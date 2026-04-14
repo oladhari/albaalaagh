@@ -58,10 +58,9 @@ export default async function GuestsPage() {
 
       {guests.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-lg mb-2" style={{ color: "#9A9070" }}>لا يوجد ضيوف بعد</p>
+          <p className="text-lg mb-2" style={{ color: "#9A9070" }}>قريباً</p>
           <p className="text-sm" style={{ color: "#9A9070" }}>
-            أضف ضيوفك من{" "}
-            <a href="/admin" style={{ color: "#C9A844" }}>لوحة الإدارة</a>
+            سيتم نشر قائمة ضيوف البلاغ قريباً
           </p>
         </div>
       ) : (
