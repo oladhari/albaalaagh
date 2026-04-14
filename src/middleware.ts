@@ -35,9 +35,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/writer", req.url));
   }
 
+  // Protect /admin routes (except /admin/login)
+  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+  const isAdminLogin = req.nextUrl.pathname === "/admin/login";
+  const isAdminAuthed = req.cookies.get("admin_authed")?.value === "1";
+  const isDev = process.env.NODE_ENV === "development";
+
+  if (isAdminRoute && !isAdminLogin && !isAdminAuthed && !isDev) {
+    return NextResponse.redirect(new URL("/admin/login", req.url));
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/writer/:path*"],
+  matcher: ["/writer/:path*", "/admin/:path*"],
 };

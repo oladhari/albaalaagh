@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 
 const NAV = [
   { href: "/admin",                  label: "لوحة التحكم"    },
@@ -11,30 +10,6 @@ const NAV = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Basic auth check via cookie (set by login page)
-  // In production: use NextAuth or Supabase Auth
-  const headersList = await headers();
-  const cookie = headersList.get("cookie") || "";
-  const isAuthed = cookie.includes("admin_authed=1") ||
-    process.env.NODE_ENV === "development";
-
-  if (!isAuthed) {
-    return (
-      <html lang="ar" dir="rtl">
-        <body style={{ background: "#111008", color: "#F0EAD6", fontFamily: "Cairo, sans-serif" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
-            <p style={{ color: "#9A9070" }}>
-              يرجى{" "}
-              <a href="/admin/login" style={{ color: "#C9A844" }}>
-                تسجيل الدخول
-              </a>{" "}
-              للوصول إلى لوحة التحكم
-            </p>
-          </div>
-        </body>
-      </html>
-    );
-  }
 
   return (
     <div className="min-h-screen flex" style={{ background: "#0D0C06", fontFamily: "Cairo, sans-serif" }}>
