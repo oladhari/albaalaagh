@@ -38,7 +38,7 @@ export default async function HomePage() {
     getLatestArticles(),
   ]);
 
-  const [featuredVideo, ...restVideos] = videos;
+  const restVideos = videos;
 
   const tickerItems = news.length > 0
     ? news.map((n: any) => n.title)
@@ -53,61 +53,79 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Featured video */}
+          {/* Site summary hero */}
           <div className="lg:col-span-2">
-            <a
-              href={`https://www.youtube.com/watch?v=${featuredVideo.youtube_id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block rounded-2xl overflow-hidden relative card-hover"
-              style={{ border: "1px solid #2E2A18" }}
+            <div
+              className="rounded-2xl overflow-hidden relative flex flex-col justify-between"
+              style={{
+                background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
+                border: "1px solid #2E2A18",
+                minHeight: "340px",
+                padding: "40px",
+              }}
             >
-              <div className="relative" style={{ aspectRatio: "16/9" }}>
-                <img
-                  src={featuredVideo.thumbnail_url}
-                  alt={featuredVideo.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div
-                  className="absolute inset-0"
+              {/* Decorative corner */}
+              <div
+                className="absolute top-0 left-0 w-40 h-40 opacity-10 rounded-br-full"
+                style={{ background: "radial-gradient(circle, #C9A844, transparent)" }}
+              />
+              <div
+                className="absolute bottom-0 right-0 w-60 h-60 opacity-5 rounded-tl-full"
+                style={{ background: "radial-gradient(circle, #C9A844, transparent)" }}
+              />
+
+              {/* Logo + tagline */}
+              <div className="relative">
+                <h1
+                  className="text-6xl font-black mb-3"
                   style={{
-                    background: "linear-gradient(to top, rgba(17,16,8,0.95) 0%, rgba(17,16,8,0.3) 60%, transparent 100%)",
+                    background: "linear-gradient(135deg, #E8D5A3, #C9A844)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
                   }}
-                />
-                {/* Live badge */}
-                {featuredVideo.is_live && (
-                  <div className="absolute top-4 right-4">
-                    <span
-                      className="text-xs font-bold px-2 py-1 rounded-full"
-                      style={{ background: "rgba(220,38,38,0.9)", color: "#fff" }}
+                >
+                  البلاغ
+                </h1>
+                <p className="text-base leading-relaxed mb-6" style={{ color: "#9A9070", maxWidth: "480px" }}>
+                  منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
+                </p>
+
+                {/* Section links */}
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { href: "/interviews", label: "📺 المقابلات" },
+                    { href: "/news",       label: "📰 الأخبار" },
+                    { href: "/articles",   label: "✍️ المقالات" },
+                    { href: "/guests",     label: "👤 الضيوف" },
+                  ].map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
+                      style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
                     >
-                      ● بث مباشر
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                    style={{ background: "rgba(201,168,68,0.9)", boxShadow: "0 0 40px rgba(201,168,68,0.4)" }}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current" style={{ color: "#111008", marginRight: "-4px" }}>
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="absolute bottom-0 right-0 left-0 p-5">
-                  <span
-                    className="inline-block text-xs px-2 py-1 rounded-full mb-2 font-bold"
-                    style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
-                  >
-                    آخر البث المباشر
-                  </span>
-                  <h2 className="text-xl font-black leading-snug" style={{ color: "#F0EAD6" }}>
-                    {featuredVideo.title}
-                  </h2>
+                      {item.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
-            </a>
+
+              {/* Stats row */}
+              <div className="relative flex gap-8 mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
+                {[
+                  { label: "مقابلات", value: videos.length + "+" },
+                  { label: "برنامج", value: playlists.length + "" },
+                  { label: "خبر", value: news.length + "+" },
+                  { label: "مقال", value: articles.length + "+" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
+                    <p className="text-xs" style={{ color: "#9A9070" }}>{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Latest news sidebar */}
