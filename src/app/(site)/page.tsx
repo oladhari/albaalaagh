@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchLatestVideos } from "@/lib/youtube";
+import { fetchLiveStreams, fetchFeaturedPlaylists } from "@/lib/youtube";
 import { supabaseAdmin } from "@/lib/supabase";
 import VideoCard from "@/components/ui/VideoCard";
 import ArticleCard from "@/components/ui/ArticleCard";
@@ -31,16 +31,14 @@ async function getLatestArticles() {
 }
 
 export default async function HomePage() {
-  const [videos, news, articles] = await Promise.all([
-    fetchLatestVideos(7),
+  const [videos, playlists, news, articles] = await Promise.all([
+    fetchLiveStreams(7),
+    fetchFeaturedPlaylists(),
     getLatestNews(),
     getLatestArticles(),
   ]);
 
-  const [featuredVideo, ...restVideos] = videos as {
-    id: string; youtube_id: string; title: string;
-    thumbnail_url: string; published_at: string;
-  }[];
+  const [featuredVideo, ...restVideos] = videos;
 
   const tickerItems = news.length > 0
     ? news.map((n: any) => n.title)
@@ -76,6 +74,17 @@ export default async function HomePage() {
                     background: "linear-gradient(to top, rgba(17,16,8,0.95) 0%, rgba(17,16,8,0.3) 60%, transparent 100%)",
                   }}
                 />
+                {/* Live badge */}
+                {featuredVideo.is_live && (
+                  <div className="absolute top-4 right-4">
+                    <span
+                      className="text-xs font-bold px-2 py-1 rounded-full"
+                      style={{ background: "rgba(220,38,38,0.9)", color: "#fff" }}
+                    >
+                      ● بث مباشر
+                    </span>
+                  </div>
+                )}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div
                     className="w-20 h-20 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
@@ -91,7 +100,7 @@ export default async function HomePage() {
                     className="inline-block text-xs px-2 py-1 rounded-full mb-2 font-bold"
                     style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
                   >
-                    آخر المقابلات
+                    آخر البث المباشر
                   </span>
                   <h2 className="text-xl font-black leading-snug" style={{ color: "#F0EAD6" }}>
                     {featuredVideo.title}
@@ -123,7 +132,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Latest Videos ── */}
+      {/* ── Latest Live Streams ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SectionHeader
           title="أحدث المقابلات"
@@ -136,6 +145,84 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Featured Playlists ── */}
+      {playlists.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SectionHeader
+            title="أبرز برامجنا"
+            subtitle="برامج متخصصة تُغطي السياسة والفكر والذكاء الاصطناعي"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {playlists.map((playlist) => (
+              <a
+                key={playlist.id}
+                href={`https://www.youtube.com/playlist?list=${playlist.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-2xl overflow-hidden card-hover flex flex-col"
+                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+              >
+                {/* Thumbnail from latest video */}
+                <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                  <img
+                    src={playlist.latestVideo?.thumbnail_url || playlist.thumbnail_url}
+                    alt={playlist.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(to top, rgba(17,16,8,0.85) 0%, transparent 60%)" }}
+                  />
+                  {/* Playlist icon */}
+                  <div
+                    className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold"
+                    style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
+                      <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/>
+                    </svg>
+                    قائمة تشغيل
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4 flex flex-col flex-1">
+                  <h3
+                    className="font-black text-base mb-2 group-hover:text-[#C9A844] transition-colors"
+                    style={{ color: "#F0EAD6" }}
+                  >
+                    {playlist.title}
+                  </h3>
+                  {playlist.description && (
+                    <p
+                      className="text-xs leading-relaxed line-clamp-3 mb-3 flex-1"
+                      style={{ color: "#9A9070", lineHeight: "1.8" }}
+                    >
+                      {playlist.description}
+                    </p>
+                  )}
+                  {playlist.latestVideo && (
+                    <div
+                      className="mt-auto pt-3 flex items-start gap-2"
+                      style={{ borderTop: "1px solid #2E2A18" }}
+                    >
+                      <img
+                        src={playlist.latestVideo.thumbnail_url}
+                        alt=""
+                        className="w-14 h-9 rounded object-cover shrink-0"
+                      />
+                      <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>
+                        آخر حلقة: {playlist.latestVideo.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Divider ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -160,14 +247,7 @@ export default async function HomePage() {
             className="rounded-xl p-8 text-center"
             style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
           >
-            <p className="text-sm mb-3" style={{ color: "#9A9070" }}>لا توجد مقالات منشورة بعد</p>
-            <Link
-              href="/admin/articles/new"
-              className="text-sm font-medium"
-              style={{ color: "#C9A844" }}
-            >
-              أضف أول مقال ←
-            </Link>
+            <p className="text-sm" style={{ color: "#9A9070" }}>لا توجد مقالات منشورة بعد</p>
           </div>
         )}
       </section>
