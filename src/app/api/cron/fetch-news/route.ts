@@ -111,8 +111,15 @@ function detectCategoryFallback(title: string): string {
 // ── Main cron handler ─────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET && process.env.NODE_ENV !== "development") {
+  const cronSecret = process.env.CRON_SECRET;
+  const headerSecret = req.headers.get("x-cron-secret");
+  const authHeader   = req.headers.get("authorization");
+  const isDev = process.env.NODE_ENV === "development";
+
+  const validManual  = headerSecret === cronSecret;
+  const validVercel  = authHeader === `Bearer ${cronSecret}`;
+
+  if (!isDev && !validManual && !validVercel) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
