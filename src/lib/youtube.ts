@@ -19,6 +19,7 @@ export interface YTPlaylist {
   title: string;
   description: string;
   thumbnail_url: string;
+  itemCount: number;
   latestVideo: { youtube_id: string; title: string; thumbnail_url: string } | null;
 }
 
@@ -95,7 +96,19 @@ export async function fetchLatestVideos(maxResults = 12): Promise<YTVideo[]> {
 // ── Fetch featured playlists by name ─────────────────────────────────────────
 // Costs: 1 unit (playlists.list) + 1 unit per playlist (playlistItems.list)
 
-const PLAYLIST_NAMES = ["منبر الأحد", "سياسة في العمق", "البلاغ الذكية"];
+const PLAYLIST_NAMES = [
+  "البلاغ الذكية",
+  "سياسة في العمق",
+  "منبر الأحد",
+  "حصاد الأسبوع",
+  "هات الحل",
+  "حدث و خبر مع رمزي",
+  "الشريعة و السياسة",
+  "رسالة من الزنزانة",
+  "فلسطين قضية العالم بأسره",
+  "وعد الآخرة",
+  "حصاد 25",
+];
 
 // Custom descriptions (overrides YouTube description if it's short)
 const PLAYLIST_DESCRIPTIONS: Record<string, string> = {
@@ -111,11 +124,11 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
   if (!YOUTUBE_API_KEY) return [];
 
   try {
-    // 1. Get all channel playlists
+    // 1. Get all channel playlists (with contentDetails for itemCount)
     const listUrl = new URL("https://www.googleapis.com/youtube/v3/playlists");
     listUrl.searchParams.set("key", YOUTUBE_API_KEY);
     listUrl.searchParams.set("channelId", CHANNEL_ID);
-    listUrl.searchParams.set("part", "snippet");
+    listUrl.searchParams.set("part", "snippet,contentDetails");
     listUrl.searchParams.set("maxResults", "50");
 
     const listData = await ytFetch(listUrl);
@@ -155,6 +168,7 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
         thumbnail_url:
           playlist.snippet.thumbnails?.high?.url ||
           playlist.snippet.thumbnails?.medium?.url || "",
+        itemCount: playlist.contentDetails?.itemCount ?? 0,
         latestVideo: latest
           ? {
               youtube_id: latest.snippet.resourceId.videoId,
@@ -173,6 +187,95 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
     ).filter(Boolean) as YTPlaylist[];
   } catch (e) {
     console.error("YouTube playlists error:", e);
+    return [];
+  }
+}
+
+// ── Fetch all channel playlists ───────────────────────────────────────────────
+
+export async function fetchAllPlaylists(): Promise<YTPlaylist[]> {
+  if (!YOUTUBE_API_KEY) return [];
+
+  try {
+    const listUrl = new URL("https://www.googleapis.com/youtube/v3/playlists");
+    listUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    listUrl.searchParams.set("channelId", CHANNEL_ID);
+    listUrl.searchParams.set("part", "snippet");
+    listUrl.searchParams.set("maxResults", "50");
+
+    const listData = await ytFetch(listUrl);
+    const allPlaylists: any[] = listData.items ?? [];
+
+    const results: YTPlaylist[] = [];
+
+    for (const playlist of allPlaylists) {
+      const itemsUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+      itemsUrl.searchParams.set("key", YOUTUBE_API_KEY);
+      itemsUrl.searchParams.set("playlistId", playlist.id);
+      itemsUrl.searchParams.set("part", "snippet");
+      itemsUrl.searchParams.set("maxResults", "1");
+
+      const itemsData = await ytFetch(itemsUrl);
+      const latest = itemsData.items?.[0];
+
+      const customKey = PLAYLIST_NAMES.find((n) => playlist.snippet.title.includes(n));
+      const ytDesc: string = playlist.snippet.description ?? "";
+      const description =
+        (customKey && PLAYLIST_DESCRIPTIONS[customKey]) ||
+        (ytDesc.length > 20 ? ytDesc.slice(0, 200) : "");
+
+      results.push({
+        id: playlist.id,
+        title: playlist.snippet.title,
+        description,
+        thumbnail_url:
+          playlist.snippet.thumbnails?.high?.url ||
+          playlist.snippet.thumbnails?.medium?.url || "",
+        itemCount: playlist.contentDetails?.itemCount ?? 0,
+        latestVideo: latest
+          ? {
+              youtube_id: latest.snippet.resourceId.videoId,
+              title: latest.snippet.title,
+              thumbnail_url:
+                latest.snippet.thumbnails?.high?.url ||
+                latest.snippet.thumbnails?.medium?.url || "",
+            }
+          : null,
+      });
+    }
+
+    // Sort: pin البلاغ الذكية first, then sort rest by itemCount descending
+    const pinned = results.filter((p) => p.title.includes("البلاغ الذكية"));
+    const rest   = results
+      .filter((p) => !p.title.includes("البلاغ الذكية"))
+      .sort((a, b) => b.itemCount - a.itemCount);
+
+    return [...pinned, ...rest];
+  } catch (e) {
+    console.error("YouTube all playlists error:", e);
+    return [];
+  }
+}
+
+// ── Fetch shorts (videos < 4 min) ─────────────────────────────────────────────
+
+export async function fetchShorts(maxResults = 12): Promise<YTVideo[]> {
+  if (!YOUTUBE_API_KEY) return [];
+
+  try {
+    const url = new URL("https://www.googleapis.com/youtube/v3/search");
+    url.searchParams.set("key", YOUTUBE_API_KEY);
+    url.searchParams.set("channelId", CHANNEL_ID);
+    url.searchParams.set("part", "snippet");
+    url.searchParams.set("type", "video");
+    url.searchParams.set("videoDuration", "short"); // < 4 minutes
+    url.searchParams.set("order", "date");
+    url.searchParams.set("maxResults", String(maxResults));
+
+    const data = await ytFetch(url);
+    if (!data.items?.length) return [];
+    return data.items.map((item: any) => mapVideo(item));
+  } catch {
     return [];
   }
 }
