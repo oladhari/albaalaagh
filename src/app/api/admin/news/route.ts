@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/admin-auth";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -13,6 +14,8 @@ const SOURCE_PRIORITY: Record<string, number> = {
 };
 
 export async function PATCH(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { id, status } = await req.json();
 
   if (!id || !["approved", "rejected", "pending"].includes(status)) {
@@ -30,6 +33,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "pending";
 

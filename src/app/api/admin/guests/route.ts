@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET() {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { data, error } = await supabaseAdmin
     .from("guests")
     .select("*")
@@ -11,6 +14,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const body = await req.json();
   const { name, title, bio, image_url, category } = body;
 
@@ -29,6 +34,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 

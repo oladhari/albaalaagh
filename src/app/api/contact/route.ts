@@ -3,6 +3,15 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -13,6 +22,11 @@ export async function POST(req: NextRequest) {
     }
 
     const typeLabel = type === "guest" ? "طلب ضيافة" : "استفسار عام";
+    const safeName    = escapeHtml(String(name));
+    const safeEmail   = escapeHtml(String(email));
+    const safeRole    = role ? escapeHtml(String(role)) : "";
+    const safeSubject = escapeHtml(String(subject));
+    const safeMessage = escapeHtml(String(message));
 
     const htmlBody = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #111008; color: #F0EAD6; padding: 24px; border-radius: 12px;">
@@ -22,26 +36,26 @@ export async function POST(req: NextRequest) {
         <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
           <tr>
             <td style="padding: 8px 0; color: #9A9070; width: 130px;">الاسم الكامل:</td>
-            <td style="padding: 8px 0; color: #F0EAD6;">${name}</td>
+            <td style="padding: 8px 0; color: #F0EAD6;">${safeName}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; color: #9A9070;">البريد الإلكتروني:</td>
-            <td style="padding: 8px 0; color: #F0EAD6;"><a href="mailto:${email}" style="color: #C9A844;">${email}</a></td>
+            <td style="padding: 8px 0; color: #F0EAD6;"><a href="mailto:${safeEmail}" style="color: #C9A844;">${safeEmail}</a></td>
           </tr>
-          ${role ? `
+          ${safeRole ? `
           <tr>
             <td style="padding: 8px 0; color: #9A9070;">الصفة / المنصب:</td>
-            <td style="padding: 8px 0; color: #F0EAD6;">${role}</td>
+            <td style="padding: 8px 0; color: #F0EAD6;">${safeRole}</td>
           </tr>
           ` : ""}
           <tr>
             <td style="padding: 8px 0; color: #9A9070;">الموضوع:</td>
-            <td style="padding: 8px 0; color: #F0EAD6;">${subject}</td>
+            <td style="padding: 8px 0; color: #F0EAD6;">${safeSubject}</td>
           </tr>
         </table>
         <hr style="border-color: #2E2A18; margin: 16px 0;" />
         <p style="color: #9A9070; font-size: 13px; margin-bottom: 8px;">الرسالة:</p>
-        <div style="background: #1A1810; border: 1px solid #2E2A18; border-radius: 8px; padding: 16px; color: #F0EAD6; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${message}</div>
+        <div style="background: #1A1810; border: 1px solid #2E2A18; border-radius: 8px; padding: 16px; color: #F0EAD6; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${safeMessage}</div>
       </div>
     `;
 

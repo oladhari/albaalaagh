@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import slugify from "slugify";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const body = await req.json();
   const { title, excerpt, content, cover_image, category, writer_id, published } = body;
 
@@ -35,6 +38,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { data, error } = await supabaseAdmin
     .from("articles")
     .select("*, writer:writers(*)")

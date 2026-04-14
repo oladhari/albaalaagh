@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const status = req.nextUrl.searchParams.get("status") ?? "pending";
 
   const { data, error } = await supabaseAdmin
@@ -16,6 +19,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
   const { id, status } = await req.json();
 
   if (!id || !["approved", "rejected", "pending"].includes(status)) {
