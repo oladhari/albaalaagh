@@ -11,6 +11,7 @@
 - **Supabase** — قاعدة بيانات PostgreSQL + مصادقة Auth
 - **Resend** — إرسال البريد الإلكتروني من نموذج التواصل
 - **rss-parser** — جلب الأخبار من مصادر RSS
+- **Anthropic SDK (Claude Haiku)** — تصنيف الأخبار جغرافياً وموضوعياً (~$0.36/شهر)
 - **Cairo** — خط عربي من Google Fonts
 
 ---
@@ -63,6 +64,10 @@ ALTER TABLE writers
 DROP POLICY IF EXISTS "public_read_articles" ON articles;
 CREATE POLICY "public_read_articles" ON articles
   FOR SELECT USING (status = 'published');
+
+-- إضافة عمود geo لتصنيف الأخبار جغرافياً (مطلوب)
+ALTER TABLE news ADD COLUMN IF NOT EXISTS geo TEXT DEFAULT 'general'
+  CHECK (geo IN ('tunisia', 'arab', 'international', 'general'));
 
 -- جدول مقالات الكتّاب (auto-fetch — اختياري)
 CREATE TABLE IF NOT EXISTS writer_articles (
@@ -159,6 +164,33 @@ curl -H "x-cron-secret: YOUR_CRON_SECRET" http://localhost:3000/api/cron/fetch-n
 ```
 
 وأضف header المصادقة في إعدادات Vercel أو استخدم `CRON_SECRET` في البيئة.
+
+### تصنيف الأخبار بالذكاء الاصطناعي
+
+كل مرة يُشغَّل الـ cron، يُرسَل طلب واحد فقط إلى Claude Haiku يحتوي على جميع العناوين الجديدة دفعةً واحدة. Haiku يصنّف كل خبر بـ:
+
+- **geo**: `tunisia` (تونس) | `arab` (الوطن العربي) | `international` (دولي) | `general`
+- **category**: سياسة | اقتصاد | قضاء | أمن | مجتمع | دولي | ثقافة | رياضة
+
+**التكلفة التقديرية:** ~$0.003 لكل استدعاء، أي **~$0.36/شهر** عند التشغيل 4 مرات يومياً.
+
+في حال فشل الاستدعاء، يعود النظام تلقائياً إلى تصنيف قاعدي بالكلمات المفتاحية.
+
+### تصحيح الأخبار الموجودة (تشغيل مرة واحدة)
+
+إذا كانت الأخبار القديمة في قاعدة البيانات بدون تصنيف جغرافي، شغّل هذا في Supabase SQL Editor:
+
+```sql
+-- تصنيف الأخبار التونسية حسب المصدر
+UPDATE news SET geo = 'tunisia'
+  WHERE source IN ('تيوميديا', 'موزاييك FM', 'نواة')
+  AND (geo IS NULL OR geo = 'general');
+
+-- تصنيف الأخبار العربية حسب المصدر
+UPDATE news SET geo = 'arab'
+  WHERE source IN ('عربي21', 'الجزيرة', 'العربي الجديد', 'القدس العربي')
+  AND (geo IS NULL OR geo = 'general');
+```
 
 ---
 
