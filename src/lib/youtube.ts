@@ -46,6 +46,37 @@ async function ytFetch(url: URL): Promise<any> {
   return res.json();
 }
 
+// ── Fetch channel statistics ──────────────────────────────────────────────────
+
+export interface YTChannelStats {
+  videoCount: number;
+  subscriberCount: number;
+  viewCount: number;
+}
+
+export async function fetchChannelStats(): Promise<YTChannelStats> {
+  if (!YOUTUBE_API_KEY) return { videoCount: 0, subscriberCount: 0, viewCount: 0 };
+
+  try {
+    const url = new URL("https://www.googleapis.com/youtube/v3/channels");
+    url.searchParams.set("key", YOUTUBE_API_KEY);
+    url.searchParams.set("id", CHANNEL_ID);
+    url.searchParams.set("part", "statistics");
+
+    const data = await ytFetch(url);
+    const stats = data.items?.[0]?.statistics;
+    if (!stats) return { videoCount: 0, subscriberCount: 0, viewCount: 0 };
+
+    return {
+      videoCount:      parseInt(stats.videoCount      ?? "0", 10),
+      subscriberCount: parseInt(stats.subscriberCount ?? "0", 10),
+      viewCount:       parseInt(stats.viewCount       ?? "0", 10),
+    };
+  } catch {
+    return { videoCount: 0, subscriberCount: 0, viewCount: 0 };
+  }
+}
+
 // ── Fetch completed live streams ──────────────────────────────────────────────
 
 export async function fetchLiveStreams(maxResults = 6): Promise<YTVideo[]> {
