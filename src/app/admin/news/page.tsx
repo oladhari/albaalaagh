@@ -1,102 +1,133 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { timeAgo } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
 
-const mockPending: NewsArticle[] = Array.from({ length: 8 }, (_, i) => ({
-  id: String(i + 1),
-  title: [
-    "الحكومة التونسية تقر إجراءات تقشفية جديدة",
-    "معارضون يرفضون الدستور الجديد ويطالبون بحوار وطني",
-    "منظمة هيومن رايتس ووتش تنتقد الأوضاع الحقوقية في تونس",
-    "صندوق النقد الدولي يعلق المفاوضات مع تونس",
-    "تظاهرات في عدة مدن تونسية ضد السياسات الاقتصادية",
-    "البرلمان الأوروبي يدعو إلى احترام الحريات في تونس",
-    "اعتقال ناشط بارز إثر انتقاده للسياسات الحكومية",
-    "تقرير: ارتفاع معدلات البطالة إلى مستويات قياسية",
-  ][i],
-  excerpt: "تفاصيل الخبر وسياقه السياسي والاقتصادي في تونس...",
-  url: `https://example.com/news/${i + 1}`,
-  source: ["الجزيرة", "موزاييك FM", "نواة", "بزنس نيوز", "العربي الجديد"][i % 5],
-  image_url: i % 2 === 0 ? `https://picsum.photos/seed/${i + 30}/200/120` : undefined,
-  published_at: new Date(Date.now() - i * 3600000).toISOString(),
-  status: "pending",
-  category: ["سياسة", "اقتصاد", "حقوق"][i % 3],
-  created_at: new Date().toISOString(),
-}));
+type Filter = "pending" | "approved" | "rejected";
 
 export default function AdminNewsPage() {
-  const [items, setItems] = useState(mockPending);
-  const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
+  const [items, setItems]     = useState<NewsArticle[]>([]);
+  const [filter, setFilter]   = useState<Filter>("pending");
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState<string | null>(null); // id being processed
 
-  const update = (id: string, status: NewsArticle["status"]) => {
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, status } : n)));
-    // TODO: supabaseAdmin.from('news').update({status}).eq('id', id)
+  const load = useCallback(async (status: Filter) => {
+    setLoading(true);
+    const res  = await fetch(`/api/admin/news?status=${status}`);
+    const data = await res.json();
+    setItems(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(filter); }, [filter, load]);
+
+  const update = async (id: string, status: NewsArticle["status"]) => {
+    setWorking(id);
+    await fetch("/api/admin/news", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    // Remove from current list after action
+    setItems((prev) => prev.filter((n) => n.id !== id));
+    setWorking(null);
   };
 
-  const visible = items.filter((n) => n.status === filter);
+  const fetchFresh = async () => {
+    setLoading(true);
+    await fetch("/api/cron/fetch-news");
+    await load(filter);
+  };
+
+  const LABELS: Record<Filter, string> = {
+    pending:  "بانتظار الموافقة",
+    approved: "موافق عليها",
+    rejected: "مرفوضة",
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>قائمة الأخبار</h1>
         <button
+          onClick={fetchFresh}
+          disabled={loading}
           className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
           style={{ borderColor: "#2E2A18", color: "#9A9070" }}
-          onClick={() => {
-            // TODO: trigger RSS fetch manually
-            alert("جارٍ جلب الأخبار الجديدة...");
-          }}
         >
-          جلب أخبار جديدة ↺
+          {loading ? "جارٍ التحميل..." : "جلب أخبار جديدة ↺"}
         </button>
       </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6">
-        {(["pending", "approved", "rejected"] as const).map((tab) => {
-          const labels = { pending: "بانتظار الموافقة", approved: "موافق عليها", rejected: "مرفوضة" };
-          const count = items.filter((n) => n.status === tab).length;
-          return (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
-              style={{
-                borderColor: filter === tab ? "#C9A844" : "#2E2A18",
-                color: filter === tab ? "#C9A844" : "#9A9070",
-                background: filter === tab ? "rgba(201,168,68,0.08)" : "transparent",
-              }}
-            >
-              {labels[tab]} ({count})
-            </button>
-          );
-        })}
+        {(["pending", "approved", "rejected"] as Filter[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setFilter(tab)}
+            className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
+            style={{
+              borderColor: filter === tab ? "#C9A844" : "#2E2A18",
+              color:       filter === tab ? "#C9A844" : "#9A9070",
+              background:  filter === tab ? "rgba(201,168,68,0.08)" : "transparent",
+            }}
+          >
+            {LABELS[tab]}
+          </button>
+        ))}
       </div>
 
-      {/* News list */}
+      {/* Info banner for pending */}
+      {filter === "pending" && (
+        <div
+          className="mb-4 px-4 py-3 rounded-xl text-xs"
+          style={{ background: "rgba(201,168,68,0.06)", border: "1px solid #2E2A18", color: "#9A9070" }}
+        >
+          عند الضغط على <span style={{ color: "#6BCB77" }}>نشر</span>، يُعاد تحرير الخبر تلقائياً بأسلوب البلاغ قبل نشره.
+        </div>
+      )}
+
+      {/* List */}
       <div className="space-y-3">
-        {visible.length === 0 && (
-          <p className="text-center py-12 text-sm" style={{ color: "#9A9070" }}>
-            لا توجد أخبار في هذه الفئة
-          </p>
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-sm" style={{ color: "#9A9070" }}>جارٍ التحميل...</p>
+          </div>
         )}
-        {visible.map((news) => (
+
+        {!loading && items.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-sm" style={{ color: "#9A9070" }}>
+              {filter === "pending" ? "لا توجد أخبار جديدة — اضغط «جلب أخبار جديدة» أعلاه" : "لا توجد عناصر في هذه الفئة"}
+            </p>
+          </div>
+        )}
+
+        {items.map((news) => (
           <div
             key={news.id}
             className="flex gap-4 p-4 rounded-xl"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+            style={{
+              background:  "#1A1810",
+              border:      "1px solid #2E2A18",
+              opacity:     working === news.id ? 0.5 : 1,
+              transition:  "opacity 0.2s",
+            }}
           >
+            {/* Image */}
             {news.image_url && (
               <img
                 src={news.image_url}
                 alt=""
                 className="w-24 h-16 rounded-lg object-cover shrink-0"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
               />
             )}
+
+            {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
@@ -110,42 +141,51 @@ export default function AdminNewsPage() {
                   {timeAgo(news.published_at)}
                 </span>
               </div>
-              <p className="text-sm font-semibold leading-snug" style={{ color: "#F0EAD6" }}>
+              <p className="text-sm font-semibold leading-snug mb-1" style={{ color: "#F0EAD6" }}>
                 {news.title}
               </p>
+              {news.excerpt && (
+                <p className="text-xs line-clamp-2 mb-1" style={{ color: "#9A9070" }}>
+                  {news.excerpt}
+                </p>
+              )}
               <a
                 href={news.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs mt-1 inline-block"
+                className="text-xs"
                 style={{ color: "#9A9070" }}
               >
                 المصدر الأصلي ↗
               </a>
             </div>
+
             {/* Actions */}
-            <div className="flex flex-col gap-2 shrink-0">
-              {news.status !== "approved" && (
+            <div className="flex flex-col gap-2 shrink-0 justify-center">
+              {filter !== "approved" && (
                 <button
                   onClick={() => update(news.id, "approved")}
+                  disabled={working === news.id}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold"
                   style={{ background: "rgba(107,203,119,0.15)", color: "#6BCB77" }}
                 >
-                  نشر ✓
+                  {working === news.id ? "..." : "نشر ✓"}
                 </button>
               )}
-              {news.status !== "rejected" && (
+              {filter !== "rejected" && (
                 <button
                   onClick={() => update(news.id, "rejected")}
+                  disabled={working === news.id}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold"
                   style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}
                 >
                   رفض ✗
                 </button>
               )}
-              {news.status !== "pending" && (
+              {filter !== "pending" && (
                 <button
                   onClick={() => update(news.id, "pending")}
+                  disabled={working === news.id}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold"
                   style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
                 >

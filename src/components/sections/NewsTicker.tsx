@@ -51,8 +51,8 @@ export default function NewsTicker({ items }: NewsTickerProps) {
 
       <style>{`
         @keyframes ticker {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0%   { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
         }
       `}</style>
     </div>

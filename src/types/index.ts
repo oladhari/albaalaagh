@@ -45,6 +45,19 @@ export interface Writer {
   created_at: string;
 }
 
+export interface WriterArticle {
+  id: string;
+  title: string;
+  excerpt: string;
+  url: string;
+  image_url?: string;
+  writer_name: string;
+  source?: string;
+  published_at: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
 export interface Article {
   id: string;
   slug: string;
@@ -80,11 +93,27 @@ export const VIDEO_CATEGORIES = [
   "مقابلات سياسية", "حوارات فكرية", "شهادات", "تحليلات", "متنوع"
 ] as const;
 
+// Writers whose articles we auto-fetch via Google News RSS
+export const WRITERS = [
+  { name: "أبو يعرب المرزوقي" },
+  { name: "خميس الماجري" },
+  { name: "شكري مجولي" },
+  { name: "صلاح الدين الجورشي" },
+  { name: "صابر النفزاوي" },
+  { name: "عبد المجيد النجار" },
+  { name: "منصف المرزوقي" },
+  { name: "الحبيب اللوز" },
+  { name: "سيف الدين مخلوف" },
+  { name: "ماهر زيد" },
+  { name: "عبد اللطيف المكي" },
+] as const;
+
 export const NEWS_SOURCES = [
-  { name: "موزاييك FM",       rss: "https://www.mosaiquefm.net/rss/ar/news/last",          logo: "" },
+  { name: "تيوميديا",         rss: "https://tumedia.net/feed/",                             logo: "" },
+  { name: "موزاييك FM",       rss: "https://www.mosaiquefm.net/ar/rss",                   logo: "" },
   { name: "نواة",             rss: "https://nawaat.org/feed/",                              logo: "" },
-  { name: "بزنس نيوز",        rss: "https://www.businessnews.com.tn/feed",                  logo: "" },
-  { name: "الجزيرة",          rss: "https://www.aljazeera.net/xml/rss/all.xml",             logo: "" },
+  { name: "عربي21",           rss: "https://arabi21.com/feed",                              logo: "" },
+  { name: "الجزيرة",          rss: "https://www.aljazeera.net/rss",                        logo: "" },
   { name: "العربي الجديد",    rss: "https://www.alaraby.co.uk/rss.xml",                     logo: "" },
   { name: "القدس العربي",     rss: "https://www.alquds.co.uk/feed/",                        logo: "" },
 ] as const;

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS writers (
   title      TEXT NOT NULL,
   bio        TEXT DEFAULT '',
   image_url  TEXT,
+  user_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -26,6 +27,8 @@ CREATE TABLE IF NOT EXISTS articles (
   cover_image  TEXT,
   category     TEXT NOT NULL DEFAULT 'سياسة',
   writer_id    UUID REFERENCES writers(id) ON DELETE SET NULL,
+  status       TEXT NOT NULL DEFAULT 'draft'
+                 CHECK (status IN ('draft', 'pending', 'published')),
   published    BOOLEAN DEFAULT FALSE,
   published_at TIMESTAMPTZ,
   created_at   TIMESTAMPTZ DEFAULT NOW()
@@ -87,6 +90,29 @@ CREATE POLICY "public_read_guests"  ON guests  FOR SELECT USING (TRUE);
 
 -- Service role key bypasses RLS (used by admin API routes)
 -- No additional policies needed for service role
+
+-- ── Writer Articles (auto-fetched from external sources) ─────
+CREATE TABLE IF NOT EXISTS writer_articles (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title        TEXT NOT NULL,
+  excerpt      TEXT DEFAULT '',
+  url          TEXT UNIQUE NOT NULL,
+  image_url    TEXT,
+  writer_name  TEXT NOT NULL,
+  source       TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  status       TEXT NOT NULL DEFAULT 'pending'
+                 CHECK (status IN ('pending','approved','rejected')),
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_writer_articles_writer     ON writer_articles(writer_name, published_at DESC);
+CREATE INDEX idx_writer_articles_status     ON writer_articles(status, published_at DESC);
+
+ALTER TABLE writer_articles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "public_read_writer_articles" ON writer_articles
+  FOR SELECT USING (status != 'rejected');
 
 -- ── Sample data (optional, remove in production) ─────────────
 INSERT INTO writers (name, title, bio) VALUES

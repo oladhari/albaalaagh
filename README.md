@@ -1,36 +1,193 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# البلاغ — موقع قناة البلاغ
 
-## Getting Started
+منبر إعلامي تونسي مستقل. موقع Next.js 16 مع Supabase وتصميم عربي RTL.
 
-First, run the development server:
+---
+
+## التقنيات المستخدمة
+
+- **Next.js 16** (App Router) — يتطلب Node.js 20+
+- **Tailwind CSS v4** (إعداد CSS فقط، لا يوجد tailwind.config.js)
+- **Supabase** — قاعدة بيانات PostgreSQL + مصادقة Auth
+- **Resend** — إرسال البريد الإلكتروني من نموذج التواصل
+- **rss-parser** — جلب الأخبار من مصادر RSS
+- **Cairo** — خط عربي من Google Fonts
+
+---
+
+## متطلبات الإعداد
+
+### 1. Node.js
+
+يتطلب المشروع Node.js 20 أو أحدث:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+nvm install 20.9.0
+nvm use 20.9.0
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. متغيرات البيئة
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+انسخ `.env.example` إلى `.env.local` واملأ القيم:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_SUPABASE_URL=         # من Supabase → Project Settings → API
+NEXT_PUBLIC_SUPABASE_ANON_KEY=    # المفتاح العام (publishable)
+SUPABASE_SERVICE_ROLE_KEY=        # مفتاح الخدمة (سري، لا تشاركه)
+YOUTUBE_API_KEY=                  # من Google Cloud Console → YouTube Data API v3
+RESEND_API_KEY=                   # من resend.com (لإرسال رسائل التواصل)
+CRON_SECRET=                      # كلمة سرية لحماية endpoint الجدولة
+NEXT_PUBLIC_SITE_URL=             # https://albaalaagh.com في الإنتاج
+```
 
-## Learn More
+### 3. قاعدة البيانات (Supabase)
 
-To learn more about Next.js, take a look at the following resources:
+شغّل `supabase-schema.sql` كاملاً في **Supabase → SQL Editor**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ثم شغّل هذه الأوامر لتحديث الجداول الموجودة (إذا أنشأت الجداول مسبقاً):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sql
+-- إضافة عمود status لجدول articles
+ALTER TABLE articles
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft', 'pending', 'published'));
 
-## Deploy on Vercel
+-- تصحيح المقالات المنشورة مسبقاً
+UPDATE articles SET status = 'published' WHERE published = true;
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+-- إضافة عمود user_id لجدول writers (ربط بحسابات المصادقة)
+ALTER TABLE writers
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-- تحديث سياسة القراءة العامة للمقالات
+DROP POLICY IF EXISTS "public_read_articles" ON articles;
+CREATE POLICY "public_read_articles" ON articles
+  FOR SELECT USING (status = 'published');
+
+-- جدول مقالات الكتّاب (auto-fetch — اختياري)
+CREATE TABLE IF NOT EXISTS writer_articles (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title        TEXT NOT NULL,
+  excerpt      TEXT DEFAULT '',
+  url          TEXT UNIQUE NOT NULL,
+  image_url    TEXT,
+  writer_name  TEXT NOT NULL,
+  source       TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  status       TEXT NOT NULL DEFAULT 'pending'
+                 CHECK (status IN ('pending','approved','rejected')),
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_writer_articles_writer ON writer_articles(writer_name, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_writer_articles_status ON writer_articles(status, published_at DESC);
+ALTER TABLE writer_articles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read_writer_articles" ON writer_articles
+  FOR SELECT USING (status != 'rejected');
+```
+
+---
+
+## إنشاء حسابات الكتّاب
+
+كل كاتب يحصل على حساب للدخول إلى `/writer` وكتابة مقالاته.
+
+### الخطوات:
+
+**1. إنشاء حساب في Supabase Auth:**
+
+- Supabase Dashboard → Authentication → Users → **Invite user**
+- أدخل البريد الإلكتروني للكاتب
+- سيصله رابط لتعيين كلمة المرور
+
+**2. ربط الحساب بملف الكاتب:**
+
+بعد إنشاء الحساب، انسخ الـ User UID من قائمة المستخدمين، ثم شغّل:
+
+```sql
+UPDATE writers
+SET user_id = 'PASTE-USER-UID-HERE'
+WHERE name = 'اسم الكاتب الكامل';
+```
+
+**3. دخول الكاتب:**
+
+الكاتب يدخل من: `https://albaalaagh.com/writer/login`
+
+### صلاحيات الكاتب:
+- كتابة مقالات وحفظها كمسودة
+- إرسال المقال للمراجعة (يظهر في لوحة الإدارة)
+- تعديل المسودات والمقالات المعلّقة
+- لا يستطيع نشر مقالاته مباشرة
+
+### صلاحيات الإدارة:
+- مراجعة المقالات المرسلة في `/admin/articles?tab=pending`
+- النشر بضغطة زر واحدة
+- إضافة مقالات مباشرة عبر `/admin/articles/new`
+
+---
+
+## تشغيل المشروع محلياً
+
+```bash
+npm install
+npm run dev
+```
+
+يعمل على `http://localhost:3000`
+
+---
+
+## جلب الأخبار (Cron Job)
+
+جلب الأخبار من مصادر RSS يدوياً:
+
+```bash
+curl -H "x-cron-secret: YOUR_CRON_SECRET" http://localhost:3000/api/cron/fetch-news
+```
+
+في Vercel، أضف Cron Job في `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch-news",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}
+```
+
+وأضف header المصادقة في إعدادات Vercel أو استخدم `CRON_SECRET` في البيئة.
+
+---
+
+## النشر على Vercel
+
+1. ارفع المشروع على GitHub
+2. في Vercel: **New Project** → استورد الـ repo
+3. أضف جميع متغيرات `.env.local` في **Environment Variables**
+4. في **Domains**: أضف `albaalaagh.com` واتبع تعليمات DNS
+5. في Supabase → Authentication → **URL Configuration**: أضف `https://albaalaagh.com` في Redirect URLs
+
+---
+
+## هيكل المشروع
+
+```
+src/
+├── app/
+│   ├── (site)/          # الصفحات العامة (الرئيسية، أخبار، مقالات...)
+│   ├── admin/           # لوحة إدارة الموقع
+│   ├── writer/          # منصة الكتّاب (تسجيل دخول + كتابة)
+│   └── api/             # API routes (cron, admin, writer, contact)
+├── components/
+│   ├── sections/        # NewsTicker, SocialBar, Navbar, Footer
+│   └── ui/              # VideoCard, ArticleCard, NewsCard, WriterArticleCard...
+├── lib/
+│   ├── supabase.ts      # عملاء Supabase (public + admin + browser auth)
+│   ├── supabase-server.ts # عميل Supabase للـ Server Components
+│   ├── youtube.ts       # جلب فيديوهات YouTube
+│   └── utils.ts         # تنسيق التواريخ، timeAgo، truncate
+└── types/index.ts       # جميع الأنواع والثوابت
+```

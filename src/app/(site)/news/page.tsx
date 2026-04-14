@@ -1,43 +1,38 @@
 import NewsCard from "@/components/ui/NewsCard";
 import SectionHeader from "@/components/ui/SectionHeader";
-import type { NewsArticle } from "@/types";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export const metadata = {
   title: "الأخبار | البلاغ",
-  description: "آخر الأخبار التونسية والعربية المنتقاة من البلاغ",
+  description: "آخر الأخبار التونسية والعربية",
 };
 
-// TODO: Replace with Supabase query: supabase.from('news').select('*').eq('status','approved').order('published_at',{ascending:false})
-const mockNews: NewsArticle[] = Array.from({ length: 12 }, (_, i) => ({
-  id: String(i + 1),
-  title: [
-    "تونس: اجتماع طارئ للحكومة لمناقشة الأوضاع الاقتصادية",
-    "منظمات حقوق الإنسان تطالب بالإفراج عن المعتقلين السياسيين",
-    "البرلمان يصادق على مشروع قانون الميزانية التكميلية",
-    "الاتحاد الأوروبي يعبر عن قلقه إزاء الأوضاع في تونس",
-    "انتخابات محلية مرتقبة وسط جدل واسع حول قانون الانتخابات",
-    "حركة النهضة تدعو إلى حوار وطني شامل",
-    "الأزمة الاقتصادية تتفاقم وسط ارتفاع نسب التضخم",
-    "المحكمة الدستورية تنظر في طعون المعارضة",
-    "تصريحات رئاسية جديدة حول ملف الإصلاح السياسي",
-    "نشطاء يتحدون قرار حل الأحزاب السياسية",
-    "الجزيرة: تقرير موسع عن المشهد السياسي التونسي",
-    "خبراء يحذرون من تدهور الأوضاع الاجتماعية",
-  ][i],
-  excerpt: "",
-  url: "#",
-  source: ["الجزيرة", "موزاييك FM", "نواة", "بزنس نيوز", "العربي الجديد"][i % 5],
-  image_url: i % 3 === 0 ? `https://picsum.photos/seed/${i + 10}/400/250` : undefined,
-  published_at: new Date(Date.now() - i * 3600000 * 2).toISOString(),
-  status: "approved",
-  category: ["سياسة", "اقتصاد", "حقوق", "برلمان"][i % 4],
-  created_at: new Date().toISOString(),
-}));
+export const revalidate = 300;
 
-const SOURCES = ["الكل", "الجزيرة", "موزاييك FM", "نواة", "بزنس نيوز", "العربي الجديد"];
-const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "حقوق", "برلمان"];
+const TUNISIA_SOURCES  = ["تيوميديا", "موزاييك FM", "نواة"];
+const ARAB_SOURCES     = ["عربي21", "الجزيرة", "العربي الجديد", "القدس العربي"];
 
-export default function NewsPage() {
+async function getNews() {
+  const { data } = await supabaseAdmin
+    .from("news")
+    .select("*")
+    .neq("status", "rejected")   // show everything except manually rejected
+    .order("published_at", { ascending: false })
+    .limit(60);
+
+  const all = data ?? [];
+
+  // Split into groups
+  const tunisia  = all.filter((n: any) => TUNISIA_SOURCES.includes(n.source));
+  const arab     = all.filter((n: any) => ARAB_SOURCES.includes(n.source));
+  const other    = all.filter((n: any) => !TUNISIA_SOURCES.includes(n.source) && !ARAB_SOURCES.includes(n.source));
+
+  return { tunisia, arab, other, all };
+}
+
+export default async function NewsPage() {
+  const { tunisia, arab, other, all } = await getNews();
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
@@ -45,50 +40,68 @@ export default function NewsPage() {
         subtitle="أخبار منتقاة من تونس والعالم العربي"
       />
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters sidebar */}
-        <aside className="lg:w-52 shrink-0">
-          <div
-            className="rounded-xl p-4 sticky top-20"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>المصادر</h3>
-            <ul className="space-y-1 mb-5">
-              {SOURCES.map((s) => (
-                <li key={s}>
-                  <button
-                    className="w-full text-right px-3 py-1.5 rounded-lg text-sm transition-colors"
-                    style={{ color: s === "الكل" ? "#C9A844" : "#9A9070" }}
-                  >
-                    {s}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <hr style={{ borderColor: "#2E2A18" }} className="mb-4" />
-            <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>الأقسام</h3>
-            <ul className="space-y-1">
-              {CATEGORIES.map((c) => (
-                <li key={c}>
-                  <button
-                    className="w-full text-right px-3 py-1.5 rounded-lg text-sm transition-colors"
-                    style={{ color: "#9A9070" }}
-                  >
-                    {c}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
-
-        {/* News list */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {mockNews.map((article) => (
-            <NewsCard key={article.id} article={article} />
-          ))}
+      {all.length === 0 ? (
+        <div className="text-center py-20">
+          <p className="text-lg mb-2" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة بعد</p>
+          <p className="text-sm" style={{ color: "#9A9070" }}>
+            توجه إلى{" "}
+            <a href="/admin/news" style={{ color: "#C9A844" }}>لوحة الإدارة</a>
+            {" "}للموافقة على الأخبار
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-12">
+
+          {/* ── Tunisia news ── */}
+          {tunisia.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="text-lg">🇹🇳</span>
+                <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>أخبار تونس</h2>
+                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tunisia.map((article: any) => (
+                  <NewsCard key={article.id} article={article} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Arab world news ── */}
+          {arab.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="text-lg">🌍</span>
+                <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>أخبار العالم العربي</h2>
+                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {arab.map((article: any) => (
+                  <NewsCard key={article.id} article={article} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Other ── */}
+          {other.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="text-lg">🌐</span>
+                <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>أخبار دولية</h2>
+                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {other.map((article: any) => (
+                  <NewsCard key={article.id} article={article} />
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
     </div>
   );
 }

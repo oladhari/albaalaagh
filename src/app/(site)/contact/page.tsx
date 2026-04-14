@@ -5,12 +5,42 @@ import { SOCIAL_LINKS } from "@/types";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<"general" | "guest">("general");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Send to API route → email / Supabase storage
-    setSubmitted(true);
+    setSending(true);
+    setError(null);
+
+    const form = e.currentTarget;
+    const data = {
+      type,
+      name: (form.elements.namedItem("name") as HTMLInputElement).value,
+      email: (form.elements.namedItem("email") as HTMLInputElement).value,
+      role: type === "guest" ? (form.elements.namedItem("role") as HTMLInputElement)?.value : undefined,
+      subject: (form.elements.namedItem("subject") as HTMLInputElement).value,
+      message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error ?? "حدث خطأ، يرجى المحاولة مجدداً");
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setError("تعذّر الاتصال بالخادم، يرجى المحاولة لاحقاً");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -87,6 +117,7 @@ export default function ContactPage() {
                   </label>
                   <input
                     required
+                    name="name"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-colors"
                     style={{
                       background: "#111008",
@@ -103,6 +134,7 @@ export default function ContactPage() {
                   </label>
                   <input
                     required
+                    name="email"
                     type="email"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
                     style={{
@@ -122,6 +154,7 @@ export default function ContactPage() {
                     الصفة / المنصب
                   </label>
                   <input
+                    name="role"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
                     placeholder="مثال: وزير سابق، ناشط حقوقي..."
                     style={{
@@ -141,6 +174,7 @@ export default function ContactPage() {
                 </label>
                 <input
                   required
+                  name="subject"
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
                   style={{
                     background: "#111008",
@@ -158,6 +192,7 @@ export default function ContactPage() {
                 </label>
                 <textarea
                   required
+                  name="message"
                   rows={5}
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none resize-none"
                   style={{
@@ -170,15 +205,21 @@ export default function ContactPage() {
                 />
               </div>
 
+              {error && (
+                <p className="text-xs text-center" style={{ color: "#e55" }}>{error}</p>
+              )}
+
               <button
                 type="submit"
+                disabled={sending}
                 className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200"
                 style={{
-                  background: "linear-gradient(135deg, #C9A844, #9A7B28)",
-                  color: "#111008",
+                  background: sending ? "#2E2A18" : "linear-gradient(135deg, #C9A844, #9A7B28)",
+                  color: sending ? "#9A9070" : "#111008",
+                  cursor: sending ? "not-allowed" : "pointer",
                 }}
               >
-                إرسال الرسالة
+                {sending ? "جارٍ الإرسال..." : "إرسال الرسالة"}
               </button>
             </form>
           )}

@@ -2,10 +2,12 @@ import Link from "next/link";
 import { headers } from "next/headers";
 
 const NAV = [
-  { href: "/admin",          label: "لوحة التحكم" },
-  { href: "/admin/news",     label: "قائمة الأخبار" },
-  { href: "/admin/articles", label: "المقالات"      },
-  { href: "/admin/writers",  label: "الكتّاب"       },
+  { href: "/admin",                  label: "لوحة التحكم"    },
+  { href: "/admin/news",             label: "قائمة الأخبار"  },
+  { href: "/admin/articles",         label: "المقالات"        },
+  { href: "/admin/writer-articles",  label: "مقالات الكتّاب" },
+  { href: "/admin/writers",          label: "الكتّاب"         },
+  { href: "/admin/guests",           label: "الضيوف"          },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

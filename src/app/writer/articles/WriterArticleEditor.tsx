@@ -1,52 +1,61 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
 
-export default function NewArticlePage() {
+interface Props {
+  writerId: string;
+  initial?: {
+    id: string;
+    title: string;
+    excerpt: string;
+    content: string;
+    cover_image: string;
+    category: string;
+  };
+}
+
+export default function WriterArticleEditor({ writerId, initial }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [writers, setWriters] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
-    title: "",
-    excerpt: "",
-    content: "",
-    cover_image: "",
-    category: ARTICLE_CATEGORIES[0] as string,
-    writer_id: "",
+    title:       initial?.title       ?? "",
+    excerpt:     initial?.excerpt     ?? "",
+    content:     initial?.content     ?? "",
+    cover_image: initial?.cover_image ?? "",
+    category:    initial?.category    ?? (ARTICLE_CATEGORIES[0] as string),
   });
-
-  useEffect(() => {
-    fetch("/api/admin/writers")
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setWriters(data); })
-      .catch(() => {});
-  }, []);
 
   const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSave = async (publish: boolean) => {
+  const handleSave = async (submit: boolean) => {
     if (!form.title || !form.content) {
       setError("العنوان والمحتوى مطلوبان");
       return;
     }
     setSaving(true);
     setError(null);
+
     try {
-      const res = await fetch("/api/admin/articles", {
-        method: "POST",
+      const url = initial?.id
+        ? `/api/writer/articles/${initial.id}`
+        : "/api/writer/articles";
+
+      const res = await fetch(url, {
+        method: initial?.id ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, published: publish }),
+        body: JSON.stringify({ ...form, writer_id: writerId, submit }),
       });
+
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "حدث خطأ أثناء الحفظ");
         return;
       }
-      router.push("/admin/articles");
+      router.push("/writer/articles");
     } catch {
       setError("تعذّر الاتصال بالخادم");
     } finally {
@@ -77,7 +86,9 @@ export default function NewArticlePage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>إضافة مقال جديد</h1>
+        <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>
+          {initial ? "تعديل المقال" : "كتابة مقال جديد"}
+        </h1>
         <div className="flex gap-3">
           <button
             onClick={() => handleSave(false)}
@@ -96,7 +107,7 @@ export default function NewArticlePage() {
               color: form.title ? "#111008" : "#9A9070",
             }}
           >
-            {saving ? "جارٍ الحفظ..." : "نشر المقال"}
+            {saving ? "جارٍ الحفظ..." : "إرسال للمراجعة"}
           </button>
         </div>
       </div>
@@ -110,8 +121,15 @@ export default function NewArticlePage() {
         </div>
       )}
 
+      <div
+        className="mb-5 p-3 rounded-lg text-xs"
+        style={{ background: "rgba(201,168,68,0.08)", border: "1px solid rgba(201,168,68,0.2)", color: "#C9A844" }}
+      >
+        احفظ مقالك كمسودة أثناء الكتابة. عند الانتهاء اضغط "إرسال للمراجعة" وسيصلك إشعار عند نشره.
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main editor */}
+        {/* Editor */}
         <div className="lg:col-span-2 space-y-5">
           <div>
             <label style={labelStyle}>عنوان المقال *</label>
@@ -139,11 +157,11 @@ export default function NewArticlePage() {
           </div>
 
           <div>
-            <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
+            <label style={labelStyle}>محتوى المقال *</label>
             <textarea
-              rows={20}
+              rows={22}
               style={{ ...inputStyle, resize: "vertical", lineHeight: "2" }}
-              placeholder={"اكتب محتوى المقال هنا...\n\nيمكنك استخدام HTML:\n<h2>عنوان</h2>\n<p>فقرة</p>\n<blockquote>اقتباس</blockquote>"}
+              placeholder={"اكتب مقالك هنا...\n\nيمكنك استخدام HTML بسيط:\n<h2>عنوان فرعي</h2>\n<p>فقرة</p>\n<blockquote>اقتباس</blockquote>\n<strong>نص مميز</strong>"}
               value={form.content}
               onChange={(e) => set("content", e.target.value)}
               onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
@@ -152,7 +170,7 @@ export default function NewArticlePage() {
           </div>
         </div>
 
-        {/* Sidebar options */}
+        {/* Sidebar */}
         <div className="space-y-5">
           <div
             className="p-4 rounded-xl space-y-4"
@@ -172,21 +190,7 @@ export default function NewArticlePage() {
             </div>
 
             <div>
-              <label style={labelStyle}>الكاتب</label>
-              <select
-                value={form.writer_id}
-                onChange={(e) => set("writer_id", e.target.value)}
-                style={inputStyle}
-              >
-                <option value="">-- اختر كاتباً --</option>
-                {writers.map((w) => (
-                  <option key={w.id} value={w.id}>{w.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>رابط صورة الغلاف</label>
+              <label style={labelStyle}>رابط صورة الغلاف (اختياري)</label>
               <input
                 style={inputStyle}
                 placeholder="https://..."
@@ -210,12 +214,13 @@ export default function NewArticlePage() {
             className="p-4 rounded-xl"
             style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
           >
-            <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>تلميحات HTML</h3>
+            <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>تنسيق HTML</h3>
             <ul className="text-xs space-y-1.5" style={{ color: "#9A9070" }}>
               <li><code style={{ color: "#E8D5A3" }}>&lt;h2&gt;</code> — عنوان فرعي</li>
               <li><code style={{ color: "#E8D5A3" }}>&lt;p&gt;</code> — فقرة</li>
               <li><code style={{ color: "#E8D5A3" }}>&lt;blockquote&gt;</code> — اقتباس</li>
               <li><code style={{ color: "#E8D5A3" }}>&lt;strong&gt;</code> — نص عريض</li>
+              <li><code style={{ color: "#E8D5A3" }}>&lt;em&gt;</code> — نص مائل</li>
               <li><code style={{ color: "#E8D5A3" }}>&lt;ul&gt;&lt;li&gt;</code> — قائمة</li>
             </ul>
           </div>

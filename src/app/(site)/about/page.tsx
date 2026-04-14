@@ -69,22 +69,6 @@ export default function AboutPage() {
           </ul>
         </div>
 
-        <div
-          className="p-6 rounded-2xl"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-        >
-          <h2 className="text-xl font-black mb-4" style={{ color: "#C9A844" }}>مواقفنا الواضحة</h2>
-          <div className="space-y-4">
-            <p>
-              <span className="font-bold" style={{ color: "#E8D5A3" }}>بشأن انقلاب 25 يوليو 2021: </span>
-              نقف بوضوح ضد ما جرى في تونس من تركيز للسلطة وتجميد للمؤسسات الدستورية، ونطالب بإعادة المسار الديمقراطي وصون الحريات.
-            </p>
-            <p>
-              <span className="font-bold" style={{ color: "#E8D5A3" }}>بشأن النظام الإيراني: </span>
-              نرفض التمدد الإيراني في المنطقة العربية ونقف ضد أدواته ومليشياته التي تزعزع استقرار الأوطان وتشعل نار الفتن.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Stats */}
