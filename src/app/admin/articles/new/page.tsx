@@ -16,6 +16,7 @@ export default function NewArticlePage() {
     cover_image: "",
     category: ARTICLE_CATEGORIES[0] as string,
     writer_id: "",
+    published_at: new Date().toISOString().slice(0, 10),
   });
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function NewArticlePage() {
       const res = await fetch("/api/admin/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ ...form, published: publish }),
       });
       const data = await res.json();
@@ -183,6 +185,18 @@ export default function NewArticlePage() {
                   <option key={w.id} value={w.id}>{w.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>تاريخ النشر</label>
+              <input
+                type="date"
+                style={inputStyle}
+                value={form.published_at}
+                onChange={(e) => set("published_at", e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
+                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+              />
             </div>
 
             <div>
