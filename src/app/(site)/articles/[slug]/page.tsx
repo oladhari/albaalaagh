@@ -22,9 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: "article",
       ...(article.cover_image ? { images: [{ url: article.cover_image, width: 1280, height: 720 }] } : {}),
       publishedTime: article.published_at,
+      authors: article.writer?.name ? [article.writer.name] : ["البلاغ"],
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
+      "article:author": article.writer?.name ?? "البلاغ",
     },
     twitter: {
       card: article.cover_image ? "summary_large_image" : "summary",
