@@ -64,6 +64,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
       const res = await fetch("/api/admin/guests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -83,6 +84,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     await fetch("/api/admin/guests", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ id }),
     });
     setGuests((prev) => prev.filter((g) => g.id !== id));

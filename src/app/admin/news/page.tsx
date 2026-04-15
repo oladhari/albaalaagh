@@ -14,7 +14,7 @@ export default function AdminNewsPage() {
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
-    const res  = await fetch(`/api/admin/news?status=${status}`);
+    const res  = await fetch(`/api/admin/news?status=${status}`, { credentials: "include" });
     const data = await res.json();
     setItems(Array.isArray(data) ? data : []);
     setLoading(false);
@@ -27,6 +27,7 @@ export default function AdminNewsPage() {
     await fetch("/api/admin/news", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ id, status }),
     });
     // Remove from current list after action

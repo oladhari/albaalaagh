@@ -12,6 +12,7 @@ export default function PublishButton({ articleId }: { articleId: string }) {
     await fetch(`/api/admin/articles/${articleId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ status: "published", published: true }),
     });
     router.refresh();

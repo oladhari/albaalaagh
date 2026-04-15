@@ -15,7 +15,7 @@ export default function AdminWriterArticlesPage() {
   const load = async (t: Tab) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/writer-articles?status=${t}`);
+      const res = await fetch(`/api/admin/writer-articles?status=${t}`, { credentials: "include" });
       const data = await res.json();
       setArticles(Array.isArray(data) ? data : []);
     } finally {
@@ -30,6 +30,7 @@ export default function AdminWriterArticlesPage() {
     await fetch("/api/admin/writer-articles", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ id, status }),
     });
     setArticles((prev) => prev.filter((a) => a.id !== id));
