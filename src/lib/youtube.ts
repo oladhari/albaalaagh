@@ -41,8 +41,8 @@ function mapVideo(item: any, videoId?: string): YTVideo {
   };
 }
 
-async function ytFetch(url: URL): Promise<any> {
-  const res = await fetch(url.toString(), { next: { revalidate: 3600 } });
+async function ytFetch(url: URL, revalidate = 21600): Promise<any> {
+  const res = await fetch(url.toString(), { next: { revalidate } });
   return res.json();
 }
 
