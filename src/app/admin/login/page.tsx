@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     });
 
     if (res.ok) {
-      router.push("/admin");
+      window.location.href = "/admin";
     } else {
       setError("كلمة المرور غير صحيحة");
       setLoading(false);
