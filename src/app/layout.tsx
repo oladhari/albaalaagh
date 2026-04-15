@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     description: "منبر سياسي تونسي متخصص في الحوارات السياسية والفكرية",
     images: ["https://www.albaalaagh.com/og-image.png"],
   },
+  other: {
+    "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
+  },
 };
 
 export default function RootLayout({

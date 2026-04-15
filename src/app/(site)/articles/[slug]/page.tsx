@@ -23,6 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       ...(article.cover_image ? { images: [{ url: article.cover_image, width: 1280, height: 720 }] } : {}),
       publishedTime: article.published_at,
     },
+    other: {
+      "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
+    },
     twitter: {
       card: article.cover_image ? "summary_large_image" : "summary",
       title: article.title,
