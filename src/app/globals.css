@@ -123,3 +123,7 @@ body {
   font-style: italic;
 }
 .article-prose strong { color: #E8D5A3; }
+.article-prose ul { list-style: disc; padding-right: 1.5rem; margin-bottom: 1.5rem; }
+.article-prose ol { list-style: decimal; padding-right: 1.5rem; margin-bottom: 1.5rem; }
+.article-prose li { margin-bottom: 0.5rem; }
+.article-prose a { color: #C9A844; text-decoration: underline; }

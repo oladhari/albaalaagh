@@ -3,7 +3,18 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 
-export const revalidate = 300;
+export const revalidate = 60;
+
+// If content has no HTML tags, wrap each paragraph in <p> tags
+function formatContent(content: string): string {
+  if (/<[a-z][\s\S]*>/i.test(content)) return content;
+  return content
+    .split(/\n\n+/)
+    .map((para) => para.trim())
+    .filter(Boolean)
+    .map((para) => `<p>${para.replace(/\n/g, "<br/>")}</p>`)
+    .join("\n");
+}
 
 async function getArticle(slug: string) {
   const { data, error } = await supabase
@@ -103,7 +114,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <div
         className="article-prose"
         style={{ color: "#D4C9A8" }}
-        dangerouslySetInnerHTML={{ __html: article.content }}
+        dangerouslySetInnerHTML={{ __html: formatContent(article.content) }}
       />
 
       <hr className="gold-separator mt-12 mb-8" />

@@ -7,7 +7,7 @@ export const metadata = {
   description: "مقالات وتحليلات من أقلام كتّاب ومفكرين متميزين",
 };
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 async function getArticles() {
   const { data } = await supabaseAdmin
