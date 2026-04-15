@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
+import DeleteWriterButton from "./DeleteWriterButton";
 
 async function getWriters() {
   const { data, error } = await supabaseAdmin
@@ -67,13 +68,16 @@ export default async function AdminWritersPage() {
                   <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>{writer.bio}</p>
                 )}
               </div>
-              <Link
-                href={`/admin/writers/${writer.id}/edit`}
-                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border self-start"
-                style={{ borderColor: "#2E2A18", color: "#9A9070" }}
-              >
-                تعديل
-              </Link>
+              <div className="flex gap-2 shrink-0 self-start">
+                <Link
+                  href={`/admin/writers/${writer.id}/edit`}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium border"
+                  style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+                >
+                  تعديل
+                </Link>
+                <DeleteWriterButton writerId={writer.id} />
+              </div>
             </div>
           ))}
         </div>
