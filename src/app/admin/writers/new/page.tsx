@@ -12,10 +12,21 @@ export default function NewWriterPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    // TODO: POST /api/admin/writers → supabaseAdmin.from('writers').insert(form)
-    await new Promise((r) => setTimeout(r, 600));
+
+    const res = await fetch("/api/admin/writers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
     setSaving(false);
-    router.push("/admin/writers");
+
+    if (res.ok) {
+      router.push("/admin/writers");
+    } else {
+      const data = await res.json();
+      alert(data.error || "فشل حفظ الكاتب");
+    }
   };
 
   const inputStyle = {
