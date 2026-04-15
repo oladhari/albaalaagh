@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 async function getStats() {
   const [news, articles, writers, guests] = await Promise.all([
     supabaseAdmin.from("news").select("id", { count: "exact", head: true }).eq("status", "pending"),

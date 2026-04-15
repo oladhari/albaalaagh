@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 import { supabaseAdmin } from "@/lib/supabase";
 import PublishButton from "./PublishButton";
 

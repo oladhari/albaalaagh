@@ -2,6 +2,8 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import DeleteWriterButton from "./DeleteWriterButton";
 
+export const dynamic = "force-dynamic";
+
 async function getWriters() {
   const { data, error } = await supabaseAdmin
     .from("writers")
