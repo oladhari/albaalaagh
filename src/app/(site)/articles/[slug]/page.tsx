@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
+import ShareButtons from "@/components/ui/ShareButtons";
 
 export const revalidate = 60;
 
@@ -96,6 +97,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           {formatArabicDate(article.published_at || article.created_at)}
         </div>
       </div>
+
+      {/* Share buttons */}
+      <ShareButtons
+        title={article.title}
+        url={`https://www.albaalaagh.com/articles/${article.slug}`}
+      />
 
       {/* Cover image */}
       {article.cover_image && (
