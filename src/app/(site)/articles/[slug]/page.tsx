@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: article.excerpt ?? article.title,
     openGraph: {
       title: article.title,
-      description: article.excerpt ?? article.title,
+      description: `${article.writer?.name ? `بقلم ${article.writer.name} — ` : ""}${article.excerpt ?? article.title}`,
       url: `https://www.albaalaagh.com/articles/${slug}`,
       siteName: "البلاغ",
       locale: "ar_TN",
