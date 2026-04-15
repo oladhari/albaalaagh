@@ -102,7 +102,7 @@ export default async function AdminArticlesPage({
               </div>
 
               <div className="flex gap-2 shrink-0">
-                {tab === "pending" && (
+                {(tab === "pending" || tab === "draft") && (
                   <PublishButton articleId={article.id} />
                 )}
                 <Link

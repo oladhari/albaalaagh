@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       category,
       writer_id: writer_id || null,
       published,
+      status: published ? "published" : "draft",
       published_at: resolvedPublishedAt,
     })
     .select()
