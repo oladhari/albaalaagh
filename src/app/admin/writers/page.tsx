@@ -51,7 +51,6 @@ export default async function AdminWritersPage() {
                   alt={writer.name}
                   className="w-14 h-14 rounded-full object-cover shrink-0"
                   style={{ border: "2px solid #2E2A18" }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
                 <div
