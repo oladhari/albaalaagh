@@ -1,11 +1,20 @@
 import Link from "next/link";
+import { supabaseAdmin } from "@/lib/supabase";
 
-const STATS = [
-  { label: "أخبار بانتظار الموافقة", value: "7",  href: "/admin/news",     color: "#C9A844" },
-  { label: "مقالات منشورة",          value: "24", href: "/admin/articles", color: "#6BCB77" },
-  { label: "كتّاب مسجّلون",          value: "9",  href: "/admin/writers",  color: "#4D96FF" },
-  { label: "فيديوهات على يوتيوب",     value: "∞",  href: "/interviews",    color: "#FF6B6B" },
-];
+async function getStats() {
+  const [news, articles, writers, guests] = await Promise.all([
+    supabaseAdmin.from("news").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabaseAdmin.from("articles").select("id", { count: "exact", head: true }).eq("status", "published"),
+    supabaseAdmin.from("writers").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("guests").select("id", { count: "exact", head: true }),
+  ]);
+  return {
+    news:     news.count     ?? 0,
+    articles: articles.count ?? 0,
+    writers:  writers.count  ?? 0,
+    guests:   guests.count   ?? 0,
+  };
+}
 
 const QUICK_ACTIONS = [
   { label: "إضافة مقال جديد", href: "/admin/articles/new", primary: true },
@@ -13,7 +22,16 @@ const QUICK_ACTIONS = [
   { label: "مراجعة الأخبار",  href: "/admin/news",         primary: false },
 ];
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const stats = await getStats();
+
+  const STATS = [
+    { label: "أخبار بانتظار الموافقة", value: String(stats.news),     href: "/admin/news",     color: "#C9A844" },
+    { label: "مقالات منشورة",          value: String(stats.articles), href: "/admin/articles", color: "#6BCB77" },
+    { label: "كتّاب مسجّلون",          value: String(stats.writers),  href: "/admin/writers",  color: "#4D96FF" },
+    { label: "ضيوف مسجّلون",           value: String(stats.guests),   href: "/admin/guests",   color: "#FF6B6B" },
+  ];
+
   return (
     <div>
       <h1 className="text-2xl font-black mb-8" style={{ color: "#F0EAD6" }}>لوحة التحكم</h1>
