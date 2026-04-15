@@ -6,6 +6,32 @@ import ShareButtons from "@/components/ui/ShareButtons";
 
 export const revalidate = 60;
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const article = await getArticle(slug);
+  if (!article) return {};
+  return {
+    title: `${article.title} | البلاغ`,
+    description: article.excerpt ?? article.title,
+    openGraph: {
+      title: article.title,
+      description: article.excerpt ?? article.title,
+      url: `https://www.albaalaagh.com/articles/${slug}`,
+      siteName: "البلاغ",
+      locale: "ar_TN",
+      type: "article",
+      ...(article.cover_image ? { images: [{ url: article.cover_image, width: 1280, height: 720 }] } : {}),
+      publishedTime: article.published_at,
+    },
+    twitter: {
+      card: article.cover_image ? "summary_large_image" : "summary",
+      title: article.title,
+      description: article.excerpt ?? article.title,
+      ...(article.cover_image ? { images: [article.cover_image] } : {}),
+    },
+  };
+}
+
 // If content has no HTML tags, wrap each paragraph in <p> tags
 function formatContent(content: string): string {
   if (/<[a-z][\s\S]*>/i.test(content)) return content;
