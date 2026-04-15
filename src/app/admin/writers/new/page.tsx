@@ -6,27 +6,35 @@ import { useRouter } from "next/navigation";
 export default function NewWriterPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", title: "", bio: "", image_url: "" });
   const set = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.name || !form.title) {
+      setError("الاسم والصفة مطلوبان");
+      return;
+    }
     setSaving(true);
-
-    const res = await fetch("/api/admin/writers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(form),
-    });
-
-    setSaving(false);
-
-    if (res.ok) {
-      router.push("/admin/writers");
-    } else {
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/writers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
       const data = await res.json();
-      alert(data.error || "فشل حفظ الكاتب");
+      if (res.ok) {
+        router.push("/admin/writers");
+      } else {
+        setError(data.error || "فشل حفظ الكاتب");
+      }
+    } catch {
+      setError("تعذّر الاتصال بالخادم");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -48,12 +56,20 @@ export default function NewWriterPage() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-black mb-8" style={{ color: "#F0EAD6" }}>إضافة كاتب جديد</h1>
 
+      {error && (
+        <div
+          className="mb-6 p-3 rounded-lg text-sm"
+          style={{ background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.3)", color: "#FF6B6B" }}
+        >
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSave} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label style={labelStyle}>الاسم الكامل *</label>
             <input
-              required
               style={inputStyle}
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
@@ -64,7 +80,6 @@ export default function NewWriterPage() {
           <div>
             <label style={labelStyle}>الصفة / المنصب *</label>
             <input
-              required
               style={inputStyle}
               placeholder="مثال: أستاذ العلوم السياسية"
               value={form.title}
@@ -91,7 +106,7 @@ export default function NewWriterPage() {
         <div>
           <label style={labelStyle}>رابط الصورة الشخصية</label>
           <input
-            type="url"
+            type="text"
             style={inputStyle}
             placeholder="https://..."
             value={form.image_url}
