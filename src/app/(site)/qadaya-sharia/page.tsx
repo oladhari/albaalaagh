@@ -3,31 +3,31 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const metadata = {
-  title: "المقالات | البلاغ",
-  description: "مقالات وتحليلات من أقلام كتّاب ومفكرين متميزين",
+  title: "قضايا شرعية | البلاغ",
+  description: "قضايا وتحليلات شرعية من منظور علمي رصين",
 };
 
 export const revalidate = 60;
 
-async function getArticles() {
+async function getQadaya() {
   const { data } = await supabaseAdmin
     .from("articles")
     .select("*, writer:writers(*)")
     .eq("status", "published")
-    .neq("category", "دين")
+    .eq("category", "دين")
     .order("published_at", { ascending: false })
     .limit(60);
   return data ?? [];
 }
 
-export default async function ArticlesPage() {
-  const articles = await getArticles();
+export default async function QadayaShariaPage() {
+  const articles = await getQadaya();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
-        title="المقالات"
-        subtitle="قراءات وتحليلات من أقلام كتّاب ومفكرين متميزين"
+        title="قضايا شرعية"
+        subtitle="قضايا وتحليلات شرعية من منظور علمي رصين"
       />
 
       {articles.length === 0 ? (
