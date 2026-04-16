@@ -84,7 +84,7 @@ export default async function HomePage() {
               {/* Logo + tagline */}
               <div className="relative">
                 <h1
-                  className="text-6xl font-black mb-3"
+                  className="text-5xl sm:text-6xl font-black mb-5"
                   style={{
                     background: "linear-gradient(135deg, #E8D5A3, #C9A844)",
                     WebkitBackgroundClip: "text",
