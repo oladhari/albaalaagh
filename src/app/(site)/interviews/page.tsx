@@ -46,7 +46,7 @@ export default async function InterviewsPage() {
         subtitle="أرشيف كامل لحواراتنا مع شخصيات سياسية وفكرية بارزة"
       />
       <InterviewsTabs
-        liveStreams={liveStreams.slice(0, 9)}
+        liveStreams={liveStreams.slice(0, 6)}
         playlists={playlists}
         shorts={shorts}
       />
