@@ -43,12 +43,15 @@ export async function GET(req: NextRequest) {
     .select("*")
     .eq("status", status)
     .order("published_at", { ascending: false })
-    .limit(60);
+    .limit(100);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Sort by source priority then date
+  // Sort: priority_score DESC → source priority → date DESC
   const sorted = (data ?? []).sort((a: any, b: any) => {
+    const scoreA = a.priority_score ?? 0;
+    const scoreB = b.priority_score ?? 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
     const pa = SOURCE_PRIORITY[a.source] ?? 99;
     const pb = SOURCE_PRIORITY[b.source] ?? 99;
     if (pa !== pb) return pa - pb;

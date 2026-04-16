@@ -3,6 +3,7 @@ import Parser from "rss-parser";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NEWS_SOURCES } from "@/types";
+import { scoreNewsPriority } from "@/lib/news-priority";
 
 const parser = new Parser({
   customFields: { item: ["media:content", "media:thumbnail", "enclosure"] },
@@ -136,7 +137,7 @@ export async function GET(req: NextRequest) {
       const feed = await parser.parseURL(source.rss);
       results.fetched += feed.items.length;
 
-      for (const item of feed.items.slice(0, 15)) {
+      for (const item of feed.items.slice(0, 30)) {
         const title = item.title?.trim() || "";
         const url = item.link?.trim() || "";
         if (!url || !title) { results.skipped++; continue; }
@@ -174,16 +175,18 @@ export async function GET(req: NextRequest) {
     toInsert.map((a) => ({ title: a.title, source: a.source }))
   );
 
-  // Step 3: insert with AI classifications
+  // Step 3: insert with AI classifications + priority scoring
   for (let i = 0; i < toInsert.length; i++) {
     const article = toInsert[i];
     const { geo, category } = classifications[i] ?? { geo: "general", category: "سياسة" };
+    const priority_score = scoreNewsPriority(article.title, article.excerpt);
 
     const { error } = await supabaseAdmin.from("news").insert({
       ...article,
       status: "pending",
       geo,
       category,
+      priority_score,
     });
 
     if (error) results.errors.push(`insert: ${error.message}`);

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { timeAgo } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
 
-type Filter = "pending" | "approved" | "rejected";
+type Filter = "pending" | "approved" | "rejected" | "priority";
 
 export default function AdminNewsPage() {
   const [items, setItems]     = useState<NewsArticle[]>([]);
@@ -14,9 +14,11 @@ export default function AdminNewsPage() {
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
-    const res  = await fetch(`/api/admin/news?status=${status}`, { credentials: "include" });
+    const apiStatus = status === "priority" ? "pending" : status;
+    const res  = await fetch(`/api/admin/news?status=${apiStatus}`, { credentials: "include" });
     const data = await res.json();
-    setItems(Array.isArray(data) ? data : []);
+    const items = Array.isArray(data) ? data : [];
+    setItems(status === "priority" ? items.filter((n: any) => (n.priority_score ?? 0) >= 5) : items);
     setLoading(false);
   }, []);
 
@@ -42,6 +44,7 @@ export default function AdminNewsPage() {
   };
 
   const LABELS: Record<Filter, string> = {
+    priority: "⭐ أولوية",
     pending:  "بانتظار الموافقة",
     approved: "موافق عليها",
     rejected: "مرفوضة",
@@ -62,8 +65,8 @@ export default function AdminNewsPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
-        {(["pending", "approved", "rejected"] as Filter[]).map((tab) => (
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {(["priority", "pending", "approved", "rejected"] as Filter[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
@@ -105,13 +108,17 @@ export default function AdminNewsPage() {
           </div>
         )}
 
-        {items.map((news) => (
+        {items.map((news) => {
+          const priority = (news as any).priority_score ?? 0;
+          const isUrgent = priority >= 8;
+          const isHigh   = priority >= 5 && priority < 8;
+          return (
           <div
             key={news.id}
             className="flex gap-4 p-4 rounded-xl"
             style={{
-              background:  "#1A1810",
-              border:      "1px solid #2E2A18",
+              background:  isUrgent ? "rgba(255,107,107,0.06)" : isHigh ? "rgba(201,168,68,0.06)" : "#1A1810",
+              border:      isUrgent ? "1px solid rgba(255,107,107,0.3)" : isHigh ? "1px solid rgba(201,168,68,0.25)" : "1px solid #2E2A18",
               opacity:     working === news.id ? 0.5 : 1,
               transition:  "opacity 0.2s",
             }}
@@ -129,6 +136,16 @@ export default function AdminNewsPage() {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
+                {isUrgent && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(255,107,107,0.2)", color: "#FF6B6B" }}>
+                    ⭐⭐ عاجل
+                  </span>
+                )}
+                {isHigh && !isUrgent && (
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(201,168,68,0.2)", color: "#C9A844" }}>
+                    ⭐ أولوية
+                  </span>
+                )}
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
@@ -195,7 +212,8 @@ export default function AdminNewsPage() {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
