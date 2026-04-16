@@ -30,6 +30,14 @@ async function getLatestArticles() {
   return data ?? [];
 }
 
+async function getArticlesCount() {
+  const { count } = await supabaseAdmin
+    .from("articles")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "published");
+  return count ?? 0;
+}
+
 function formatCount(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
   if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
@@ -37,12 +45,13 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [videos, playlists, news, articles, channelStats] = await Promise.all([
+  const [videos, playlists, news, articles, channelStats, articlesCount] = await Promise.all([
     fetchLiveStreams(7),
     fetchFeaturedPlaylists(),
     getLatestNews(),
     getLatestArticles(),
     fetchChannelStats(),
+    getArticlesCount(),
   ]);
 
   const restVideos = videos;
@@ -125,7 +134,7 @@ export default async function HomePage() {
                 {[
                   { label: "فيديو على يوتيوب", value: channelStats.videoCount > 0 ? channelStats.videoCount + "+" : "..." },
                   { label: "مشترك يوتيوب",     value: channelStats.subscriberCount > 0 ? formatCount(channelStats.subscriberCount) : "..." },
-                  { label: "مقال",              value: articles.length > 0 ? articles.length + "+" : "قريباً" },
+                  { label: "مقال",              value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <p className="text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
