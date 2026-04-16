@@ -46,7 +46,7 @@ function formatCount(n: number): string {
 
 export default async function HomePage() {
   const [videos, playlists, news, articles, channelStats, articlesCount] = await Promise.all([
-    fetchLiveStreams(7),
+    fetchLiveStreams(20),
     fetchFeaturedPlaylists(),
     getLatestNews(),
     getLatestArticles(),
@@ -175,7 +175,7 @@ export default async function HomePage() {
           linkHref="/interviews"
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {restVideos.slice(0, 6).map((video) => (
+          {restVideos.slice(0, 9).map((video) => (
             <VideoCard key={video.id} {...video} />
           ))}
         </div>

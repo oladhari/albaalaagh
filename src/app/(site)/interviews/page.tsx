@@ -25,7 +25,7 @@ const ORDERED_PLAYLISTS = [
 
 export default async function InterviewsPage() {
   const [liveStreams, allPlaylists, shorts] = await Promise.all([
-    fetchLiveStreams(12),
+    fetchLiveStreams(20),
     fetchAllPlaylists(),
     fetchShorts(12),
   ]);
@@ -46,7 +46,7 @@ export default async function InterviewsPage() {
         subtitle="أرشيف كامل لحواراتنا مع شخصيات سياسية وفكرية بارزة"
       />
       <InterviewsTabs
-        liveStreams={liveStreams}
+        liveStreams={liveStreams.slice(0, 9)}
         playlists={playlists}
         shorts={shorts}
       />
