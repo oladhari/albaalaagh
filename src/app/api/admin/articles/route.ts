@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import slugify from "slugify";
 import { requireAdmin } from "@/lib/admin-auth";
+import { postArticleToFacebook } from "@/lib/facebook";
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -38,6 +39,19 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Auto-post to Facebook pages if published
+  if (published && data) {
+    const writerRes = writer_id
+      ? await supabaseAdmin.from("writers").select("name").eq("id", writer_id).single()
+      : null;
+    postArticleToFacebook({
+      title,
+      excerpt,
+      slug: data.slug,
+      writerName: writerRes?.data?.name,
+    }).catch(console.error);
+  }
 
   return NextResponse.json(data, { status: 201 });
 }

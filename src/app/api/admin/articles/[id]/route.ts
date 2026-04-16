@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { postArticleToFacebook } from "@/lib/facebook";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthed = await requireAdmin();
@@ -38,9 +39,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .from("articles")
     .update(updates)
     .eq("id", id)
-    .select()
+    .select("*, writer:writers(name)")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Auto-post to Facebook when status changes to published
+  if (status === "published" && data) {
+    postArticleToFacebook({
+      title: data.title,
+      excerpt: data.excerpt,
+      slug: data.slug,
+      writerName: (data.writer as any)?.name,
+    }).catch(console.error);
+  }
+
   return NextResponse.json(data);
 }
