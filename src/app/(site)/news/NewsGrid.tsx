@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import NewsCard from "@/components/ui/NewsCard";
 import Link from "next/link";
+import NewsCard from "@/components/ui/NewsCard";
 
 const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "قضاء", "أمن", "مجتمع", "دولي", "ثقافة", "رياضة"];
 
@@ -23,16 +23,18 @@ function resolveGeo(article: any): string {
   return "general";
 }
 
-export default function NewsGrid({ articles }: { articles: any[] }) {
+export default function NewsGrid({
+  articles,
+  editorials,
+}: {
+  articles:   any[];
+  editorials: any[];
+}) {
   const [activeCategory, setActiveCategory] = useState("الكل");
 
-  // Split البلاغ editorials from regular news
-  const editorials = articles.filter((a) => a.source === "البلاغ");
-  const regular    = articles.filter((a) => a.source !== "البلاغ");
-
   const filtered = activeCategory === "الكل"
-    ? regular
-    : regular.filter((a) => a.category === activeCategory);
+    ? articles
+    : articles.filter((a) => a.category === activeCategory);
 
   const byGeo: Record<string, any[]> = { tunisia: [], arab: [], international: [], general: [] };
   for (const article of filtered) {
@@ -43,7 +45,11 @@ export default function NewsGrid({ articles }: { articles: any[] }) {
 
   const visibleSections = GEO_SECTIONS.filter((s) => byGeo[s.key].length > 0);
 
-  if (articles.length === 0) {
+  // Show latest 6 in the section, link to /taqrir for all
+  const PREVIEW_COUNT = 6;
+  const previewEditorials = editorials.slice(0, PREVIEW_COUNT);
+
+  if (articles.length === 0 && editorials.length === 0) {
     return (
       <div className="text-center py-20">
         <p className="text-lg mb-2" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة بعد</p>
@@ -62,33 +68,25 @@ export default function NewsGrid({ articles }: { articles: any[] }) {
       {/* ── تقارير البلاغ ── */}
       {editorials.length > 0 && (
         <div className="mb-12">
-          {/* Section header */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-1 h-6 rounded-full" style={{ background: "linear-gradient(180deg, #C9A844, #9A7B28)" }} />
             <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>تقارير البلاغ</h2>
             <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
-            <span className="text-xs" style={{ color: "#9A9070" }}>{editorials.length} تقرير</span>
+            <Link
+              href="/taqrir"
+              className="text-xs font-bold px-3 py-1 rounded-full border transition-all"
+              style={{ borderColor: "rgba(201,168,68,0.35)", color: "#C9A844" }}
+            >
+              عرض الكل ({editorials.length}) ←
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {editorials.slice(0, 6).map((article: any) => (
+            {previewEditorials.map((article: any) => (
               <NewsCard key={article.id} article={article} />
             ))}
           </div>
 
-          {editorials.length > 6 && (
-            <div className="mt-4 text-center">
-              <Link
-                href="/news?source=albaalagh"
-                className="text-sm font-bold px-5 py-2 rounded-full border"
-                style={{ borderColor: "rgba(201,168,68,0.4)", color: "#C9A844" }}
-              >
-                عرض جميع التقارير ({editorials.length}) ←
-              </Link>
-            </div>
-          )}
-
-          {/* Divider before regular news */}
           <div className="mt-10 h-px" style={{ background: "linear-gradient(90deg, transparent, #2E2A18, transparent)" }} />
         </div>
       )}
