@@ -23,9 +23,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
-  // Use the article image directly — Facebook requires a stable, direct image URL.
-  // The /api/og/news dynamic route works for Twitter cards but not reliably for Facebook.
-  const ogImage = article.image_url ?? null;
+  // Always provide an og:image so we never inherit the site default from layout.
+  // If the article has its own image, use it directly (most reliable for Facebook).
+  // Otherwise fall back to our branded OG image route (title on dark background).
+  const ogImage = article.image_url
+    ? article.image_url
+    : `${base}/api/og/news?title=${encodeURIComponent(article.title)}`;
 
   return {
     title: `${article.title} | البلاغ`,
@@ -37,17 +40,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "article",
-      ...(ogImage ? { images: [{ url: ogImage, width: 1280, height: 720 }] } : {}),
+      images: [{ url: ogImage, width: 1280, height: 720 }],
       publishedTime: article.published_at,
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
     },
     twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: article.title,
       description: article.excerpt ?? article.title,
-      ...(ogImage ? { images: [ogImage] } : {}),
+      images: [ogImage],
     },
   };
 }
