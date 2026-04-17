@@ -3,7 +3,28 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import slugify from "slugify";
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
+const BASE   = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "media";
+
+async function copyImageToBucket(sourceUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(sourceUrl, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") ?? "image/jpeg";
+    if (!contentType.startsWith("image/")) return null;
+    const ext = contentType.split("/")[1]?.split(";")[0] ?? "jpg";
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const filename = `news/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data, error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .upload(filename, buffer, { contentType, upsert: false });
+    if (error) return null;
+    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(data.path);
+    return urlData.publicUrl;
+  } catch {
+    return null;
+  }
+}
 
 async function postToFacebook(title: string, excerpt: string, slug: string) {
   const PAGES = [
@@ -47,12 +68,15 @@ export async function POST(
   const slug = slugify(title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
   const url  = `${BASE}/taqrir/${slug}`;
 
+  // Copy RSS image to our bucket so we own it permanently
+  const ownedImageUrl = image_url ? await copyImageToBucket(image_url) : null;
+
   const { error } = await supabaseAdmin.from("news").insert({
     slug,
     content,
     title,
     excerpt,
-    image_url:    image_url || null,
+    image_url:    ownedImageUrl ?? image_url ?? null,
     source:       "البلاغ",
     url,
     status:       "approved",
