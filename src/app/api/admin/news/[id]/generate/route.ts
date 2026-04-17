@@ -81,7 +81,6 @@ export async function POST(
     };
 
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
-    const ogImage = `${base}/api/og/news?title=${encodeURIComponent(generated.title)}${news.image_url ? `&img=${encodeURIComponent(news.image_url)}` : ""}`;
 
     const writerId = await getOrCreateEditorialWriter();
     const slug = slugify(generated.title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
@@ -93,7 +92,9 @@ export async function POST(
         title: generated.title,
         excerpt: generated.excerpt,
         content: generated.content,
-        cover_image: ogImage,
+        // Use RSS image directly so it displays in the article.
+        // Admin can replace with a Supabase image via the article editor.
+        cover_image: news.image_url ?? null,
         category: news.category ?? "سياسة",
         writer_id: writerId,
         published: true,
