@@ -38,6 +38,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   const [search, setSearch] = useState("");
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
+  const [importConfirm, setImportConfirm] = useState(false);
 
   const set = (field: string, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
@@ -114,7 +115,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   };
 
   const runAutoImport = async () => {
-    if (!confirm("سيتم استيراد الضيوف تلقائياً من جميع مقاطع القناة. قد يستغرق هذا دقيقة أو أكثر. متابعة؟")) return;
+    setImportConfirm(false);
     setImporting(true);
     setImportResult(null);
     try {
@@ -124,7 +125,6 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
       });
       const data = await res.json();
       if (data.inserted > 0) {
-        // Reload page to show new guests
         window.location.reload();
       } else {
         setImportResult(
@@ -132,7 +132,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
         );
       }
     } catch {
-      setImportResult("خطأ في الاستيراد");
+      setImportResult("خطأ في الاستيراد، حاول مجدداً");
     } finally {
       setImporting(false);
     }
@@ -149,16 +149,34 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
         <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>الضيوف</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm" style={{ color: "#9A9070" }}>{guests.length} ضيف</span>
-          <button
-            onClick={runAutoImport}
-            disabled={importing}
-            className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
-            style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.08)" }}
-          >
-            {importing ? "جارٍ الاستيراد..." : "⚡ استيراد تلقائي من يوتيوب"}
-          </button>
+          {!importConfirm && !importing && (
+            <button
+              onClick={() => setImportConfirm(true)}
+              className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
+              style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.08)" }}
+            >
+              ⚡ استيراد تلقائي من يوتيوب
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Inline confirmation */}
+      {importConfirm && !importing && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-4" style={{ background: "rgba(201,168,68,0.06)", border: "1px solid rgba(201,168,68,0.3)", color: "#F0EAD6" }}>
+          <span className="flex-1">سيتم استيراد الضيوف من جميع البثوث المباشرة. قد يستغرق دقيقة أو أكثر.</span>
+          <button onClick={runAutoImport} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(107,203,119,0.15)", color: "#6BCB77" }}>تأكيد</button>
+          <button onClick={() => setImportConfirm(false)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(255,107,107,0.1)", color: "#FF6B6B" }}>إلغاء</button>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {importing && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-3" style={{ background: "rgba(201,168,68,0.06)", border: "1px solid #2E2A18", color: "#C9A844" }}>
+          <span className="animate-spin text-base">⏳</span>
+          <span>جارٍ الاستيراد من يوتيوب وتحليل الضيوف... لا تغلق الصفحة</span>
+        </div>
+      )}
 
       {importResult && (
         <div className="mb-4 px-4 py-3 rounded-xl text-xs" style={{ background: "rgba(107,203,119,0.08)", border: "1px solid rgba(107,203,119,0.3)", color: "#6BCB77" }}>
