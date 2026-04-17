@@ -112,10 +112,11 @@ export default async function HomePage() {
                 {/* Section links */}
                 <div className="flex flex-wrap gap-3">
                   {[
-                    { href: "/interviews", label: "📺 المقابلات" },
-                    { href: "/news",       label: "📰 الأخبار" },
-                    { href: "/articles",   label: "✍️ المقالات" },
-                    { href: "/guests",     label: "👤 الضيوف" },
+                    { href: "/interviews",    label: "📺 المقابلات" },
+                    { href: "/news",          label: "📰 الأخبار" },
+                    { href: "/articles",      label: "✍️ المقالات" },
+                    { href: "/qadaya-sharia", label: "☪️ قضايا شرعية" },
+                    { href: "/guests",        label: "👤 الضيوف" },
                   ].map((item) => (
                     <Link
                       key={item.href}

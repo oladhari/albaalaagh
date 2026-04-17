@@ -93,12 +93,13 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               {[
-                ["/interviews", "المقابلات"],
-                ["/news", "الأخبار"],
-                ["/articles", "المقالات"],
-                ["/guests", "الضيوف"],
-                ["/about", "من نحن"],
-                ["/contact", "تواصل معنا"],
+                ["/interviews",    "المقابلات"],
+                ["/news",          "الأخبار"],
+                ["/articles",      "المقالات"],
+                ["/qadaya-sharia", "قضايا شرعية"],
+                ["/guests",        "الضيوف"],
+                ["/about",         "من نحن"],
+                ["/contact",       "تواصل معنا"],
               ].map(([href, label]) => (
                 <li key={href}>
                   <Link

@@ -15,6 +15,8 @@ export default function AboutPage() {
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
+            paddingBottom: "0.15em",
+            lineHeight: "1.2",
           }}
         >
           البلاغ
