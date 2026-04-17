@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import NewsCard from "@/components/ui/NewsCard";
+import Link from "next/link";
 
 const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "قضاء", "أمن", "مجتمع", "دولي", "ثقافة", "رياضة"];
 
@@ -12,25 +13,27 @@ const GEO_SECTIONS = [
   { key: "general",       label: "أخبار أخرى",          flag: "📰" },
 ];
 
+const TUNISIA_SOURCES = ["تيوميديا", "موزاييك FM", "نواة", "ديوان FM"];
+const ARAB_SOURCES    = ["عربي21", "الجزيرة", "العربي الجديد", "القدس العربي"];
+
+function resolveGeo(article: any): string {
+  if (article.geo) return article.geo;
+  if (TUNISIA_SOURCES.includes(article.source)) return "tunisia";
+  if (ARAB_SOURCES.includes(article.source))    return "arab";
+  return "general";
+}
+
 export default function NewsGrid({ articles }: { articles: any[] }) {
   const [activeCategory, setActiveCategory] = useState("الكل");
 
+  // Split البلاغ editorials from regular news
+  const editorials = articles.filter((a) => a.source === "البلاغ");
+  const regular    = articles.filter((a) => a.source !== "البلاغ");
+
   const filtered = activeCategory === "الكل"
-    ? articles
-    : articles.filter((a) => a.category === activeCategory);
+    ? regular
+    : regular.filter((a) => a.category === activeCategory);
 
-  const TUNISIA_SOURCES = ["تيوميديا", "موزاييك FM", "نواة"];
-  const ARAB_SOURCES    = ["عربي21", "الجزيرة", "العربي الجديد", "القدس العربي"];
-
-  function resolveGeo(article: any): string {
-    if (article.geo) return article.geo;
-    // Fallback for articles without geo (pre-classification)
-    if (TUNISIA_SOURCES.includes(article.source)) return "tunisia";
-    if (ARAB_SOURCES.includes(article.source))    return "arab";
-    return "general";
-  }
-
-  // Group by geo
   const byGeo: Record<string, any[]> = { tunisia: [], arab: [], international: [], general: [] };
   for (const article of filtered) {
     const geo = resolveGeo(article);
@@ -55,6 +58,41 @@ export default function NewsGrid({ articles }: { articles: any[] }) {
 
   return (
     <div>
+
+      {/* ── تقارير البلاغ ── */}
+      {editorials.length > 0 && (
+        <div className="mb-12">
+          {/* Section header */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1 h-6 rounded-full" style={{ background: "linear-gradient(180deg, #C9A844, #9A7B28)" }} />
+            <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>تقارير البلاغ</h2>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
+            <span className="text-xs" style={{ color: "#9A9070" }}>{editorials.length} تقرير</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {editorials.slice(0, 6).map((article: any) => (
+              <NewsCard key={article.id} article={article} />
+            ))}
+          </div>
+
+          {editorials.length > 6 && (
+            <div className="mt-4 text-center">
+              <Link
+                href="/news?source=albaalagh"
+                className="text-sm font-bold px-5 py-2 rounded-full border"
+                style={{ borderColor: "rgba(201,168,68,0.4)", color: "#C9A844" }}
+              >
+                عرض جميع التقارير ({editorials.length}) ←
+              </Link>
+            </div>
+          )}
+
+          {/* Divider before regular news */}
+          <div className="mt-10 h-px" style={{ background: "linear-gradient(90deg, transparent, #2E2A18, transparent)" }} />
+        </div>
+      )}
+
       {/* ── Category filter ── */}
       <div className="flex flex-wrap gap-2 mb-8">
         {CATEGORIES.map((cat) => (
