@@ -30,12 +30,24 @@ function getCategories(guest: Guest): string[] {
   return [];
 }
 
+const isArabic = (name: string) => /[\u0600-\u06FF]/.test(name[0] ?? "");
+
+function sortGuests(list: Guest[]): Guest[] {
+  return [...list].sort((a, b) => {
+    const aAr = isArabic(a.name);
+    const bAr = isArabic(b.name);
+    if (aAr && !bAr) return -1;
+    if (!aAr && bAr) return 1;
+    return a.name.localeCompare(b.name, aAr ? "ar" : "en");
+  });
+}
+
 export default function GuestsGrid({ guests }: { guests: Guest[] }) {
   const [active, setActive] = useState<string | null>(null);
 
-  const filtered = active
-    ? guests.filter((g) => getCategories(g).includes(active))
-    : guests;
+  const filtered = sortGuests(
+    active ? guests.filter((g) => getCategories(g).includes(active)) : guests
+  );
 
   return (
     <>
