@@ -92,11 +92,13 @@ ${numbered}`;
 
 // Fallbacks used when Haiku call fails
 function detectGeoFallback(title: string, source: string): Classification["geo"] {
+  const t = title;
+  // Content takes priority over source
+  if (/فلسطين|غزة|إسرائيل|أمريكا|أوروبا|روسيا|الصين|ترامب|نتنياهو|لبنان|سوريا|إيران/.test(t)) return "international";
+  if (/تونس|تونسي|قيس سعيد|الحكومة التونسية|البرلمان التونسي/.test(t)) return "tunisia";
+  // Source as tiebreaker only when title gives no signal
   const TUNISIA_SOURCES = ["تيوميديا", "موزاييك FM", "نواة"];
   if (TUNISIA_SOURCES.includes(source)) return "tunisia";
-  const t = title;
-  if (/تونس|تونسي|قيس سعيد/.test(t)) return "tunisia";
-  if (/فلسطين|غزة|إسرائيل|أمريكا|أوروبا|روسيا|الصين/.test(t)) return "international";
   return "arab";
 }
 

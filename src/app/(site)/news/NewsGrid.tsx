@@ -23,9 +23,8 @@ export default function NewsGrid({ articles }: { articles: any[] }) {
   const ARAB_SOURCES    = ["عربي21", "الجزيرة", "العربي الجديد", "القدس العربي"];
 
   function resolveGeo(article: any): string {
-    // Use AI-assigned geo if available and not default
-    if (article.geo && article.geo !== "general") return article.geo;
-    // Fall back to source-based detection for older articles
+    if (article.geo) return article.geo;
+    // Fallback for articles without geo (pre-classification)
     if (TUNISIA_SOURCES.includes(article.source)) return "tunisia";
     if (ARAB_SOURCES.includes(article.source))    return "arab";
     return "general";
