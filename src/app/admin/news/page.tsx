@@ -6,21 +6,50 @@ import type { NewsArticle } from "@/types";
 
 type Filter = "pending" | "approved" | "rejected" | "priority";
 
+interface Preview {
+  newsId:    string;
+  title:     string;
+  excerpt:   string;
+  content:   string;
+  image_url: string | null;
+  geo:       string;
+  category:  string;
+}
+
+const GOLD  = "#C9A844";
+const DIM   = "#9A9070";
+const GREEN = "#6BCB77";
+const RED   = "#FF6B6B";
+const inputStyle = {
+  background: "#111008",
+  border: "1px solid #2E2A18",
+  color: "#F0EAD6",
+  borderRadius: 8,
+  padding: "8px 12px",
+  width: "100%",
+  outline: "none",
+  fontFamily: "inherit",
+  fontSize: 13,
+  resize: "vertical" as const,
+};
+
 export default function AdminNewsPage() {
-  const [items, setItems]       = useState<NewsArticle[]>([]);
-  const [filter, setFilter]     = useState<Filter>("pending");
-  const [loading, setLoading]   = useState(true);
-  const [working, setWorking]   = useState<string | null>(null);
+  const [items, setItems]         = useState<NewsArticle[]>([]);
+  const [filter, setFilter]       = useState<Filter>("pending");
+  const [loading, setLoading]     = useState(true);
+  const [working, setWorking]     = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [generated, setGenerated]   = useState<Record<string, { url: string; title: string }>>({});
+  const [preview, setPreview]     = useState<Preview | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState<Record<string, string>>({});
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
     const apiStatus = status === "priority" ? "pending" : status;
     const res  = await fetch(`/api/admin/news?status=${apiStatus}`, { credentials: "include" });
     const data = await res.json();
-    const items = Array.isArray(data) ? data : [];
-    setItems(status === "priority" ? items.filter((n: any) => (n.priority_score ?? 0) >= 5) : items);
+    const all  = Array.isArray(data) ? data : [];
+    setItems(status === "priority" ? all.filter((n: any) => (n.priority_score ?? 0) >= 5) : all);
     setLoading(false);
   }, []);
 
@@ -34,20 +63,49 @@ export default function AdminNewsPage() {
       credentials: "include",
       body: JSON.stringify({ id, status }),
     });
-    // Remove from current list after action
     setItems((prev) => prev.filter((n) => n.id !== id));
     setWorking(null);
   };
 
-  const generate = async (id: string) => {
-    setGenerating(id);
+  const generate = async (news: NewsArticle) => {
+    setGenerating(news.id);
+    setPreview(null);
     try {
-      const res  = await fetch(`/api/admin/news/${id}/generate`, { method: "POST", credentials: "include" });
+      const res  = await fetch(`/api/admin/news/${news.id}/generate`, { method: "POST", credentials: "include" });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في الإنشاء"); return; }
-      setGenerated((prev) => ({ ...prev, [id]: { url: data.url, title: data.title } }));
+      setPreview({
+        newsId:    news.id,
+        title:     data.title,
+        excerpt:   data.excerpt,
+        content:   data.content,
+        image_url: data.image_url,
+        geo:       data.geo ?? "tunisia",
+        category:  data.category ?? "سياسة",
+      });
     } finally {
       setGenerating(null);
+    }
+  };
+
+  const publish = async () => {
+    if (!preview) return;
+    setPublishing(true);
+    try {
+      const res  = await fetch(`/api/admin/news/${preview.newsId}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(preview),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "خطأ في النشر"); return; }
+      setPublished((prev) => ({ ...prev, [preview.newsId]: data.url }));
+      setPreview(null);
+      // Move item to approved in list
+      setItems((prev) => prev.filter((n) => n.id !== preview.newsId));
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -72,7 +130,7 @@ export default function AdminNewsPage() {
           onClick={fetchFresh}
           disabled={loading}
           className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
-          style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+          style={{ borderColor: "#2E2A18", color: DIM }}
         >
           {loading ? "جارٍ التحميل..." : "جلب أخبار جديدة ↺"}
         </button>
@@ -86,8 +144,8 @@ export default function AdminNewsPage() {
             onClick={() => setFilter(tab)}
             className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
             style={{
-              borderColor: filter === tab ? "#C9A844" : "#2E2A18",
-              color:       filter === tab ? "#C9A844" : "#9A9070",
+              borderColor: filter === tab ? GOLD : "#2E2A18",
+              color:       filter === tab ? GOLD : DIM,
               background:  filter === tab ? "rgba(201,168,68,0.08)" : "transparent",
             }}
           >
@@ -96,13 +154,74 @@ export default function AdminNewsPage() {
         ))}
       </div>
 
-      {/* Info banner for pending */}
-      {filter === "pending" && (
+      {/* Preview / Edit panel */}
+      {preview && (
         <div
-          className="mb-4 px-4 py-3 rounded-xl text-xs"
-          style={{ background: "rgba(201,168,68,0.06)", border: "1px solid #2E2A18", color: "#9A9070" }}
+          className="mb-6 p-5 rounded-xl space-y-4"
+          style={{ background: "#1A1810", border: `1px solid ${GOLD}44` }}
         >
-          عند الضغط على <span style={{ color: "#6BCB77" }}>نشر</span>، يُعاد تحرير الخبر تلقائياً بأسلوب البلاغ قبل نشره.
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold" style={{ color: GOLD }}>📝 معاينة التقرير — يمكنك التعديل قبل النشر</h2>
+            <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>✕ إلغاء</button>
+          </div>
+
+          {preview.image_url && (
+            <img
+              src={preview.image_url}
+              alt=""
+              className="w-full max-h-48 object-cover rounded-lg"
+            />
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>العنوان</label>
+            <textarea
+              rows={2}
+              style={inputStyle}
+              value={preview.title}
+              onChange={(e) => setPreview((p) => p && ({ ...p, title: e.target.value }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>المقدمة</label>
+            <textarea
+              rows={3}
+              style={inputStyle}
+              value={preview.excerpt}
+              onChange={(e) => setPreview((p) => p && ({ ...p, excerpt: e.target.value }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>المحتوى (HTML)</label>
+            <textarea
+              rows={10}
+              style={inputStyle}
+              value={preview.content}
+              onChange={(e) => setPreview((p) => p && ({ ...p, content: e.target.value }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              onClick={publish}
+              disabled={publishing}
+              className="px-5 py-2.5 rounded-full text-sm font-bold"
+              style={{ background: `linear-gradient(135deg, ${GOLD}, #9A7B28)`, color: "#111008" }}
+            >
+              {publishing ? "⏳ جارٍ النشر..." : "🚀 نشر على الموقع وفيسبوك"}
+            </button>
+            <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>
+              إلغاء
+            </button>
+          </div>
         </div>
       )}
 
@@ -110,13 +229,13 @@ export default function AdminNewsPage() {
       <div className="space-y-3">
         {loading && (
           <div className="text-center py-12">
-            <p className="text-sm" style={{ color: "#9A9070" }}>جارٍ التحميل...</p>
+            <p className="text-sm" style={{ color: DIM }}>جارٍ التحميل...</p>
           </div>
         )}
 
         {!loading && items.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-sm" style={{ color: "#9A9070" }}>
+            <p className="text-sm" style={{ color: DIM }}>
               {filter === "pending" ? "لا توجد أخبار جديدة — اضغط «جلب أخبار جديدة» أعلاه" : "لا توجد عناصر في هذه الفئة"}
             </p>
           </div>
@@ -126,128 +245,112 @@ export default function AdminNewsPage() {
           const priority = (news as any).priority_score ?? 0;
           const isUrgent = priority >= 8;
           const isHigh   = priority >= 5 && priority < 8;
+          const isPreviewing = preview?.newsId === news.id;
+          const doneUrl = published[news.id];
+
           return (
-          <div
-            key={news.id}
-            className="flex gap-4 p-4 rounded-xl"
-            style={{
-              background:  isUrgent ? "rgba(255,107,107,0.06)" : isHigh ? "rgba(201,168,68,0.06)" : "#1A1810",
-              border:      isUrgent ? "1px solid rgba(255,107,107,0.3)" : isHigh ? "1px solid rgba(201,168,68,0.25)" : "1px solid #2E2A18",
-              opacity:     working === news.id ? 0.5 : 1,
-              transition:  "opacity 0.2s",
-            }}
-          >
-            {/* Image */}
-            {news.image_url && (
-              <img
-                src={news.image_url}
-                alt=""
-                className="w-24 h-16 rounded-lg object-cover shrink-0"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              />
-            )}
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                {isUrgent && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(255,107,107,0.2)", color: "#FF6B6B" }}>
-                    ⭐⭐ عاجل
-                  </span>
-                )}
-                {isHigh && !isUrgent && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(201,168,68,0.2)", color: "#C9A844" }}>
-                    ⭐ أولوية
-                  </span>
-                )}
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
-                >
-                  {news.source}
-                </span>
-                {news.category && (
-                  <span className="text-xs" style={{ color: "#9A9070" }}>{news.category}</span>
-                )}
-                <span className="text-xs mr-auto" style={{ color: "#9A9070" }}>
-                  {timeAgo(news.published_at)}
-                </span>
-              </div>
-              <p className="text-sm font-semibold leading-snug mb-1" style={{ color: "#F0EAD6" }}>
-                {news.title}
-              </p>
-              {news.excerpt && (
-                <p className="text-xs line-clamp-2 mb-1" style={{ color: "#9A9070" }}>
-                  {news.excerpt}
-                </p>
-              )}
-              <a
-                href={news.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs"
-                style={{ color: "#9A9070" }}
+            <div key={news.id}>
+              <div
+                className="flex gap-4 p-4 rounded-xl"
+                style={{
+                  background:  isPreviewing ? "rgba(201,168,68,0.06)" : isUrgent ? "rgba(255,107,107,0.06)" : isHigh ? "rgba(201,168,68,0.06)" : "#1A1810",
+                  border:      isPreviewing ? `1px solid ${GOLD}66` : isUrgent ? "1px solid rgba(255,107,107,0.3)" : isHigh ? "1px solid rgba(201,168,68,0.25)" : "1px solid #2E2A18",
+                  opacity:     working === news.id ? 0.5 : 1,
+                }}
               >
-                المصدر الأصلي ↗
-              </a>
-            </div>
+                {news.image_url && (
+                  <img
+                    src={news.image_url}
+                    alt=""
+                    className="w-24 h-16 rounded-lg object-cover shrink-0"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
 
-            {/* Actions */}
-            <div className="flex flex-col gap-2 shrink-0 justify-center">
-              {filter !== "approved" && (
-                <button
-                  onClick={() => update(news.id, "approved")}
-                  disabled={working === news.id}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: "rgba(107,203,119,0.15)", color: "#6BCB77" }}
-                >
-                  {working === news.id ? "..." : "نشر ✓"}
-                </button>
-              )}
-              {filter !== "rejected" && (
-                <button
-                  onClick={() => update(news.id, "rejected")}
-                  disabled={working === news.id}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}
-                >
-                  رفض ✗
-                </button>
-              )}
-              {filter !== "pending" && (
-                <button
-                  onClick={() => update(news.id, "pending")}
-                  disabled={working === news.id}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
-                >
-                  إعادة
-                </button>
-              )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {isUrgent && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(255,107,107,0.2)", color: RED }}>⭐⭐ عاجل</span>
+                    )}
+                    {isHigh && !isUrgent && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(201,168,68,0.2)", color: GOLD }}>⭐ أولوية</span>
+                    )}
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(201,168,68,0.12)", color: GOLD }}>
+                      {news.source}
+                    </span>
+                    {news.category && (
+                      <span className="text-xs" style={{ color: DIM }}>{news.category}</span>
+                    )}
+                    <span className="text-xs mr-auto" style={{ color: DIM }}>{timeAgo(news.published_at)}</span>
+                  </div>
+                  <p className="text-sm font-semibold leading-snug mb-1" style={{ color: "#F0EAD6" }}>{news.title}</p>
+                  {news.excerpt && (
+                    <p className="text-xs line-clamp-2 mb-1" style={{ color: DIM }}>{news.excerpt}</p>
+                  )}
+                  <a href={news.url} target="_blank" rel="noopener noreferrer" className="text-xs" style={{ color: DIM }}>
+                    المصدر الأصلي ↗
+                  </a>
+                </div>
 
-              {/* Generate article + post to Facebook */}
-              {generated[news.id] ? (
-                <a
-                  href={generated[news.id].url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-center"
-                  style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844", textDecoration: "none" }}
-                >
-                  ✓ عرض التقرير ↗
-                </a>
-              ) : (
-                <button
-                  onClick={() => generate(news.id)}
-                  disabled={generating === news.id || working === news.id}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                  style={{ background: "rgba(201,168,68,0.08)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
-                >
-                  {generating === news.id ? "⏳ جارٍ..." : "✍️ تقرير"}
-                </button>
-              )}
+                <div className="flex flex-col gap-2 shrink-0 justify-center">
+                  {filter !== "approved" && (
+                    <button
+                      onClick={() => update(news.id, "approved")}
+                      disabled={working === news.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: "rgba(107,203,119,0.15)", color: GREEN }}
+                    >
+                      {working === news.id ? "..." : "نشر ✓"}
+                    </button>
+                  )}
+                  {filter !== "rejected" && (
+                    <button
+                      onClick={() => update(news.id, "rejected")}
+                      disabled={working === news.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: "rgba(255,107,107,0.15)", color: RED }}
+                    >
+                      رفض ✗
+                    </button>
+                  )}
+                  {filter !== "pending" && (
+                    <button
+                      onClick={() => update(news.id, "pending")}
+                      disabled={working === news.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: "rgba(201,168,68,0.1)", color: GOLD }}
+                    >
+                      إعادة
+                    </button>
+                  )}
+
+                  {doneUrl ? (
+                    <a
+                      href={doneUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-center"
+                      style={{ background: "rgba(201,168,68,0.15)", color: GOLD, textDecoration: "none" }}
+                    >
+                      ✓ عرض ↗
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => generate(news)}
+                      disabled={generating === news.id || working === news.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{
+                        background: isPreviewing ? `rgba(201,168,68,0.15)` : "rgba(201,168,68,0.08)",
+                        color: GOLD,
+                        border: `1px solid rgba(201,168,68,0.3)`,
+                      }}
+                    >
+                      {generating === news.id ? "⏳ جارٍ..." : isPreviewing ? "✍️ إعادة" : "✍️ تقرير"}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
           );
         })}
       </div>

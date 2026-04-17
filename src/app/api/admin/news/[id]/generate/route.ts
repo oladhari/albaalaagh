@@ -2,32 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
-import { postArticleToFacebook } from "@/lib/facebook";
-import slugify from "slugify";
 
 export const maxDuration = 60;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-async function getOrCreateEditorialWriter(): Promise<string> {
-  const { data } = await supabaseAdmin
-    .from("writers")
-    .select("id")
-    .eq("name", "تحرير البلاغ")
-    .single();
-
-  if (data?.id) return data.id;
-
-  const { data: created, error } = await supabaseAdmin
-    .from("writers")
-    .insert({ name: "تحرير البلاغ", title: "الفريق التحريري", bio: "الفريق التحريري لقناة البلاغ التونسية" })
-    .select("id")
-    .single();
-
-  if (error) throw new Error(`writer creation failed: ${error.message}`);
-  return created.id;
-}
-
+// Only generates — does NOT save or post anything.
+// The client previews, edits, then calls /publish.
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -37,13 +18,13 @@ export async function POST(
 
   const { id } = await params;
 
-  const { data: news, error: newsErr } = await supabaseAdmin
+  const { data: news, error } = await supabaseAdmin
     .from("news")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (newsErr || !news) {
+  if (error || !news) {
     return NextResponse.json({ error: "الخبر غير موجود" }, { status: 404 });
   }
 
@@ -80,43 +61,13 @@ export async function POST(
       content: string;
     };
 
-    const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
-
-    const writerId = await getOrCreateEditorialWriter();
-    const slug = slugify(generated.title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
-
-    const { data: article, error: articleErr } = await supabaseAdmin
-      .from("articles")
-      .insert({
-        slug,
-        title: generated.title,
-        excerpt: generated.excerpt,
-        content: generated.content,
-        // Use RSS image directly so it displays in the article.
-        // Admin can replace with a Supabase image via the article editor.
-        cover_image: news.image_url ?? null,
-        category: news.category ?? "سياسة",
-        writer_id: writerId,
-        published: true,
-        status: "published",
-        published_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (articleErr) throw new Error(articleErr.message);
-
-    postArticleToFacebook({
-      title: generated.title,
-      excerpt: generated.excerpt,
-      slug: article.slug,
-    }).catch(console.error);
-
     return NextResponse.json({
-      ok: true,
-      slug: article.slug,
-      title: generated.title,
-      url: `${base}/articles/${article.slug}`,
+      title:     generated.title,
+      excerpt:   generated.excerpt,
+      content:   generated.content,
+      image_url: news.image_url ?? null,
+      geo:       news.geo,
+      category:  news.category,
     });
   } catch (err: any) {
     console.error("[news/generate]", err);
