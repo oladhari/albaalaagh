@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "آخر"] as const;
+const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
 type Category = typeof CATEGORIES[number];
 
 interface Video {

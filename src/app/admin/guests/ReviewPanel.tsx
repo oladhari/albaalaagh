@@ -26,7 +26,8 @@ function Diff({ label, before, after }: { label: string; before: string; after?:
 
 export default function ReviewPanel() {
   const [tab, setTab]               = useState<Tab>("updates");
-  const [loading, setLoading]       = useState(false);
+  const [loading, setLoading]           = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState("");
   const [applying, setApplying]     = useState(false);
   const [result, setResult]         = useState<ReviewResult | null>(null);
   const [error, setError]           = useState<string | null>(null);
@@ -39,17 +40,44 @@ export default function ReviewPanel() {
     setResult(null);
     setApproved(new Set());
     setApplyResult(null);
+
+    const merged: ReviewResult = { updates: [], duplicates: [], uncertain: [], hasMore: false, nextOffset: 0, total: 0 };
+    let offset = 0;
+
     try {
-      const res  = await fetch("/api/admin/guests/review", { method: "POST", credentials: "include" });
-      const data = await res.json();
-      if (!res.ok || data.error) { setError(data.error ?? "خطأ غير معروف"); return; }
-      setResult(data);
-      // Pre-approve all updates by default
-      setApproved(new Set(data.updates.map((u: GuestUpdate) => u.id)));
+      while (true) {
+        setLoadingProgress(offset === 0 ? "جارٍ التحليل..." : `جارٍ التحليل... ${offset}/${merged.total || "?"}`);
+        const res = await fetch(`/api/admin/guests/review?offset=${offset}`, { method: "POST", credentials: "include" });
+
+        // Guard against non-JSON (timeout HTML pages etc.)
+        const contentType = res.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/json")) {
+          setError(`خطأ في الخادم (${res.status}) — حاول مجدداً`);
+          break;
+        }
+
+        const data: ReviewResult & { error?: string } = await res.json();
+        if (!res.ok || data.error) { setError(data.error ?? "خطأ غير معروف"); break; }
+
+        merged.updates    = [...merged.updates,    ...data.updates];
+        merged.duplicates = [...merged.duplicates, ...data.duplicates];
+        merged.uncertain  = [...merged.uncertain,  ...data.uncertain];
+        merged.total      = data.total;
+
+        if (!data.hasMore) break;
+        offset = data.nextOffset;
+      }
+
+      if (!merged.updates.length && !merged.duplicates.length && !merged.uncertain.length && !error) {
+        // completed successfully with results
+      }
+      setResult(merged);
+      setApproved(new Set(merged.updates.map((u) => u.id)));
     } catch (e: any) {
       setError(e?.message ?? "خطأ في الاتصال");
     } finally {
       setLoading(false);
+      setLoadingProgress("");
     }
   };
 
@@ -111,7 +139,7 @@ export default function ReviewPanel() {
           className="px-4 py-2 rounded-full text-sm font-bold border"
           style={{ borderColor: GOLD, color: GOLD, background: "rgba(201,168,68,0.08)" }}
         >
-          {loading ? "⏳ جارٍ التحليل..." : "تشغيل التدقيق بالذكاء الاصطناعي"}
+          {loading ? `⏳ ${loadingProgress || "جارٍ التحليل..."}` : "تشغيل التدقيق بالذكاء الاصطناعي"}
         </button>
       </div>
 
