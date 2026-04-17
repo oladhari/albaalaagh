@@ -92,12 +92,15 @@ export default async function GuestsPage() {
                     {guest.name[0]}
                   </div>
                 )}
-                <span
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium"
-                  style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
-                >
-                  {guest.category}
-                </span>
+                {(Array.isArray(guest.category) ? guest.category : guest.category ? [guest.category] : []).slice(0, 1).map((c: string) => (
+                  <span
+                    key={c}
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium"
+                    style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
+                  >
+                    {c}
+                  </span>
+                ))}
               </div>
               <p className="text-sm font-bold mt-3 leading-snug" style={{ color: "#F0EAD6" }}>
                 {guest.name}

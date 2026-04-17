@@ -191,7 +191,7 @@ export default function ReviewPanel() {
                             </p>
                             <Diff label="الاسم"      before={u.current_name}     after={u.name} />
                             <Diff label="الصفة"      before={u.current_title}    after={u.title} />
-                            <Diff label="التصنيف"    before={u.current_category} after={u.category} />
+                            <Diff label="التصنيف"    before={u.current_category.join("، ")} after={u.category?.join("، ")} />
                             <p className="text-xs mt-2" style={{ color: DIM }}>💡 {u.reason}</p>
                           </div>
                           <button

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   if (unauthed) return unauthed;
 
   const { updates } = await req.json() as {
-    updates: { id: string; name?: string; title?: string; category?: string }[];
+    updates: { id: string; name?: string; title?: string; category?: string | string[] }[];
   };
 
   if (!Array.isArray(updates) || updates.length === 0) {
@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
   const errors: string[] = [];
 
   for (const u of updates) {
-    const patch: Record<string, string> = {};
+    const patch: Record<string, unknown> = {};
     if (u.name)     patch.name     = u.name;
     if (u.title)    patch.title    = u.title;
-    if (u.category) patch.category = u.category;
+    if (u.category) patch.category = Array.isArray(u.category) ? u.category : [u.category];
     if (Object.keys(patch).length === 0) continue;
 
     const { error } = await supabaseAdmin

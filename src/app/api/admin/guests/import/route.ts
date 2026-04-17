@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
         const { error } = await supabaseAdmin.from("guests").insert({
           name: normalized,
           title: guest.title,
-          category: guest.category,
+          category: [guest.category],
         });
         if (error) results.errors.push(`insert ${normalized}: ${error.message}`);
         else results.inserted++;

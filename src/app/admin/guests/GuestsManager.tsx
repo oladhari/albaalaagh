@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 
-const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
-type Category = typeof CATEGORIES[number];
+export const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
 
 interface Video {
   youtube_id: string;
@@ -18,7 +17,7 @@ interface Guest {
   title: string;
   bio: string;
   image_url?: string;
-  category: string;
+  category: string[];
 }
 
 interface Props {
@@ -26,7 +25,7 @@ interface Props {
   initialGuests: Guest[];
 }
 
-const emptyForm = { name: "", title: "", bio: "", image_url: "", category: "آخر" as Category };
+const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[] };
 
 export default function GuestsManager({ videos, initialGuests }: Props) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests);
@@ -43,6 +42,14 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   const set = (field: string, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
 
+  const toggleCategory = (cat: string) =>
+    setForm((p) => ({
+      ...p,
+      categories: p.categories.includes(cat)
+        ? p.categories.filter((c) => c !== cat)
+        : [...p.categories, cat],
+    }));
+
   // Fill form from a video title
   const importFromTitle = (title: string) => {
     setSelectedTitle(title);
@@ -57,7 +64,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   };
 
   const saveGuest = async () => {
-    if (!form.name || !form.title || !form.category) {
+    if (!form.name || !form.title || form.categories.length === 0) {
       setError("الاسم والصفة والتصنيف مطلوبة");
       return;
     }
@@ -68,7 +75,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, category: form.categories }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
@@ -223,29 +230,39 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
               {selectedTitle ? `من: ${selectedTitle.slice(0, 60)}...` : "إضافة ضيف جديد"}
             </h2>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label style={labelStyle}>الاسم الكامل *</label>
-                <input
-                  style={inputStyle}
-                  placeholder="اسم الضيف..."
-                  value={form.name}
-                  onChange={(e) => set("name", e.target.value)}
-                  onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>التصنيف *</label>
-                <select
-                  style={inputStyle}
-                  value={form.category}
-                  onChange={(e) => set("category", e.target.value)}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+            <div>
+              <label style={labelStyle}>الاسم الكامل *</label>
+              <input
+                style={inputStyle}
+                placeholder="اسم الضيف..."
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
+                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>التصنيف * (يمكن اختيار أكثر من واحد)</label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {CATEGORIES.map((c) => {
+                  const active = form.categories.includes(c);
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleCategory(c)}
+                      className="px-3 py-1 rounded-full text-xs font-medium border transition-all"
+                      style={{
+                        borderColor: active ? "#C9A844" : "#2E2A18",
+                        color:       active ? "#111008" : "#9A9070",
+                        background:  active ? "#C9A844" : "transparent",
+                      }}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -339,14 +356,17 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                       <p className="text-sm font-semibold truncate" style={{ color: "#F0EAD6" }}>
                         {guest.name}
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 flex-wrap">
                         <span className="text-xs" style={{ color: "#9A9070" }}>{guest.title}</span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded-full"
-                          style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
-                        >
-                          {guest.category}
-                        </span>
+                        {(Array.isArray(guest.category) ? guest.category : [guest.category]).map((c) => (
+                          <span
+                            key={c}
+                            className="text-xs px-1.5 py-0.5 rounded-full"
+                            style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
+                          >
+                            {c}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <button

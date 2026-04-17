@@ -11,10 +11,10 @@ export interface GuestUpdate {
   id: string;
   current_name: string;
   current_title: string;
-  current_category: string;
+  current_category: string[];
   name?: string;
   title?: string;
-  category?: string;
+  category?: string[];
   reason: string;
 }
 
@@ -61,7 +61,10 @@ export async function POST(req: NextRequest) {
   const hasMore = offset + limit < guests.length;
 
   const list = chunk
-    .map((g) => `[${g.id}] "${g.name}" | صفة: "${g.title ?? ""}" | تصنيف: "${g.category ?? ""}"`)
+    .map((g) => {
+      const cat = Array.isArray(g.category) ? (g.category as string[]).join("، ") : (g.category ?? "");
+      return `[${g.id}] "${g.name}" | صفة: "${g.title ?? ""}" | تصنيف: "${cat}"`;
+    })
     .join("\n");
 
   // For duplicates we need full names list even in chunk mode
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
 
 أجب بـ JSON فقط:
 {
-  "updates": [{"id":"...","name":"(فقط إذا يختلف)","title":"(فقط إذا يختلف)","category":"(فقط إذا يختلف)","reason":"..."}],
+  "updates": [{"id":"...","name":"(فقط إذا يختلف)","title":"(فقط إذا يختلف)","category":["تصنيف1","تصنيف2"],"reason":"..."}],
   "duplicates": [{"ids":["id1","id2"],"names":["اسم1","اسم2"],"reason":"..."}],
   "uncertain": [{"id":"...","name":"...","reason":"..."}]
 }
@@ -109,7 +112,9 @@ ${list}`;
       .filter((u) => guestMap.has(u.id))
       .map((u) => {
         const g = guestMap.get(u.id)!;
-        return { ...u, current_name: g.name, current_title: g.title ?? "", current_category: g.category ?? "" };
+        const cat = g.category;
+        const currentCategory: string[] = Array.isArray(cat) ? cat : (cat ? [cat as unknown as string] : []);
+        return { ...u, current_name: g.name, current_title: g.title ?? "", current_category: currentCategory };
       });
 
     return NextResponse.json({
