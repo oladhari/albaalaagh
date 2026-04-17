@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 async function getWriters() {
   const { data, error } = await supabaseAdmin
     .from("writers")
-    .select("*")
+    .select("*, articles(id)")
     .order("name");
   if (error) { console.error(error); return []; }
-  return data ?? [];
+  return (data ?? []).map((w: any) => ({
+    ...w,
+    article_count: Array.isArray(w.articles) ? w.articles.filter((a: any) => a).length : 0,
+  }));
 }
 
 export default async function AdminWritersPage() {
@@ -64,8 +67,16 @@ export default async function AdminWritersPage() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm" style={{ color: "#F0EAD6" }}>{writer.name}</p>
-                <p className="text-xs mb-2" style={{ color: "#C9A844" }}>{writer.title}</p>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="font-bold text-sm" style={{ color: "#F0EAD6" }}>{writer.name}</p>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-bold"
+                    style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+                  >
+                    {writer.article_count} مقال
+                  </span>
+                </div>
+                <p className="text-xs mb-1" style={{ color: "#C9A844" }}>{writer.title}</p>
                 {writer.bio && (
                   <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>{writer.bio}</p>
                 )}

@@ -44,6 +44,7 @@ export default function AdminNewsPage() {
   const [publishing, setPublishing]   = useState(false);
   const [published, setPublished]     = useState<Record<string, string>>({});
   const [uploading, setUploading]     = useState(false);
+  const [deleting, setDeleting]       = useState<string | null>(null);
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
@@ -139,6 +140,19 @@ export default function AdminNewsPage() {
     } finally {
       setPublishing(false);
     }
+  };
+
+  const hardDelete = async (id: string) => {
+    if (!confirm("حذف هذا الخبر نهائياً؟")) return;
+    setDeleting(id);
+    await fetch("/api/admin/news", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id }),
+    });
+    setItems((prev) => prev.filter((n) => n.id !== id));
+    setDeleting(null);
   };
 
   const fetchFresh = async () => {
@@ -379,6 +393,18 @@ export default function AdminNewsPage() {
                       style={{ background: "rgba(201,168,68,0.1)", color: GOLD }}
                     >
                       إعادة
+                    </button>
+                  )}
+
+                  {/* Hard delete — rejected items or non-البلاغ approved items */}
+                  {(filter === "rejected" || (filter === "approved" && (news as any).source !== "البلاغ")) && (
+                    <button
+                      onClick={() => hardDelete(news.id)}
+                      disabled={deleting === news.id || working === news.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: "rgba(255,107,107,0.1)", color: RED, border: "1px solid rgba(255,107,107,0.2)" }}
+                    >
+                      {deleting === news.id ? "..." : "🗑️"}
                     </button>
                   )}
 

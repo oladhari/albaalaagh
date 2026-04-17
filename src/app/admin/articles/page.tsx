@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { supabaseAdmin } from "@/lib/supabase";
 import PublishButton from "./PublishButton";
 import DeleteArticleButton from "./DeleteArticleButton";
+import UnpublishButton from "./UnpublishButton";
 
 async function getArticles(status: string) {
   const { data } = await supabaseAdmin
@@ -116,14 +117,17 @@ export default async function AdminArticlesPage({
                   تعديل
                 </Link>
                 {article.status === "published" && (
-                  <Link
-                    href={`/articles/${article.slug}`}
-                    target="_blank"
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium border"
-                    style={{ borderColor: "#2E2A18", color: "#9A9070" }}
-                  >
-                    عرض ↗
-                  </Link>
+                  <>
+                    <Link
+                      href={`/articles/${article.slug}`}
+                      target="_blank"
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium border"
+                      style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+                    >
+                      عرض ↗
+                    </Link>
+                    <UnpublishButton articleId={article.id} />
+                  </>
                 )}
                 <DeleteArticleButton id={article.id} />
               </div>

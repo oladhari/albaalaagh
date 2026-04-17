@@ -13,6 +13,16 @@ const SOURCE_PRIORITY: Record<string, number> = {
   "القدس العربي":  7,
 };
 
+export async function DELETE(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+  const { id } = await req.json();
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const { error } = await supabaseAdmin.from("news").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
+
 export async function PATCH(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;

@@ -8,7 +8,13 @@ export async function GET(req: NextRequest) {
   const title = searchParams.get("title") ?? "";
   const img   = searchParams.get("img")   ?? "";
 
-  const fontData = await fetch(`${origin}/fonts/Cairo-Bold.woff2`).then((r) => r.arrayBuffer());
+  let fontData: ArrayBuffer | null = null;
+  try {
+    const r = await fetch(`${origin}/fonts/Cairo-Bold.woff2`);
+    if (r.ok) fontData = await r.arrayBuffer();
+  } catch {
+    // font unavailable — render without custom font
+  }
 
   const fontSize = title.length > 80 ? 34 : title.length > 50 ? 40 : 48;
 
@@ -105,7 +111,7 @@ export async function GET(req: NextRequest) {
     {
       width: 1280,
       height: 720,
-      fonts: [{ name: "Cairo", data: fontData, weight: 700, style: "normal" }],
+      fonts: fontData ? [{ name: "Cairo", data: fontData, weight: 700, style: "normal" }] : [],
     }
   );
 }
