@@ -36,6 +36,8 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string | null>(null);
 
   const set = (field: string, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
@@ -111,6 +113,31 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     fontWeight: "600",
   };
 
+  const runAutoImport = async () => {
+    if (!confirm("سيتم استيراد الضيوف تلقائياً من جميع مقاطع القناة. قد يستغرق هذا دقيقة أو أكثر. متابعة؟")) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch("/api/admin/guests/import", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.inserted > 0) {
+        // Reload page to show new guests
+        window.location.reload();
+      } else {
+        setImportResult(
+          `تم الفحص: ${data.fetched} فيديو — استُخرج ${data.extracted} ضيف — أُضيف ${data.inserted} جديد — تخطّى ${data.skipped} مكرر`
+        );
+      }
+    } catch {
+      setImportResult("خطأ في الاستيراد");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const existingNames = new Set(guests.map((g) => g.name));
   const filteredVideos = videos.filter((v) =>
     search ? v.title.includes(search) : true
@@ -118,10 +145,26 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>الضيوف</h1>
-        <span className="text-sm" style={{ color: "#9A9070" }}>{guests.length} ضيف</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm" style={{ color: "#9A9070" }}>{guests.length} ضيف</span>
+          <button
+            onClick={runAutoImport}
+            disabled={importing}
+            className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
+            style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.08)" }}
+          >
+            {importing ? "جارٍ الاستيراد..." : "⚡ استيراد تلقائي من يوتيوب"}
+          </button>
+        </div>
       </div>
+
+      {importResult && (
+        <div className="mb-4 px-4 py-3 rounded-xl text-xs" style={{ background: "rgba(107,203,119,0.08)", border: "1px solid rgba(107,203,119,0.3)", color: "#6BCB77" }}>
+          {importResult}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 

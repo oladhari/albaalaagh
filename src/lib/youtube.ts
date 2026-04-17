@@ -352,6 +352,64 @@ export async function fetchAllVideoTitles(
   return videos;
 }
 
+// ── Fetch all videos with full descriptions (for guest import) ────────────────
+// Step 1: collect all video IDs via search.list (100 units per page)
+// Step 2: batch-fetch full snippets via videos.list (1 unit per 50 videos)
+
+export async function fetchAllVideosWithDescriptions(): Promise<
+  { youtube_id: string; title: string; description: string }[]
+> {
+  if (!YOUTUBE_API_KEY) return [];
+
+  // Step 1: get all video IDs (no cache — this is a one-time admin operation)
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const url = new URL("https://www.googleapis.com/youtube/v3/search");
+    url.searchParams.set("key", YOUTUBE_API_KEY);
+    url.searchParams.set("channelId", CHANNEL_ID);
+    url.searchParams.set("part", "id");
+    url.searchParams.set("type", "video");
+    url.searchParams.set("maxResults", "50");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    const data = await res.json();
+    if (!data.items) break;
+
+    for (const item of data.items) {
+      if (item.id?.videoId) ids.push(item.id.videoId);
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  // Step 2: fetch full snippets in batches of 50 (1 unit each — very cheap)
+  const videos: { youtube_id: string; title: string; description: string }[] = [];
+
+  for (let i = 0; i < ids.length; i += 50) {
+    const batch = ids.slice(i, i + 50);
+    const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+    url.searchParams.set("key", YOUTUBE_API_KEY);
+    url.searchParams.set("id", batch.join(","));
+    url.searchParams.set("part", "snippet");
+
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    const data = await res.json();
+    if (!data.items) continue;
+
+    for (const item of data.items) {
+      videos.push({
+        youtube_id: item.id,
+        title: item.snippet.title ?? "",
+        description: item.snippet.description ?? "",
+      });
+    }
+  }
+
+  return videos;
+}
+
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 function getMockVideos(count: number): YTVideo[] {
