@@ -352,26 +352,35 @@ export async function fetchAllVideoTitles(
   return videos;
 }
 
-// ── Fetch all videos with full descriptions (for guest import) ────────────────
-// Step 1: collect all video IDs via search.list (100 units per page)
-// Step 2: batch-fetch full snippets via videos.list (1 unit per 50 videos)
+// ── Fetch all live stream videos with full descriptions (for guest import) ────
+// Uses uploads playlist (not search.list) — paginated at 1 unit/50 videos.
+// Then filters to live streams only via liveStreamingDetails.
 
 export async function fetchAllVideosWithDescriptions(): Promise<
   { youtube_id: string; title: string; description: string }[]
 > {
   if (!YOUTUBE_API_KEY) return [];
 
-  // Step 1: get all video IDs (no cache — this is a one-time admin operation)
-  const ids: string[] = [];
+  // Step 1: get the channel's uploads playlist ID (1 unit)
+  const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+  chUrl.searchParams.set("key", YOUTUBE_API_KEY);
+  chUrl.searchParams.set("id", CHANNEL_ID);
+  chUrl.searchParams.set("part", "contentDetails");
+  const chRes = await fetch(chUrl.toString(), { cache: "no-store" });
+  const chData = await chRes.json();
+  const uploadsPlaylistId: string =
+    chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploadsPlaylistId) return [];
+
+  // Step 2: paginate through uploads playlist to collect all video IDs (1 unit/50)
+  const allIds: string[] = [];
   let pageToken: string | undefined;
 
   do {
-    const url = new URL("https://www.googleapis.com/youtube/v3/search");
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
     url.searchParams.set("key", YOUTUBE_API_KEY);
-    url.searchParams.set("channelId", CHANNEL_ID);
-    url.searchParams.set("part", "id");
-    url.searchParams.set("type", "video");
-    url.searchParams.set("eventType", "completed");
+    url.searchParams.set("playlistId", uploadsPlaylistId);
+    url.searchParams.set("part", "contentDetails");
     url.searchParams.set("maxResults", "50");
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
@@ -380,26 +389,30 @@ export async function fetchAllVideosWithDescriptions(): Promise<
     if (!data.items) break;
 
     for (const item of data.items) {
-      if (item.id?.videoId) ids.push(item.id.videoId);
+      const vid = item.contentDetails?.videoId;
+      if (vid) allIds.push(vid);
     }
     pageToken = data.nextPageToken;
   } while (pageToken);
 
-  // Step 2: fetch full snippets in batches of 50 (1 unit each — very cheap)
+  // Step 3: batch-fetch snippet + liveStreamingDetails (1 unit/50 videos)
+  // Keep only videos that have liveStreamingDetails (= were live streams)
   const videos: { youtube_id: string; title: string; description: string }[] = [];
 
-  for (let i = 0; i < ids.length; i += 50) {
-    const batch = ids.slice(i, i + 50);
+  for (let i = 0; i < allIds.length; i += 50) {
+    const batch = allIds.slice(i, i + 50);
     const url = new URL("https://www.googleapis.com/youtube/v3/videos");
     url.searchParams.set("key", YOUTUBE_API_KEY);
     url.searchParams.set("id", batch.join(","));
-    url.searchParams.set("part", "snippet");
+    url.searchParams.set("part", "snippet,liveStreamingDetails");
 
     const res = await fetch(url.toString(), { cache: "no-store" });
     const data = await res.json();
     if (!data.items) continue;
 
     for (const item of data.items) {
+      // liveStreamingDetails exists only on live/past-live videos
+      if (!item.liveStreamingDetails) continue;
       videos.push({
         youtube_id: item.id,
         title: item.snippet.title ?? "",
