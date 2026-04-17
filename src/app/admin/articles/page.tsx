@@ -4,6 +4,7 @@ import { formatArabicDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 import { supabaseAdmin } from "@/lib/supabase";
 import PublishButton from "./PublishButton";
+import DeleteArticleButton from "./DeleteArticleButton";
 
 async function getArticles(status: string) {
   const { data } = await supabaseAdmin
@@ -124,6 +125,7 @@ export default async function AdminArticlesPage({
                     عرض ↗
                   </Link>
                 )}
+                <DeleteArticleButton id={article.id} />
               </div>
             </div>
           ))}

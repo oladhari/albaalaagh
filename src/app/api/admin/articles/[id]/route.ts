@@ -44,7 +44,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Auto-post to Facebook when status changes to published
   if (status === "published" && data) {
     postArticleToFacebook({
       title: data.title,
@@ -55,4 +54,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   return NextResponse.json(data);
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+  const { id } = await params;
+  const { error } = await supabaseAdmin.from("articles").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }
