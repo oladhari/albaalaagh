@@ -13,14 +13,15 @@ function isValidNewsImage(url?: string): boolean {
 
 export default function NewsCard({ article }: { article: NewsArticle }) {
   const validImage = isValidNewsImage(article.image_url) ? article.image_url : undefined;
+  const isInternal = article.source === "البلاغ";
 
   return (
     <a
       href={article.url}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={isInternal ? "_self" : "_blank"}
+      rel={isInternal ? undefined : "noopener noreferrer"}
       className="group flex gap-3 p-3 rounded-xl card-hover"
-      style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      style={{ background: "#1A1810", border: `1px solid ${isInternal ? "rgba(201,168,68,0.25)" : "#2E2A18"}` }}
     >
       {validImage && (
         <div className="shrink-0 w-24 h-16 rounded-lg overflow-hidden">

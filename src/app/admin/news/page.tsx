@@ -14,6 +14,7 @@ interface Preview {
   image_url: string | null;
   geo:       string;
   category:  string;
+  editMode?: boolean; // true = editing existing, false = new publish
 }
 
 const GOLD  = "#C9A844";
@@ -88,22 +89,38 @@ export default function AdminNewsPage() {
     }
   };
 
+  const openEdit = (news: any) => {
+    setPreview({
+      newsId:    news.id,
+      title:     news.title,
+      excerpt:   news.excerpt ?? "",
+      content:   news.content ?? "",
+      image_url: news.image_url ?? null,
+      geo:       news.geo ?? "general",
+      category:  news.category ?? "سياسة",
+      editMode:  true,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const publish = async () => {
     if (!preview) return;
     setPublishing(true);
     try {
-      const res  = await fetch(`/api/admin/news/${preview.newsId}/publish`, {
-        method: "POST",
+      const method = preview.editMode ? "PATCH" : "POST";
+      const res = await fetch(`/api/admin/news/${preview.newsId}/publish`, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(preview),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في النشر"); return; }
-      setPublished((prev) => ({ ...prev, [preview.newsId]: data.url }));
+      if (!preview.editMode) {
+        setPublished((prev) => ({ ...prev, [preview.newsId]: data.url }));
+        setItems((prev) => prev.filter((n) => n.id !== preview.newsId));
+      }
       setPreview(null);
-      // Move item to approved in list
-      setItems((prev) => prev.filter((n) => n.id !== preview.newsId));
     } finally {
       setPublishing(false);
     }
@@ -161,17 +178,30 @@ export default function AdminNewsPage() {
           style={{ background: "#1A1810", border: `1px solid ${GOLD}44` }}
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold" style={{ color: GOLD }}>📝 معاينة التقرير — يمكنك التعديل قبل النشر</h2>
+            <h2 className="text-sm font-bold" style={{ color: GOLD }}>
+              {preview.editMode ? "✏️ تعديل التقرير" : "📝 معاينة التقرير — يمكنك التعديل قبل النشر"}
+            </h2>
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>✕ إلغاء</button>
           </div>
 
-          {preview.image_url && (
-            <img
-              src={preview.image_url}
-              alt=""
-              className="w-full max-h-48 object-cover rounded-lg"
+          {/* Image preview + URL input */}
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>
+              صورة المقال — ارفع الصورة على Supabase والصق الرابط هنا
+            </label>
+            <input
+              type="url"
+              style={{ ...inputStyle, resize: undefined }}
+              placeholder="https://..."
+              value={preview.image_url ?? ""}
+              onChange={(e) => setPreview((p) => p && ({ ...p, image_url: e.target.value || null }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
             />
-          )}
+            {preview.image_url && (
+              <img src={preview.image_url} alt="" className="mt-2 w-full max-h-40 object-cover rounded-lg" />
+            )}
+          </div>
 
           <div>
             <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>العنوان</label>
@@ -216,7 +246,7 @@ export default function AdminNewsPage() {
               className="px-5 py-2.5 rounded-full text-sm font-bold"
               style={{ background: `linear-gradient(135deg, ${GOLD}, #9A7B28)`, color: "#111008" }}
             >
-              {publishing ? "⏳ جارٍ النشر..." : "🚀 نشر على الموقع وفيسبوك"}
+              {publishing ? "⏳ جارٍ الحفظ..." : preview.editMode ? "💾 حفظ التعديلات" : "🚀 نشر على الموقع وفيسبوك"}
             </button>
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>
               إلغاء
@@ -321,6 +351,17 @@ export default function AdminNewsPage() {
                       style={{ background: "rgba(201,168,68,0.1)", color: GOLD }}
                     >
                       إعادة
+                    </button>
+                  )}
+
+                  {/* Edit button for published البلاغ articles */}
+                  {(news as any).source === "البلاغ" && (
+                    <button
+                      onClick={() => openEdit(news)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                      style={{ background: "rgba(201,168,68,0.1)", color: GOLD, border: `1px solid rgba(201,168,68,0.3)` }}
+                    >
+                      ✏️ تعديل
                     </button>
                   )}
 

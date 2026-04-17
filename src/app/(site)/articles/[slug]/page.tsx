@@ -20,16 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "article",
-      ...(article.cover_image ? {
-        images: [{
-          // Use branded OG image for social sharing when writer is editorial
-          url: article.writer?.name === "تحرير البلاغ"
-            ? `https://www.albaalaagh.com/api/og/news?title=${encodeURIComponent(article.title)}&img=${encodeURIComponent(article.cover_image)}`
-            : article.cover_image,
-          width: 1280,
-          height: 720,
-        }],
-      } : {}),
+      ...(article.cover_image ? { images: [{ url: article.cover_image, width: 1280, height: 720 }] } : {}),
       publishedTime: article.published_at,
       authors: article.writer?.name ? [article.writer.name] : ["البلاغ"],
     },
