@@ -371,6 +371,7 @@ export async function fetchAllVideosWithDescriptions(): Promise<
     url.searchParams.set("channelId", CHANNEL_ID);
     url.searchParams.set("part", "id");
     url.searchParams.set("type", "video");
+    url.searchParams.set("eventType", "completed");
     url.searchParams.set("maxResults", "50");
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
