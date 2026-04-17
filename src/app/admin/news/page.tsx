@@ -7,10 +7,12 @@ import type { NewsArticle } from "@/types";
 type Filter = "pending" | "approved" | "rejected" | "priority";
 
 export default function AdminNewsPage() {
-  const [items, setItems]     = useState<NewsArticle[]>([]);
-  const [filter, setFilter]   = useState<Filter>("pending");
-  const [loading, setLoading] = useState(true);
-  const [working, setWorking] = useState<string | null>(null); // id being processed
+  const [items, setItems]       = useState<NewsArticle[]>([]);
+  const [filter, setFilter]     = useState<Filter>("pending");
+  const [loading, setLoading]   = useState(true);
+  const [working, setWorking]   = useState<string | null>(null);
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [generated, setGenerated]   = useState<Record<string, { url: string; title: string }>>({});
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
@@ -35,6 +37,18 @@ export default function AdminNewsPage() {
     // Remove from current list after action
     setItems((prev) => prev.filter((n) => n.id !== id));
     setWorking(null);
+  };
+
+  const generate = async (id: string) => {
+    setGenerating(id);
+    try {
+      const res  = await fetch(`/api/admin/news/${id}/generate`, { method: "POST", credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "خطأ في الإنشاء"); return; }
+      setGenerated((prev) => ({ ...prev, [id]: { url: data.url, title: data.title } }));
+    } finally {
+      setGenerating(null);
+    }
   };
 
   const fetchFresh = async () => {
@@ -208,6 +222,28 @@ export default function AdminNewsPage() {
                   style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
                 >
                   إعادة
+                </button>
+              )}
+
+              {/* Generate article + post to Facebook */}
+              {generated[news.id] ? (
+                <a
+                  href={generated[news.id].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-center"
+                  style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844", textDecoration: "none" }}
+                >
+                  ✓ عرض التقرير ↗
+                </a>
+              ) : (
+                <button
+                  onClick={() => generate(news.id)}
+                  disabled={generating === news.id || working === news.id}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                  style={{ background: "rgba(201,168,68,0.08)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+                >
+                  {generating === news.id ? "⏳ جارٍ..." : "✍️ تقرير"}
                 </button>
               )}
             </div>
