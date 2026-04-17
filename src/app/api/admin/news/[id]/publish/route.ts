@@ -56,7 +56,7 @@ async function postToFacebook(title: string, excerpt: string, slug: string) {
 // POST — publish a new البلاغ article into the news table
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _ctx: { params: Promise<{ id: string }> }
 ) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
@@ -88,7 +88,7 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  postToFacebook(title, excerpt, slug).catch(console.error);
+  await postToFacebook(title, excerpt, slug).catch(console.error);
 
   return NextResponse.json({ ok: true, slug, url });
 }
