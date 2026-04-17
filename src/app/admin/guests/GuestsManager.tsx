@@ -118,21 +118,45 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     setImportConfirm(false);
     setImporting(true);
     setImportResult(null);
+
+    let offset = 0;
+    let totalInserted = 0;
+    let totalUpdated = 0;
+    let totalFetched = 0;
+
     try {
-      const res = await fetch("/api/admin/guests/import", {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.inserted > 0) {
-        window.location.reload();
-      } else {
-        setImportResult(
-          `تم الفحص: ${data.fetched} فيديو — استُخرج ${data.extracted} ضيف — أُضيف ${data.inserted} جديد — تخطّى ${data.skipped} مكرر`
-        );
+      while (true) {
+        const res = await fetch(`/api/admin/guests/import?offset=${offset}`, {
+          method: "POST",
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          setImportResult(`خطأ: ${data.error ?? "غير معروف"}`);
+          break;
+        }
+
+        totalFetched   = data.fetched;
+        totalInserted += data.inserted ?? 0;
+        totalUpdated  += data.updated  ?? 0;
+
+        if (!data.hasMore) {
+          // Done — reload if anything changed
+          if (totalInserted > 0 || totalUpdated > 0) {
+            window.location.reload();
+          } else {
+            setImportResult(
+              `تم الفحص: ${totalFetched} بث مباشر — أُضيف ${totalInserted} ضيف جديد — حُدِّث ${totalUpdated} — لا جديد`
+            );
+          }
+          break;
+        }
+
+        offset = data.nextOffset;
       }
-    } catch {
-      setImportResult("خطأ في الاستيراد، حاول مجدداً");
+    } catch (err: any) {
+      setImportResult(`خطأ في الاتصال: ${err?.message ?? err}`);
     } finally {
       setImporting(false);
     }
@@ -173,8 +197,8 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
       {/* Loading state */}
       {importing && (
         <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-3" style={{ background: "rgba(201,168,68,0.06)", border: "1px solid #2E2A18", color: "#C9A844" }}>
-          <span className="animate-spin text-base">⏳</span>
-          <span>جارٍ الاستيراد من يوتيوب وتحليل الضيوف... لا تغلق الصفحة</span>
+          <span className="inline-block animate-spin">⏳</span>
+          <span>جارٍ الاستيراد من يوتيوب وتحليل الضيوف... قد يستغرق عدة دقائق — لا تغلق الصفحة</span>
         </div>
       )}
 
