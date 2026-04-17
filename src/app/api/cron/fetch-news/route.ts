@@ -46,13 +46,16 @@ async function classifyBatch(
     .map((a, i) => `${i}. "${a.title}" [${a.source}]`)
     .join("\n");
 
-  const prompt = `أنت مصنِّف أخبار عربية. صنِّف كل خبر أدناه:
+  const prompt = `أنت مصنِّف أخبار عربية. صنِّف كل خبر حسب موضوعه (وليس مصدره):
 
 geo:
-- "tunisia"       → الخبر يخصّ تونس بشكل رئيسي
-- "arab"          → يخصّ الوطن العربي (غير تونس)
-- "international" → عالمي/دولي لا علاقة مباشرة بالعالم العربي
+- "tunisia"       → موضوع الخبر يخصّ تونس مباشرة (سياسة تونسية، قضاء تونسي، اقتصاد تونسي...)
+- "arab"          → موضوعه يخصّ دولة عربية أخرى (فلسطين، مصر، ليبيا، لبنان، السعودية...)
+- "international" → موضوعه دولي لا يخصّ العالم العربي مباشرة (أمريكا، أوروبا، روسيا، الصين...)
 - "general"       → لا يمكن التصنيف
+
+تنبيه مهم: إذا كان الخبر عن غزة أو فلسطين أو إسرائيل أو لبنان أو سوريا فهو "arab" حتى لو صدر من مصدر تونسي.
+إذا كان الخبر عن ترامب أو أوروبا أو روسيا فهو "international".
 
 category (اختر واحدة):
 سياسة | اقتصاد | قضاء | مجتمع | أمن | دولي | ثقافة | رياضة
@@ -71,10 +74,11 @@ ${numbered}`;
     });
 
     const text = msg.content[0].type === "text" ? msg.content[0].text : "[]";
-    const match = text.match(/\[[\s\S]*?\]/);
-    if (!match) throw new Error("No JSON array found");
+    const start = text.indexOf("[");
+    const end   = text.lastIndexOf("]");
+    if (start === -1 || end === -1) throw new Error("No JSON array found");
 
-    const parsed: Classification[] = JSON.parse(match[0]);
+    const parsed: Classification[] = JSON.parse(text.slice(start, end + 1));
     // Ensure same length as input — pad with fallbacks if needed
     while (parsed.length < articles.length) {
       parsed.push({ geo: "general", category: "سياسة" });
