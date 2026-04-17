@@ -25,39 +25,31 @@ async function extractGuestsFromBatch(
   videos: { youtube_id: string; title: string; description: string }[]
 ): Promise<ExtractedGuest[]> {
   const numbered = videos
-    .map((v, i) => `${i}. العنوان: "${v.title}"\nالوصف: "${v.description.slice(0, 400)}"`)
-    .join("\n\n");
+    .map((v, i) => `${i}. "${v.title}" | ${v.description.slice(0, 150).replace(/\n/g, " ")}`)
+    .join("\n");
 
-  const prompt = `أنت مساعد متخصص في استخراج بيانات الضيوف من قناة سياسية تونسية تدعى "البلاغ".
-
-لكل فيديو أدناه، استخرج أسماء الضيوف المذكورين (المدعوّين في الحوار، ليس مقدم البرنامج).
-لكل ضيف أعطِ:
-- name: الاسم الكامل بدون ألقاب فخرية (بدون "الدكتور"، "الأستاذ"، "الشيخ" إلخ)
-- title: أغنى وصف ممكن لصفته أو منصبه من العنوان والوصف معاً (مثال: "محامٍ وناشط حقوقي تونسي، رئيس منظمة العفو الدولية فرع تونس")
-- category: واحدة من: وزير | برلماني | ناشط | مفكر | صحفي | أكاديمي | آخر
-
-إذا لم يكن الفيديو مقابلة أو لا يوجد ضيف واضح، أعد مصفوفة فارغة للفيديو.
-إذا كان هناك أكثر من ضيف، أدرج جميعهم.
-
-أجب بـ JSON فقط — مصفوفة بنفس طول المدخلات، كل عنصر مصفوفة من الضيوف:
-[[{"name":"...","title":"...","category":"..."}], [], ...]
-
-الفيديوهات:
-${numbered}`;
+  const prompt = `استخرج الضيوف من هذه المقابلات لقناة "البلاغ" التونسية.
+لكل فيديو: اسم الضيف (بدون ألقاب)، صفته، تصنيفه (وزير|برلماني|ناشط|مفكر|صحفي|أكاديمي|آخر).
+إذا لا يوجد ضيف واضح أعد [].
+JSON فقط، مصفوفة بنفس عدد الفيديوهات (${videos.length}):
+[[{"name":"...","title":"...","category":"..."}],[],...]\n\n${numbered}`;
 
   try {
     const msg = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "[]";
-    const match = text.match(/\[[\s\S]*\]/);
-    if (!match) return [];
+    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
 
-    const parsed: ExtractedGuest[][] = JSON.parse(match[0]);
-    return parsed.flat().filter((g) => g.name && g.name.length > 2);
+    // Extract the outermost JSON array robustly
+    const start = text.indexOf("[");
+    const end   = text.lastIndexOf("]");
+    if (start === -1 || end === -1 || end <= start) return [];
+
+    const parsed: ExtractedGuest[][] = JSON.parse(text.slice(start, end + 1));
+    return parsed.flat().filter((g) => g?.name && g.name.length > 2);
   } catch (err) {
     console.error("[guests/import] Haiku error:", err);
     return [];
@@ -105,8 +97,8 @@ export async function POST(req: NextRequest) {
       existingMap.set(normalizeArabicName(g.name), { id: g.id, title: g.title ?? "" });
     }
 
-    // 3. Batch Haiku extraction (20 videos per call)
-    const BATCH = 20;
+    // 3. Batch Haiku extraction (10 videos per call — keeps prompt short)
+    const BATCH = 10;
     const allExtracted: ExtractedGuest[] = [];
 
     for (let i = 0; i < chunk.length; i += BATCH) {
