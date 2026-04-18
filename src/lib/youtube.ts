@@ -78,11 +78,63 @@ export async function fetchChannelStats(): Promise<YTChannelStats> {
 }
 
 // ── Fetch completed live streams ──────────────────────────────────────────────
+// Fetches recent uploads then filters to livestreams only via liveStreamingDetails.
 
 export async function fetchLiveStreams(maxResults = 6): Promise<YTVideo[]> {
-  // Use fetchLatestVideos directly — eventType:"completed" has indexing delays
-  // and can return fewer results than requested. The channel is primarily livestreams.
-  return fetchLatestVideos(maxResults);
+  if (!YOUTUBE_API_KEY) return getMockVideos(maxResults);
+
+  try {
+    // Step 1: uploads playlist ID (cached 24h)
+    const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    chUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    chUrl.searchParams.set("id", CHANNEL_ID);
+    chUrl.searchParams.set("part", "contentDetails");
+    const chData = await ytFetch(chUrl, 86400);
+    const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) return getMockVideos(maxResults);
+
+    // Step 2: grab more items than needed so we have enough after filtering
+    const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    plUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    plUrl.searchParams.set("playlistId", uploadsId);
+    plUrl.searchParams.set("part", "snippet");
+    plUrl.searchParams.set("maxResults", String(Math.min(maxResults * 5, 50)));
+    const plData = await ytFetch(plUrl);
+    if (!plData.items?.length) return getMockVideos(maxResults);
+
+    const ids = plData.items
+      .map((item: any) => item.snippet?.resourceId?.videoId)
+      .filter(Boolean) as string[];
+
+    // Step 3: batch-fetch liveStreamingDetails to identify livestreams
+    const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+    vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    vidUrl.searchParams.set("id", ids.join(","));
+    vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
+    const vidData = await ytFetch(vidUrl);
+    if (!vidData.items?.length) return getMockVideos(maxResults);
+
+    const lives = vidData.items
+      .filter((item: any) => !!item.liveStreamingDetails)
+      .slice(0, maxResults)
+      .map((item: any) => ({
+        id:            item.id,
+        youtube_id:    item.id,
+        title:         item.snippet.title ?? "",
+        description:   item.snippet.description ?? "",
+        thumbnail_url:
+          item.snippet.thumbnails?.maxres?.url ||
+          item.snippet.thumbnails?.high?.url   ||
+          item.snippet.thumbnails?.medium?.url || "",
+        published_at: item.snippet.publishedAt,
+        created_at:   item.snippet.publishedAt,
+      } satisfies YTVideo));
+
+    return lives.length ? lives : getMockVideos(maxResults);
+  } catch (e) {
+    console.error("YouTube livestreams error:", e);
+    return getMockVideos(maxResults);
+  }
 }
 
 // ── Fetch latest videos via uploads playlist (no indexing delay) ──────────────
