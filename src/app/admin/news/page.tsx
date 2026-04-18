@@ -7,14 +7,15 @@ import type { NewsArticle } from "@/types";
 type Filter = "pending" | "approved" | "rejected" | "priority";
 
 interface Preview {
-  newsId:    string;
-  title:     string;
-  excerpt:   string;
-  content:   string;
-  image_url: string | null;
-  geo:       string;
-  category:  string;
-  editMode?: boolean; // true = editing existing, false = new publish
+  newsId:       string;
+  title:        string;
+  excerpt:      string;
+  content:      string;
+  image_url:    string | null;
+  geo:          string;
+  category:     string;
+  published_at: string;
+  editMode?:    boolean; // true = editing existing, false = new publish
 }
 
 const GOLD  = "#C9A844";
@@ -78,13 +79,14 @@ export default function AdminNewsPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في الإنشاء"); return; }
       setPreview({
-        newsId:    news.id,
-        title:     data.title,
-        excerpt:   data.excerpt,
-        content:   data.content,
-        image_url: data.image_url,
-        geo:       data.geo ?? "tunisia",
-        category:  data.category ?? "سياسة",
+        newsId:       news.id,
+        title:        data.title,
+        excerpt:      data.excerpt,
+        content:      data.content,
+        image_url:    data.image_url,
+        geo:          data.geo ?? "tunisia",
+        category:     data.category ?? "سياسة",
+        published_at: new Date().toISOString().slice(0, 16),
       });
     } finally {
       setGenerating(null);
@@ -107,14 +109,17 @@ export default function AdminNewsPage() {
 
   const openEdit = (news: any) => {
     setPreview({
-      newsId:    news.id,
-      title:     news.title,
-      excerpt:   news.excerpt ?? "",
-      content:   news.content ?? "",
-      image_url: news.image_url ?? null,
-      geo:       news.geo ?? "general",
-      category:  news.category ?? "سياسة",
-      editMode:  true,
+      newsId:       news.id,
+      title:        news.title,
+      excerpt:      news.excerpt ?? "",
+      content:      news.content ?? "",
+      image_url:    news.image_url ?? null,
+      geo:          news.geo ?? "general",
+      category:     news.category ?? "سياسة",
+      published_at: news.published_at
+        ? new Date(news.published_at).toISOString().slice(0, 16)
+        : new Date().toISOString().slice(0, 16),
+      editMode:     true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -264,6 +269,18 @@ export default function AdminNewsPage() {
               style={inputStyle}
               value={preview.excerpt}
               onChange={(e) => setPreview((p) => p && ({ ...p, excerpt: e.target.value }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>تاريخ النشر</label>
+            <input
+              type="datetime-local"
+              style={{ ...inputStyle, resize: undefined }}
+              value={preview.published_at}
+              onChange={(e) => setPreview((p) => p && ({ ...p, published_at: e.target.value }))}
               onFocus={(e) => (e.target.style.borderColor = GOLD)}
               onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
             />
@@ -429,7 +446,7 @@ export default function AdminNewsPage() {
                     >
                       ✓ عرض ↗
                     </a>
-                  ) : (
+                  ) : (news as any).source !== "البلاغ" && (
                     <button
                       onClick={() => generate(news)}
                       disabled={generating === news.id || working === news.id}
