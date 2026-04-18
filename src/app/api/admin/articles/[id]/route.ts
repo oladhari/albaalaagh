@@ -39,6 +39,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (cover_image !== undefined) updates.cover_image = cover_image || null;
   if (category !== undefined)    updates.category = category;
 
+  // Fetch current status before updating to detect fresh publish
+  const { data: before } = await supabaseAdmin
+    .from("articles")
+    .select("status")
+    .eq("id", id)
+    .single();
+
   const { data, error } = await supabaseAdmin
     .from("articles")
     .update(updates)
@@ -48,7 +55,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (status === "published" && data) {
+  // Only post to Facebook on first publish (not on edits to already-published articles)
+  const wasAlreadyPublished = before?.status === "published";
+  if (status === "published" && !wasAlreadyPublished && data) {
     postArticleToFacebook({
       title: data.title,
       excerpt: data.excerpt,
