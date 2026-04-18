@@ -21,13 +21,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (unauthed) return unauthed;
   const { id } = await params;
   const body = await req.json();
-  const { status, published, title, excerpt, content, cover_image, category } = body;
+  const { status, published, title, excerpt, content, cover_image, category, published_at } = body;
 
   const updates: Record<string, unknown> = {};
   if (status !== undefined) updates.status = status;
   if (published !== undefined) {
     updates.published = published;
-    if (published) updates.published_at = new Date().toISOString();
+    if (published) {
+      updates.published_at = published_at
+        ? new Date(published_at).toISOString()
+        : new Date().toISOString();
+    }
   }
   if (title !== undefined)       updates.title = title;
   if (excerpt !== undefined)     updates.excerpt = excerpt;
