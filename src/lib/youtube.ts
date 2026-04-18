@@ -41,7 +41,7 @@ function mapVideo(item: any, videoId?: string): YTVideo {
   };
 }
 
-async function ytFetch(url: URL, revalidate = 21600): Promise<any> {
+async function ytFetch(url: URL, revalidate = 1800): Promise<any> {
   const res = await fetch(url.toString(), { next: { revalidate } });
   return res.json();
 }
@@ -80,25 +80,9 @@ export async function fetchChannelStats(): Promise<YTChannelStats> {
 // ── Fetch completed live streams ──────────────────────────────────────────────
 
 export async function fetchLiveStreams(maxResults = 6): Promise<YTVideo[]> {
-  if (!YOUTUBE_API_KEY) return getMockVideos(maxResults);
-
-  try {
-    const url = new URL("https://www.googleapis.com/youtube/v3/search");
-    url.searchParams.set("key", YOUTUBE_API_KEY);
-    url.searchParams.set("channelId", CHANNEL_ID);
-    url.searchParams.set("part", "snippet");
-    url.searchParams.set("eventType", "completed");
-    url.searchParams.set("type", "video");
-    url.searchParams.set("order", "date");
-    url.searchParams.set("maxResults", String(maxResults));
-
-    const data = await ytFetch(url);
-    if (!data.items?.length) return fetchLatestVideos(maxResults); // fallback
-
-    return data.items.map((item: any) => ({ ...mapVideo(item), is_live: true }));
-  } catch {
-    return fetchLatestVideos(maxResults);
-  }
+  // Use fetchLatestVideos directly — eventType:"completed" has indexing delays
+  // and can return fewer results than requested. The channel is primarily livestreams.
+  return fetchLatestVideos(maxResults);
 }
 
 // ── Fetch latest videos (by date) ─────────────────────────────────────────────
