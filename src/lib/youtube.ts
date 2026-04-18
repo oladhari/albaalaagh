@@ -85,23 +85,49 @@ export async function fetchLiveStreams(maxResults = 6): Promise<YTVideo[]> {
   return fetchLatestVideos(maxResults);
 }
 
-// ── Fetch latest videos (by date) ─────────────────────────────────────────────
+// ── Fetch latest videos via uploads playlist (no indexing delay) ──────────────
+// Uses playlistItems.list on the channel's uploads playlist — more reliable
+// than search.list which has delays for recently completed livestreams.
 
 export async function fetchLatestVideos(maxResults = 12): Promise<YTVideo[]> {
   if (!YOUTUBE_API_KEY) return getMockVideos(maxResults);
 
   try {
-    const url = new URL("https://www.googleapis.com/youtube/v3/search");
-    url.searchParams.set("key", YOUTUBE_API_KEY);
-    url.searchParams.set("channelId", CHANNEL_ID);
-    url.searchParams.set("part", "snippet");
-    url.searchParams.set("order", "date");
-    url.searchParams.set("type", "video");
-    url.searchParams.set("maxResults", String(maxResults));
+    // Step 1: get uploads playlist ID
+    const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    chUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    chUrl.searchParams.set("id", CHANNEL_ID);
+    chUrl.searchParams.set("part", "contentDetails");
+    const chData = await ytFetch(chUrl, 86400); // channel meta changes rarely
+    const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) return getMockVideos(maxResults);
 
-    const data = await ytFetch(url);
-    if (!data.items) return getMockVideos(maxResults);
-    return data.items.map((item: any) => mapVideo(item));
+    // Step 2: fetch latest N items from uploads playlist
+    const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    plUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    plUrl.searchParams.set("playlistId", uploadsId);
+    plUrl.searchParams.set("part", "snippet");
+    plUrl.searchParams.set("maxResults", String(maxResults));
+    const plData = await ytFetch(plUrl); // uses default 30-min cache
+
+    if (!plData.items?.length) return getMockVideos(maxResults);
+
+    return plData.items.map((item: any) => {
+      const snippet = item.snippet;
+      const videoId = snippet.resourceId?.videoId ?? "";
+      return {
+        id:            videoId,
+        youtube_id:    videoId,
+        title:         snippet.title ?? "",
+        description:   snippet.description ?? "",
+        thumbnail_url:
+          snippet.thumbnails?.maxres?.url ||
+          snippet.thumbnails?.high?.url   ||
+          snippet.thumbnails?.medium?.url || "",
+        published_at: snippet.publishedAt,
+        created_at:   snippet.publishedAt,
+      } satisfies YTVideo;
+    });
   } catch (e) {
     console.error("YouTube API error:", e);
     return getMockVideos(maxResults);
