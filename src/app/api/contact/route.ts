@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     `;
 
     const { error } = await resend.emails.send({
-      from: "موقع البلاغ <onboarding@resend.dev>",
+      from: "موقع البلاغ <noreply@albaalaagh.com>",
       to: ["contact@albaalaagh.com"],
       replyTo: email,
       subject: `[البلاغ] ${typeLabel}: ${subject}`,
