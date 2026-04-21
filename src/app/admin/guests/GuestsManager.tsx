@@ -27,6 +27,7 @@ interface Guest {
   host_id?: string | null;
   program_ids?: string[];
   roles?: string[];
+  is_active?: boolean;
 }
 
 interface Props {
@@ -119,7 +120,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     setDeleting(null);
   };
 
-  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "program_names" | "host_id" | "program_ids" | "roles">>) => {
+  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "is_active" | "program_name" | "program_names" | "host_id" | "program_ids" | "roles">>) => {
     setPatching(id);
     const res = await fetch("/api/admin/guests", {
       method: "PATCH",
@@ -518,6 +519,18 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                         />
                         طاقم البلاغ (مخفي عن الجمهور)
                       </label>
+                      {guest.is_staff && (
+                        <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: (guest.is_active ?? true) ? "#6BCB77" : "#FF6B6B" }}>
+                          <input
+                            type="checkbox"
+                            checked={guest.is_active ?? true}
+                            disabled={patching === guest.id}
+                            onChange={(e) => patchGuest(guest.id, { is_active: e.target.checked })}
+                            className="rounded"
+                          />
+                          {(guest.is_active ?? true) ? "نشط" : "غير نشط"}
+                        </label>
+                      )}
                       {patching === guest.id && (
                         <span className="text-xs" style={{ color: "#C9A844" }}>جارٍ الحفظ...</span>
                       )}
