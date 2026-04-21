@@ -40,9 +40,17 @@ export default async function OgImage() {
             البلاغ
           </div>
 
-          {/* Description */}
-          <div style={{ fontSize: 28, color: "#9A9070", lineHeight: 1.7, textAlign: "right", maxWidth: 860 }}>
-            منبر إعلامي تونسي مستقل — حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ومواكبة الحدث التونسي والعربي والدولي
+          {/* Description — each line is nowrap to prevent Satori scrambling Arabic word order */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            {[
+              "منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة",
+              "حوارات معمّقة مع شخصيات سياسية وفكرية بارزة",
+              "ومواكبة الحدث التونسي والعربي والدولي",
+            ].map((line) => (
+              <div key={line} style={{ fontSize: 26, color: "#9A9070", whiteSpace: "nowrap", textAlign: "right" }}>
+                {line}
+              </div>
+            ))}
           </div>
 
           {/* Nav pills */}
@@ -75,7 +83,7 @@ export default async function OgImage() {
           ].map((stat) => (
             <div key={stat.label} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
               <div style={{ fontSize: 36, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
-              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4 }}>{stat.label}</div>
+              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4, whiteSpace: "nowrap" }}>{stat.label}</div>
             </div>
           ))}
         </div>
