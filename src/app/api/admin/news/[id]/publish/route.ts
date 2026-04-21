@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { postToTelegram } from "@/lib/telegram";
 import slugify from "slugify";
 
 const BASE   = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
@@ -89,6 +90,7 @@ export async function POST(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await postToFacebook(title, excerpt, slug).catch(console.error);
+  await postToTelegram({ title, excerpt, slug, type: "news" }).catch(console.error);
 
   return NextResponse.json({ ok: true, slug, url });
 }

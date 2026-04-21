@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { postArticleToFacebook } from "@/lib/facebook";
+import { postToTelegram } from "@/lib/telegram";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthed = await requireAdmin();
@@ -55,15 +56,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Only post to Facebook on first publish (not on edits to already-published articles)
+  // Only post on first publish (not on edits to already-published articles)
   const wasAlreadyPublished = before?.status === "published";
   if (status === "published" && !wasAlreadyPublished && data) {
-    postArticleToFacebook({
+    const postOpts = {
       title: data.title,
       excerpt: data.excerpt,
       slug: data.slug,
       writerName: (data.writer as any)?.name,
-    }).catch(console.error);
+    };
+    postArticleToFacebook(postOpts).catch(console.error);
+    postToTelegram({ ...postOpts, type: "article" }).catch(console.error);
   }
 
   return NextResponse.json(data);
