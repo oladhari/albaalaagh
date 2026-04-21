@@ -105,64 +105,114 @@ export default async function AboutPage() {
 
       </div>
 
-      {/* Staff */}
-      {staff.length > 0 && (
-        <div className="mt-14">
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>فريق البلاغ</h2>
-            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-            {staff.map((member: any) => (
-              <div
-                key={member.id}
-                className="flex items-center gap-4 p-4 rounded-xl"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-              >
-                {member.image_url ? (
-                  <img
-                    src={member.image_url}
-                    alt={member.name}
-                    className="w-14 h-14 rounded-full object-cover shrink-0"
-                    style={{ border: "2px solid #2E2A18" }}
-                  />
-                ) : (
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-black shrink-0"
-                    style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-                  >
-                    {member.name[0]}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="font-bold text-sm leading-snug" style={{ color: "#F0EAD6" }}>{member.name}</p>
-                  {member.title && (
-                    <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>{member.title}</p>
-                  )}
-                  {member.roles?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {member.roles.filter(Boolean).map((r: string) => (
-                        <span
-                          key={r}
-                          className="text-xs px-1.5 py-0.5 rounded-full"
-                          style={{ background: "rgba(107,203,119,0.12)", color: "#6BCB77", border: "1px solid rgba(107,203,119,0.25)" }}
+      {/* Staff — pyramid layout */}
+      {staff.length > 0 && (() => {
+        // Sort by roles count descending, then group into tiers
+        const sorted = [...staff].sort((a: any, b: any) =>
+          (b.roles?.length ?? 0) - (a.roles?.length ?? 0)
+        );
+        const tiers: any[][] = [];
+        let lastCount = -1;
+        for (const m of sorted) {
+          const c = m.roles?.length ?? 0;
+          if (c !== lastCount) { tiers.push([]); lastCount = c; }
+          tiers[tiers.length - 1].push(m);
+        }
+
+        const colsClass = (n: number) => {
+          if (n === 1) return "flex justify-center";
+          if (n === 2) return "grid grid-cols-2 max-w-md mx-auto gap-5";
+          if (n === 3) return "grid grid-cols-3 gap-5";
+          return "grid grid-cols-2 sm:grid-cols-4 gap-5";
+        };
+
+        return (
+          <div className="mt-14">
+            <div className="flex items-center gap-4 mb-10">
+              <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>فريق البلاغ</h2>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
+            </div>
+
+            <div className="space-y-6">
+              {tiers.map((tier, ti) => {
+                const isTop = ti === 0;
+                const imgSize = isTop ? "w-24 h-24" : "w-16 h-16";
+                const nameSize = isTop ? "text-base" : "text-sm";
+                const cardPad = isTop ? "p-6" : "p-4";
+                const maxW = isTop ? "max-w-xs w-full" : "";
+
+                return (
+                  <div key={ti} className={colsClass(tier.length)}>
+                    {tier.map((member: any) => {
+                      const roles: string[] = member.roles?.filter(Boolean) ?? [];
+                      return (
+                        <div
+                          key={member.id}
+                          className={`rounded-2xl text-center ${cardPad} ${maxW}`}
+                          style={{
+                            background: "#1A1810",
+                            border: `1px solid ${isTop ? "#C9A844" : "#2E2A18"}`,
+                            boxShadow: isTop ? "0 0 30px rgba(201,168,68,0.08)" : "none",
+                          }}
                         >
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {member.programs_count > 0 && (
-                    <p className="text-xs mt-1.5 font-semibold" style={{ color: "#C9A844" }}>
-                      {member.programs_count} {member.programs_count === 1 ? "برنامج" : "برامج"}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+                          {/* Avatar */}
+                          <div className="flex justify-center mb-3">
+                            {member.image_url ? (
+                              <img
+                                src={member.image_url}
+                                alt={member.name}
+                                className={`${imgSize} rounded-full object-cover`}
+                                style={{ border: `2px solid ${isTop ? "#C9A844" : "#2E2A18"}` }}
+                              />
+                            ) : (
+                              <div
+                                className={`${imgSize} rounded-full flex items-center justify-center font-black`}
+                                style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844", fontSize: isTop ? 32 : 22 }}
+                              >
+                                {member.name[0]}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Name & title */}
+                          <p className={`font-black ${nameSize} leading-snug`} style={{ color: "#F0EAD6" }}>
+                            {member.name}
+                          </p>
+                          {member.title && (
+                            <p className="text-xs mt-1" style={{ color: "#9A9070" }}>{member.title}</p>
+                          )}
+
+                          {/* Roles */}
+                          {roles.length > 0 && (
+                            <div className="flex flex-wrap justify-center gap-1 mt-3">
+                              {roles.map((r) => (
+                                <span
+                                  key={r}
+                                  className="text-xs px-2 py-0.5 rounded-full"
+                                  style={{ background: "rgba(107,203,119,0.12)", color: "#6BCB77", border: "1px solid rgba(107,203,119,0.25)" }}
+                                >
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Programs count */}
+                          {member.programs_count > 0 && (
+                            <p className="text-xs mt-2 font-semibold" style={{ color: "#C9A844" }}>
+                              {member.programs_count} {member.programs_count === 1 ? "برنامج" : "برامج"}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12">
