@@ -305,7 +305,7 @@ export default function AdminNewsPage() {
               className="px-5 py-2.5 rounded-full text-sm font-bold"
               style={{ background: `linear-gradient(135deg, ${GOLD}, #9A7B28)`, color: "#111008" }}
             >
-              {publishing ? "⏳ جارٍ الحفظ..." : preview.editMode ? "💾 حفظ التعديلات" : "🚀 نشر على الموقع وفيسبوك"}
+              {publishing ? "⏳ جارٍ الحفظ..." : preview.editMode ? "💾 حفظ التعديلات" : "🚀 نشر على الموقع وفيسبوك وتيليغرام وX"}
             </button>
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>
               إلغاء
