@@ -52,16 +52,17 @@ export async function postToX(opts: PostOptions): Promise<void> {
     ? `${BASE_URL}/articles/${opts.slug}`
     : `${BASE_URL}/taqrir/${opts.slug}`;
 
+  // X counts URLs as 23 chars regardless of length, and has a 280 char limit
+  const excerpt = opts.excerpt ? opts.excerpt.slice(0, 100) : null;
   const lines = [
     opts.title,
     opts.writerName ? `✍️ ${opts.writerName}` : null,
-    opts.excerpt ? `\n${opts.excerpt.slice(0, 150)}...` : null,
+    excerpt ? `\n${excerpt}` : null,
     `\n🔗 ${url}`,
     "\n#البلاغ #تونس",
   ].filter(Boolean).join("\n");
 
-  // X has a 280 character limit
-  const text = lines.length > 280 ? lines.slice(0, 277) + "..." : lines;
+  const text = lines.length > 270 ? lines.slice(0, 267) + "..." : lines;
 
   const endpoint = "https://api.twitter.com/2/tweets";
 
