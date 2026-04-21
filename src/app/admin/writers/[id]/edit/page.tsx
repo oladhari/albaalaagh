@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import AvatarUpload from "@/components/admin/AvatarUpload";
 
 export default function EditWriterPage() {
   const router = useRouter();
@@ -128,24 +129,20 @@ export default function EditWriterPage() {
         </div>
 
         <div>
-          <label style={labelStyle}>رابط الصورة الشخصية</label>
+          <label style={labelStyle}>الصورة الشخصية</label>
+          <AvatarUpload
+            currentUrl={form.image_url}
+            onUploaded={(url) => set("image_url", url)}
+          />
           <input
             type="text"
-            style={inputStyle}
-            placeholder="https://..."
+            style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
+            placeholder="أو الصق رابط الصورة مباشرة..."
             value={form.image_url}
             onChange={(e) => set("image_url", e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
             onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
           />
-          {form.image_url && (
-            <img
-              src={form.image_url}
-              alt="معاينة"
-              className="mt-3 w-20 h-20 rounded-full object-cover"
-              style={{ border: "2px solid #C9A844" }}
-            />
-          )}
         </div>
 
         <div className="flex gap-3 pt-2">
