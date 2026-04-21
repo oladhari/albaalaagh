@@ -73,8 +73,17 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
         )}
         {badge && (
           <span
-            className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium"
-            style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
+            title={badge}
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full font-medium overflow-hidden"
+            style={{
+              background: "rgba(201,168,68,0.9)",
+              color: "#111008",
+              maxWidth: "calc(100% - 8px)",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              display: "block",
+              transform: "translateX(-50%)",
+            }}
           >
             {badge}
           </span>
