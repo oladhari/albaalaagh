@@ -1,20 +1,36 @@
+"use client";
+
 import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 
-export const dynamic = "force-dynamic";
+export default function AdminStaffPage() {
+  const [staff, setStaff] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [patching, setPatching] = useState<string | null>(null);
 
-async function getStaff() {
-  const { data, error } = await supabaseAdmin
-    .from("guests")
-    .select("*")
-    .eq("is_staff", true)
-    .order("name");
-  if (error) { console.error(error); return []; }
-  return data ?? [];
-}
+  useEffect(() => {
+    fetch("/api/admin/guests", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data: any[]) => {
+        setStaff((data ?? []).filter((g) => g.is_staff).sort((a, b) => a.name.localeCompare(b.name, "ar")));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-export default async function AdminStaffPage() {
-  const staff = await getStaff();
+  const toggleActive = async (id: string, val: boolean) => {
+    setPatching(id);
+    setStaff((prev) => prev.map((m) => m.id === id ? { ...m, is_active: val } : m));
+    await fetch("/api/admin/guests", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, is_active: val }),
+    });
+    setPatching(null);
+  };
+
+  if (loading) return <div className="text-center py-20" style={{ color: "#9A9070" }}>جارٍ التحميل...</div>;
 
   return (
     <div>
@@ -46,18 +62,23 @@ export default async function AdminStaffPage() {
           {staff.map((member: any) => {
             const programs: string[] = member.program_names?.filter(Boolean) ?? [];
             const roles: string[]   = member.roles?.filter(Boolean) ?? [];
+            const inactive = member.is_active === false;
             return (
               <div
                 key={member.id}
                 className="flex gap-4 p-5 rounded-xl"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+                style={{
+                  background: "#1A1810",
+                  border: `1px solid ${inactive ? "#2E2A18" : "#2E2A18"}`,
+                  opacity: inactive ? 0.7 : 1,
+                }}
               >
                 {/* Avatar */}
                 {member.image_url ? (
                   <img
                     src={member.image_url} alt={member.name}
                     className="w-16 h-16 rounded-full object-cover shrink-0"
-                    style={{ border: "2px solid #2E2A18" }}
+                    style={{ border: "2px solid #2E2A18", filter: inactive ? "grayscale(1)" : "none" }}
                   />
                 ) : (
                   <div
@@ -70,10 +91,15 @@ export default async function AdminStaffPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0 space-y-2">
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold text-sm" style={{ color: "#F0EAD6" }}>{member.name}</p>
-                    <p className="text-xs" style={{ color: "#C9A844" }}>{member.title}</p>
+                    {inactive && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(100,100,100,0.2)", color: "#9A9070", border: "1px solid #2E2A18" }}>
+                        سابقاً
+                      </span>
+                    )}
                   </div>
+                  <p className="text-xs" style={{ color: "#C9A844" }}>{member.title}</p>
 
                   {/* Roles */}
                   {roles.length > 0 && (
@@ -111,7 +137,21 @@ export default async function AdminStaffPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="shrink-0 self-start">
+                <div className="shrink-0 self-start flex flex-col gap-2 items-end">
+                  {/* Active toggle */}
+                  <label
+                    className="flex items-center gap-1.5 text-xs cursor-pointer select-none"
+                    style={{ color: inactive ? "#FF6B6B" : "#6BCB77" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!inactive}
+                      disabled={patching === member.id}
+                      onChange={(e) => toggleActive(member.id, e.target.checked)}
+                    />
+                    {inactive ? "غير نشط" : "نشط"}
+                  </label>
+
                   <Link
                     href={`/admin/guests/${member.id}/edit`}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium border block"
