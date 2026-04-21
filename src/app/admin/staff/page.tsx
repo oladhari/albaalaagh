@@ -7,16 +7,32 @@ export default function AdminStaffPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [patching, setPatching] = useState<string | null>(null);
+  const [showStaff, setShowStaff] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/guests", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data: any[]) => {
-        setStaff((data ?? []).filter((g) => g.is_staff).sort((a, b) => a.name.localeCompare(b.name, "ar")));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/admin/guests", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/admin/settings?key=show_staff", { credentials: "include" }).then((r) => r.json()),
+    ]).then(([guests, setting]) => {
+      setStaff((guests ?? []).filter((g: any) => g.is_staff).sort((a: any, b: any) => a.name.localeCompare(b.name, "ar")));
+      setShowStaff(setting.value === "true");
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
+
+  const toggleVisibility = async () => {
+    const next = !showStaff;
+    setTogglingVisibility(true);
+    setShowStaff(next);
+    await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ key: "show_staff", value: next }),
+    });
+    setTogglingVisibility(false);
+  };
 
   const toggleActive = async (id: string, val: boolean) => {
     setPatching(id);
@@ -43,7 +59,7 @@ export default function AdminStaffPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>الطاقم</h1>
           <p className="text-sm mt-1" style={{ color: "#9A9070" }}>
@@ -57,6 +73,31 @@ export default function AdminStaffPage() {
         >
           ← إدارة الضيوف
         </Link>
+      </div>
+
+      {/* Visibility toggle */}
+      <div className="flex items-center justify-between p-4 rounded-xl mb-8" style={{ background: "#1A1810", border: `1px solid ${showStaff ? "rgba(201,168,68,0.3)" : "#2E2A18"}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: "#F0EAD6" }}>ظهور قسم "فريق البلاغ" في صفحة من نحن</p>
+          <p className="text-xs mt-1" style={{ color: "#9A9070" }}>
+            {showStaff ? "القسم ظاهر حالياً للزوار" : "القسم مخفي حالياً عن الزوار"}
+          </p>
+        </div>
+        <button
+          onClick={toggleVisibility}
+          disabled={togglingVisibility}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all"
+          style={{
+            background: showStaff ? "rgba(201,168,68,0.15)" : "rgba(100,100,100,0.1)",
+            border: `1px solid ${showStaff ? "rgba(201,168,68,0.4)" : "#2E2A18"}`,
+            color: showStaff ? "#C9A844" : "#9A9070",
+          }}
+        >
+          <span style={{ width: 32, height: 18, borderRadius: 9, background: showStaff ? "#C9A844" : "#2E2A18", position: "relative", display: "inline-block", transition: "background 0.2s", flexShrink: 0 }}>
+            <span style={{ position: "absolute", top: 3, width: 12, height: 12, borderRadius: "50%", background: "#fff", transition: "left 0.2s", left: showStaff ? 17 : 3 }} />
+          </span>
+          {showStaff ? "ظاهر" : "مخفي"}
+        </button>
       </div>
 
       {staff.length === 0 ? (

@@ -49,8 +49,17 @@ async function getStaff() {
     });
 }
 
+async function getShowStaff(): Promise<boolean> {
+  const { data } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "show_staff")
+    .single();
+  return data?.value === "true";
+}
+
 export default async function AboutPage() {
-  const staff = await getStaff();
+  const [staff, showStaff] = await Promise.all([getStaff(), getShowStaff()]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -122,7 +131,7 @@ export default async function AboutPage() {
       </div>
 
       {/* Staff — pyramid layout */}
-      {staff.length > 0 && (() => {
+      {showStaff && staff.length > 0 && (() => {
         // Sort by weighted score descending, then group into pyramid rows: 1, 2, 3, 4…
         const sorted = [...staff].sort((a: any, b: any) => {
           const aActive = a.is_active !== false;
