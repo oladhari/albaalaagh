@@ -20,20 +20,13 @@ export const metadata: Metadata = {
     siteName: "البلاغ",
     title: "البلاغ | قناة سياسية تونسية",
     description: "منبر سياسي تونسي متخصص في الحوارات السياسية والفكرية مع شخصيات بارزة من وزراء وبرلمانيين ومفكرين وناشطين",
-    images: [
-      {
-        url: "https://www.albaalaagh.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "البلاغ - منبر سياسي تونسي",
-      },
-    ],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "البلاغ - منبر سياسي تونسي" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "البلاغ | قناة سياسية تونسية",
     description: "منبر سياسي تونسي متخصص في الحوارات السياسية والفكرية",
-    images: ["https://www.albaalaagh.com/og-image.png"],
+    images: ["/opengraph-image"],
   },
   other: {
     "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
