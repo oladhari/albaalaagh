@@ -40,8 +40,10 @@ export async function POST(
 2. مقدمة وجيزة (جملتان إلى ثلاث) تلخص الحدث
 3. تقرير كامل بأسلوب صحفي موضوعي (3 إلى 4 فقرات)
 
-أجب بـ JSON فقط بدون أي نص خارجه:
-{"title":"...","excerpt":"...","content":"<p>...</p><p>...</p>"}`;
+أجب بهذا التنسيق فقط بدون أي نص خارجه:
+<title>العنوان هنا</title>
+<excerpt>المقدمة هنا</excerpt>
+<content><p>فقرة أولى</p><p>فقرة ثانية</p></content>`;
 
   try {
     const msg = await anthropic.messages.create({
@@ -50,16 +52,20 @@ export async function POST(
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text  = msg.content[0].type === "text" ? msg.content[0].text : "";
-    const start = text.indexOf("{");
-    const end   = text.lastIndexOf("}");
-    if (start === -1 || end === -1) throw new Error("No JSON in response");
+    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
 
-    const generated = JSON.parse(text.slice(start, end + 1)) as {
-      title: string;
-      excerpt: string;
-      content: string;
+    const extract = (tag: string) => {
+      const m = text.match(new RegExp(`<${tag}>([\s\S]*?)<\/${tag}>`));
+      return m ? m[1].trim() : "";
     };
+
+    const generated = {
+      title:   extract("title"),
+      excerpt: extract("excerpt"),
+      content: extract("content"),
+    };
+
+    if (!generated.title || !generated.content) throw new Error("Missing fields in response");
 
     return NextResponse.json({
       title:     generated.title,
