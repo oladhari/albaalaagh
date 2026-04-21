@@ -22,6 +22,7 @@ interface Guest {
   is_staff: boolean;
   program_name?: string;
   host_id?: string | null;
+  program_ids?: string[];
 }
 
 interface Props {
@@ -106,7 +107,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     setDeleting(null);
   };
 
-  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "host_id">>) => {
+  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "host_id" | "program_ids">>) => {
     setPatching(id);
     const res = await fetch("/api/admin/guests", {
       method: "PATCH",
@@ -491,6 +492,41 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                         <span className="text-xs" style={{ color: "#C9A844" }}>جارٍ الحفظ...</span>
                       )}
                     </div>
+                    {/* Program links — which playlists does this guest appear in? */}
+                    {guest.tier !== "program" && (() => {
+                      const allPrograms = guests.filter((g) => g.tier === "program");
+                      if (allPrograms.length === 0) return null;
+                      const linked = guest.program_ids ?? [];
+                      return (
+                        <div className="flex flex-wrap gap-2 pt-1" style={{ borderTop: "1px solid #2E2A18" }}>
+                          <span className="text-xs self-center" style={{ color: "#9A9070" }}>يظهر في:</span>
+                          {allPrograms.map((prog) => {
+                            const active = linked.includes(prog.id);
+                            return (
+                              <button
+                                key={prog.id}
+                                type="button"
+                                disabled={patching === guest.id}
+                                onClick={() => {
+                                  const next = active
+                                    ? linked.filter((x) => x !== prog.id)
+                                    : [...linked, prog.id];
+                                  patchGuest(guest.id, { program_ids: next });
+                                }}
+                                className="text-xs px-2 py-0.5 rounded-full border transition-all"
+                                style={{
+                                  borderColor: active ? "#C9A844" : "#2E2A18",
+                                  color:       active ? "#111008" : "#9A9070",
+                                  background:  active ? "#C9A844" : "transparent",
+                                }}
+                              >
+                                {prog.program_name ?? prog.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
