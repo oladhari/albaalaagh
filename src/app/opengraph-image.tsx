@@ -6,6 +6,9 @@ export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Satori renders text LTR — reverse word order so Arabic reads correctly RTL
+const rtl = (text: string) => text.split(" ").reverse().join(" ");
+
 export default async function OgImage() {
   const fontData = await readFile(
     path.join(process.cwd(), "public/fonts/Cairo-Bold.ttf")
@@ -48,7 +51,7 @@ export default async function OgImage() {
               "ومواكبة الحدث التونسي والعربي والدولي",
             ].map((line) => (
               <div key={line} style={{ fontSize: 26, color: "#9A9070", whiteSpace: "nowrap", textAlign: "right" }}>
-                {line}
+                {rtl(line)}
               </div>
             ))}
           </div>
@@ -66,9 +69,10 @@ export default async function OgImage() {
                   fontSize: 22,
                   fontWeight: 700,
                   background: "rgba(201,168,68,0.12)",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {label}
+                {rtl(label)}
               </div>
             ))}
           </div>
@@ -83,7 +87,7 @@ export default async function OgImage() {
           ].map((stat) => (
             <div key={stat.label} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
               <div style={{ fontSize: 36, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
-              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4, whiteSpace: "nowrap" }}>{stat.label}</div>
+              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4, whiteSpace: "nowrap" }}>{rtl(stat.label)}</div>
             </div>
           ))}
         </div>
