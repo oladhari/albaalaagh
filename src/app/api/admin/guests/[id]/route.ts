@@ -16,12 +16,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (unauthed) return unauthed;
   const { id } = await params;
   const body = await req.json();
-  const { name, title, bio, image_url, category } = body;
+  const { name, title, bio, image_url, category, roles } = body;
   if (!name || !title) return NextResponse.json({ error: "الاسم والصفة مطلوبان" }, { status: 400 });
 
   const { data, error } = await supabaseAdmin
     .from("guests")
-    .update({ name, title, bio: bio ?? "", image_url: image_url || null, category: category ?? [] })
+    .update({ name, title, bio: bio ?? "", image_url: image_url || null, category: category ?? [], roles: roles ?? [] })
     .eq("id", id)
     .select()
     .single();
