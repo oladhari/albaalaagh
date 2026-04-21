@@ -27,11 +27,14 @@ export default function AdminStaffPage() {
       credentials: "include",
       body: JSON.stringify({ id, is_active: val }),
     });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      // revert on failure
       setStaff((prev) => prev.map((m) => m.id === id ? { ...m, is_active: !val } : m));
-      const data = await res.json().catch(() => ({}));
       alert(data.error || "فشل الحفظ");
+    } else if (data.is_active !== val) {
+      // Column missing in DB — value didn't save
+      setStaff((prev) => prev.map((m) => m.id === id ? { ...m, is_active: !val } : m));
+      alert("العمود is_active غير موجود في قاعدة البيانات. يرجى تشغيل SQL الآتي في Supabase:\nALTER TABLE guests ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true;");
     }
     setPatching(null);
   };
