@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { postArticleToFacebook } from "@/lib/facebook";
 import { postToTelegram } from "@/lib/telegram";
+import { postToX } from "@/lib/twitter";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthed = await requireAdmin();
@@ -67,6 +68,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     };
     postArticleToFacebook(postOpts).catch(console.error);
     postToTelegram({ ...postOpts, type: "article" }).catch(console.error);
+    postToX({ ...postOpts, type: "article" }).catch(console.error);
   }
 
   return NextResponse.json(data);
