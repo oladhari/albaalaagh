@@ -6,7 +6,7 @@ export const metadata = {
   description: "تعرف على قناة البلاغ ورسالتها ومنهجها",
 };
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 async function getStaff() {
   const { data, error } = await supabase
