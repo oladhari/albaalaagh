@@ -55,7 +55,7 @@ export async function POST(
     const text = msg.content[0].type === "text" ? msg.content[0].text : "";
 
     const extract = (tag: string) => {
-      const m = text.match(new RegExp(`<${tag}>([\s\S]*?)<\/${tag}>`));
+      const m = text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
       return m ? m[1].trim() : "";
     };
 
