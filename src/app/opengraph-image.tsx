@@ -17,68 +17,112 @@ export default async function OgImage() {
         style={{
           width: 1200,
           height: 630,
-          background: "#0D0B06",
+          background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
+          border: "1px solid #2E2A18",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
           fontFamily: "Cairo",
+          direction: "rtl",
           position: "relative",
+          overflow: "hidden",
+          padding: "60px 80px",
         }}
       >
-        {/* Corner accents */}
-        <div style={{ position: "absolute", top: 32, right: 32, width: 60, height: 60, borderTop: "2px solid #2E2A18", borderRight: "2px solid #2E2A18", display: "flex" }} />
-        <div style={{ position: "absolute", top: 32, left: 32, width: 60, height: 60, borderTop: "2px solid #2E2A18", borderLeft: "2px solid #2E2A18", display: "flex" }} />
-        <div style={{ position: "absolute", bottom: 32, right: 32, width: 60, height: 60, borderBottom: "2px solid #2E2A18", borderRight: "2px solid #2E2A18", display: "flex" }} />
-        <div style={{ position: "absolute", bottom: 32, left: 32, width: 60, height: 60, borderBottom: "2px solid #2E2A18", borderLeft: "2px solid #2E2A18", display: "flex" }} />
-
-        {/* Main title */}
+        {/* Top-right radial glow */}
         <div
           style={{
-            fontSize: 140,
-            fontWeight: 700,
-            color: "#C9A844",
-            lineHeight: 1,
-            letterSpacing: "-2px",
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 320,
+            height: 320,
+            borderBottomLeftRadius: "100%",
+            background: "radial-gradient(circle, rgba(201,168,68,0.12), transparent 70%)",
+            display: "flex",
           }}
-        >
-          البلاغ
-        </div>
-
-        {/* Gold separator */}
+        />
+        {/* Bottom-left radial glow */}
         <div
           style={{
-            width: 180,
-            height: 2,
-            background: "linear-gradient(to right, transparent, #C9A844, transparent)",
-            marginTop: 24,
-            marginBottom: 28,
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: 480,
+            height: 480,
+            borderTopRightRadius: "100%",
+            background: "radial-gradient(circle, rgba(201,168,68,0.06), transparent 70%)",
             display: "flex",
           }}
         />
 
-        {/* Subtitle */}
-        <div
-          style={{
-            fontSize: 36,
-            color: "#9A9070",
-            letterSpacing: "1px",
-          }}
-        >
-          منبر سياسي تونسي مستقل
+        {/* Main content */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+          {/* Title */}
+          <div
+            style={{
+              fontSize: 120,
+              fontWeight: 700,
+              color: "#C9A844",
+              lineHeight: 1.1,
+              letterSpacing: "-1px",
+            }}
+          >
+            البلاغ
+          </div>
+
+          {/* Description */}
+          <div
+            style={{
+              fontSize: 30,
+              color: "#9A9070",
+              lineHeight: 1.7,
+              maxWidth: 780,
+            }}
+          >
+            منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
+          </div>
+
+          {/* Nav pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+            {["المقابلات", "الأخبار", "المقالات", "قضايا شرعية", "الضيوف"].map((label) => (
+              <div
+                key={label}
+                style={{
+                  padding: "10px 26px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(201,168,68,0.3)",
+                  color: "#C9A844",
+                  fontSize: 24,
+                  fontWeight: 700,
+                  background: "rgba(201,168,68,0.12)",
+                }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* URL at bottom */}
+        {/* Stats */}
         <div
           style={{
-            position: "absolute",
-            bottom: 44,
-            fontSize: 22,
-            color: "#3A3520",
-            letterSpacing: "2px",
+            display: "flex",
+            gap: 56,
+            paddingTop: 32,
+            borderTop: "1px solid #2E2A18",
           }}
         >
-          www.albaalaagh.com
+          {[
+            { value: "+5876", label: "فيديو على يوتيوب" },
+            { value: "31.7K", label: "مشترك يوتيوب" },
+            { value: "+17",   label: "مقال" },
+          ].map((stat) => (
+            <div key={stat.label} style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ fontSize: 38, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
+              <div style={{ fontSize: 20, color: "#9A9070", marginTop: 4 }}>{stat.label}</div>
+            </div>
+          ))}
         </div>
       </div>
     ),
