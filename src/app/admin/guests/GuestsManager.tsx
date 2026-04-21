@@ -21,6 +21,7 @@ interface Guest {
   tier: "program" | "guest";
   is_staff: boolean;
   program_name?: string;
+  program_names?: string[];
   host_id?: string | null;
   program_ids?: string[];
 }
@@ -30,7 +31,7 @@ interface Props {
   initialGuests: Guest[];
 }
 
-const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[], tier: "guest" as "program" | "guest", is_staff: false, program_name: "" };
+const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[], tier: "guest" as "program" | "guest", is_staff: false, program_name: "", program_names: [] as string[] };
 
 export default function GuestsManager({ videos, initialGuests }: Props) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests);
@@ -115,7 +116,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     setDeleting(null);
   };
 
-  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "host_id" | "program_ids">>) => {
+  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "program_names" | "host_id" | "program_ids">>) => {
     setPatching(id);
     const res = await fetch("/api/admin/guests", {
       method: "PATCH",
@@ -348,19 +349,39 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
               </div>
             </div>
 
-            {form.tier === "program" && (
+            {form.tier === "program" && playlists.length > 0 && (
               <div>
-                <label style={labelStyle}>البرنامج (من يوتيوب)</label>
-                <select
-                  style={{ ...inputStyle }}
-                  value={form.program_name}
-                  onChange={(e) => set("program_name", e.target.value)}
-                >
-                  <option value="">— اختر البرنامج —</option>
-                  {playlists.map((p) => (
-                    <option key={p.id} value={p.title}>{p.title}</option>
-                  ))}
-                </select>
+                <label style={labelStyle}>البرامج (من يوتيوب — يمكن اختيار أكثر من واحد)</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {playlists.map((p) => {
+                    const active = (form.program_names ?? []).includes(p.title);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => {
+                            const curr = prev.program_names ?? [];
+                            return {
+                              ...prev,
+                              program_names: active
+                                ? curr.filter((x) => x !== p.title)
+                                : [...curr, p.title],
+                            };
+                          })
+                        }
+                        className="px-3 py-1 rounded-full text-xs font-medium border transition-all"
+                        style={{
+                          borderColor: active ? "#C9A844" : "#2E2A18",
+                          color:       active ? "#111008" : "#9A9070",
+                          background:  active ? "#C9A844" : "transparent",
+                        }}
+                      >
+                        {p.title}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -462,32 +483,18 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                         <option value="program">برنامج دوري</option>
                       </select>
                       {guest.tier === "program" && (
-                        <>
-                          <select
-                            value={guest.program_name ?? ""}
-                            disabled={patching === guest.id}
-                            onChange={(e) => patchGuest(guest.id, { program_name: e.target.value })}
-                            className="text-xs rounded px-2 py-1"
-                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18", maxWidth: "180px" }}
-                          >
-                            <option value="">— اختر البرنامج —</option>
-                            {playlists.map((p) => (
-                              <option key={p.id} value={p.title}>{p.title}</option>
-                            ))}
-                          </select>
-                          <select
-                            value={guest.host_id ?? ""}
-                            disabled={patching === guest.id}
-                            onChange={(e) => patchGuest(guest.id, { host_id: e.target.value || null })}
-                            className="text-xs rounded px-2 py-1"
-                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18" }}
-                          >
-                            <option value="">— المسؤول في البلاغ —</option>
-                            {guests.filter((g) => g.is_staff).map((staff) => (
-                              <option key={staff.id} value={staff.id}>{staff.name}</option>
-                            ))}
-                          </select>
-                        </>
+                        <select
+                          value={guest.host_id ?? ""}
+                          disabled={patching === guest.id}
+                          onChange={(e) => patchGuest(guest.id, { host_id: e.target.value || null })}
+                          className="text-xs rounded px-2 py-1"
+                          style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18" }}
+                        >
+                          <option value="">— المسؤول في البلاغ —</option>
+                          {guests.filter((g) => g.is_staff).map((staff) => (
+                            <option key={staff.id} value={staff.id}>{staff.name}</option>
+                          ))}
+                        </select>
                       )}
                       <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "#9A9070" }}>
                         <input
@@ -503,6 +510,39 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                         <span className="text-xs" style={{ color: "#C9A844" }}>جارٍ الحفظ...</span>
                       )}
                     </div>
+                    {/* For program hosts — which playlists do they host? (multi-select) */}
+                    {guest.tier === "program" && playlists.length > 0 && (() => {
+                      const linked = guest.program_names ?? [];
+                      return (
+                        <div className="flex flex-wrap gap-2 pt-1" style={{ borderTop: "1px solid #2E2A18" }}>
+                          <span className="text-xs self-center shrink-0" style={{ color: "#9A9070" }}>البرامج:</span>
+                          {playlists.map((p) => {
+                            const active = linked.includes(p.title);
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                disabled={patching === guest.id}
+                                onClick={() => {
+                                  const next = active
+                                    ? linked.filter((x) => x !== p.title)
+                                    : [...linked, p.title];
+                                  patchGuest(guest.id, { program_names: next });
+                                }}
+                                className="text-xs px-2 py-0.5 rounded-full border transition-all"
+                                style={{
+                                  borderColor: active ? "#C9A844" : "#2E2A18",
+                                  color:       active ? "#111008" : "#9A9070",
+                                  background:  active ? "#C9A844" : "transparent",
+                                }}
+                              >
+                                {p.title}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     {/* Program links — which playlists does this guest appear in? */}
                     {guest.tier !== "program" && (() => {
                       const allPrograms = guests.filter((g) => g.tier === "program");
