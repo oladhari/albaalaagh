@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from "@/lib/supabase";
+import { staffScore } from "@/lib/staff-roles";
 
 export const metadata = {
   title: "من نحن | البلاغ",
@@ -107,16 +108,16 @@ export default async function AboutPage() {
 
       {/* Staff — pyramid layout */}
       {staff.length > 0 && (() => {
-        // Sort by roles count descending, then group into tiers
+        // Sort by weighted score descending, then group into pyramid rows: 1, 2, 3, 4…
         const sorted = [...staff].sort((a: any, b: any) =>
-          (b.roles?.length ?? 0) - (a.roles?.length ?? 0)
+          staffScore(b.roles ?? []) - staffScore(a.roles ?? [])
         );
         const tiers: any[][] = [];
-        let lastCount = -1;
-        for (const m of sorted) {
-          const c = m.roles?.length ?? 0;
-          if (c !== lastCount) { tiers.push([]); lastCount = c; }
-          tiers[tiers.length - 1].push(m);
+        let i = 0, rowSize = 1;
+        while (i < sorted.length) {
+          tiers.push(sorted.slice(i, i + rowSize));
+          i += rowSize;
+          rowSize++;
         }
 
         const colsClass = (n: number) => {
