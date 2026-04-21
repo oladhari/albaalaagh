@@ -290,13 +290,31 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
 export async function fetchPlaylistNames(): Promise<{ id: string; title: string }[]> {
   if (!YOUTUBE_API_KEY) return [];
   try {
-    const url = new URL("https://www.googleapis.com/youtube/v3/playlists");
-    url.searchParams.set("key", YOUTUBE_API_KEY);
-    url.searchParams.set("channelId", CHANNEL_ID);
-    url.searchParams.set("part", "snippet");
-    url.searchParams.set("maxResults", "50");
-    const data = await ytFetch(url, 86400);
-    return (data.items ?? []).map((p: any) => ({ id: p.id, title: p.snippet.title }));
+    const all: { id: string; title: string }[] = [];
+    let pageToken: string | undefined;
+
+    do {
+      const url = new URL("https://www.googleapis.com/youtube/v3/playlists");
+      url.searchParams.set("key", YOUTUBE_API_KEY);
+      url.searchParams.set("channelId", CHANNEL_ID);
+      url.searchParams.set("part", "snippet");
+      url.searchParams.set("maxResults", "50");
+      if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+      // Short cache so renamed playlists appear within an hour
+      const data = await ytFetch(url, 3600);
+      for (const p of data.items ?? []) {
+        const title = (p.snippet?.title ?? "").trim();
+        if (title) all.push({ id: p.id, title });
+      }
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+
+    // Deduplicate by id, then sort alphabetically
+    const seen = new Set<string>();
+    return all
+      .filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; })
+      .sort((a, b) => a.title.localeCompare(b.title, "ar"));
   } catch {
     return [];
   }
