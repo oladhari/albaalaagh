@@ -7,7 +7,7 @@ export const metadata = {
   description: "الشخصيات التي استضافتها قناة البلاغ",
 };
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 async function getGuests() {
   const { data, error } = await supabase
