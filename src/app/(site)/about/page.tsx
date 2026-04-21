@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 async function getStaff() {
   const { data, error } = await supabase
     .from("guests")
-    .select("id, name, title, image_url, roles")
+    .select("id, name, title, image_url, roles, is_active")
     .eq("is_staff", true)
     .order("name");
   if (error) { console.error(error); return []; }

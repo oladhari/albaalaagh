@@ -21,12 +21,18 @@ export default function AdminStaffPage() {
   const toggleActive = async (id: string, val: boolean) => {
     setPatching(id);
     setStaff((prev) => prev.map((m) => m.id === id ? { ...m, is_active: val } : m));
-    await fetch("/api/admin/guests", {
+    const res = await fetch("/api/admin/guests", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ id, is_active: val }),
     });
+    if (!res.ok) {
+      // revert on failure
+      setStaff((prev) => prev.map((m) => m.id === id ? { ...m, is_active: !val } : m));
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "فشل الحفظ");
+    }
     setPatching(null);
   };
 
