@@ -44,15 +44,22 @@ async function postToFacebook(title: string, excerpt: string, slug: string) {
     "\n\n#البلاغ #تونس",
   ].filter(Boolean).join("\n");
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     PAGES.map((page) =>
       fetch(`https://graph.facebook.com/${page.id}/feed`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, link: url, access_token: page.token }),
+      }).then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) console.error(`Facebook page ${page.id} failed:`, JSON.stringify(json));
+        else console.log(`Facebook page ${page.id} posted ok`);
       })
     )
   );
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.error(`Facebook page ${i} rejected:`, r.reason);
+  });
 }
 
 // POST — publish a new البلاغ article into the news table

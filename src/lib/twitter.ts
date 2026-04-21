@@ -76,7 +76,9 @@ export async function postToX(opts: PostOptions): Promise<void> {
   }).then(async (res) => {
     if (!res.ok) {
       const err = await res.json();
-      console.error("X post failed:", err);
+      console.error("X post failed status:", res.status, "body:", JSON.stringify(err));
+    } else {
+      console.log("X post succeeded");
     }
   });
 }
