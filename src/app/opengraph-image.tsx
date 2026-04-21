@@ -8,7 +8,7 @@ export const contentType = "image/png";
 
 export default async function OgImage() {
   const fontData = await readFile(
-    path.join(process.cwd(), "public/fonts/Cairo-Bold.woff2")
+    path.join(process.cwd(), "public/fonts/Cairo-Bold.ttf")
   );
 
   return new ImageResponse(
