@@ -284,6 +284,24 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
   }
 }
 
+// ── Lightweight playlist names list (for admin dropdowns) ────────────────────
+// Single API call, cached 24h. Returns just id + title.
+
+export async function fetchPlaylistNames(): Promise<{ id: string; title: string }[]> {
+  if (!YOUTUBE_API_KEY) return [];
+  try {
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlists");
+    url.searchParams.set("key", YOUTUBE_API_KEY);
+    url.searchParams.set("channelId", CHANNEL_ID);
+    url.searchParams.set("part", "snippet");
+    url.searchParams.set("maxResults", "50");
+    const data = await ytFetch(url, 86400);
+    return (data.items ?? []).map((p: any) => ({ id: p.id, title: p.snippet.title }));
+  } catch {
+    return [];
+  }
+}
+
 // ── Fetch all channel playlists ───────────────────────────────────────────────
 
 export async function fetchAllPlaylists(): Promise<YTPlaylist[]> {

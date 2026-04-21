@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
 
@@ -44,6 +44,14 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
   const [importConfirm, setImportConfirm] = useState(false);
+  const [playlists, setPlaylists] = useState<{ id: string; title: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/youtube/playlists", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setPlaylists(data); })
+      .catch(() => {});
+  }, []);
 
   const set = (field: string, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
@@ -342,15 +350,17 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
 
             {form.tier === "program" && (
               <div>
-                <label style={labelStyle}>اسم البرنامج</label>
-                <input
-                  style={inputStyle}
-                  placeholder="مثال: مشهد تونسي، حوار الساعة..."
+                <label style={labelStyle}>البرنامج (من يوتيوب)</label>
+                <select
+                  style={{ ...inputStyle }}
                   value={form.program_name}
                   onChange={(e) => set("program_name", e.target.value)}
-                  onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-                />
+                >
+                  <option value="">— اختر البرنامج —</option>
+                  {playlists.map((p) => (
+                    <option key={p.id} value={p.title}>{p.title}</option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -453,17 +463,18 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                       </select>
                       {guest.tier === "program" && (
                         <>
-                          <input
+                          <select
+                            value={guest.program_name ?? ""}
+                            disabled={patching === guest.id}
+                            onChange={(e) => patchGuest(guest.id, { program_name: e.target.value })}
                             className="text-xs rounded px-2 py-1"
-                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18", minWidth: "120px" }}
-                            placeholder="اسم البرنامج..."
-                            defaultValue={guest.program_name ?? ""}
-                            onBlur={(e) => {
-                              if (e.target.value !== (guest.program_name ?? "")) {
-                                patchGuest(guest.id, { program_name: e.target.value });
-                              }
-                            }}
-                          />
+                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18", maxWidth: "180px" }}
+                          >
+                            <option value="">— اختر البرنامج —</option>
+                            {playlists.map((p) => (
+                              <option key={p.id} value={p.title}>{p.title}</option>
+                            ))}
+                          </select>
                           <select
                             value={guest.host_id ?? ""}
                             disabled={patching === guest.id}
