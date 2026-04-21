@@ -31,7 +31,14 @@ async function getStaff() {
     if (p.host_id) counts[p.host_id] = (counts[p.host_id] ?? 0) + 1;
   }
 
-  return staff.map((s: any) => ({ ...s, programs_count: counts[s.id] ?? 0 }));
+  return staff
+    .map((s: any) => ({ ...s, programs_count: counts[s.id] ?? 0 }))
+    .sort((a: any, b: any) => {
+      // Active first, then inactive
+      if ((a.is_active ?? true) !== (b.is_active ?? true))
+        return (b.is_active ?? true) ? 1 : -1;
+      return 0;
+    });
 }
 
 export default async function AboutPage() {
@@ -109,9 +116,12 @@ export default async function AboutPage() {
       {/* Staff — pyramid layout */}
       {staff.length > 0 && (() => {
         // Sort by weighted score descending, then group into pyramid rows: 1, 2, 3, 4…
-        const sorted = [...staff].sort((a: any, b: any) =>
-          staffScore(b.roles ?? []) - staffScore(a.roles ?? [])
-        );
+        const sorted = [...staff].sort((a: any, b: any) => {
+          const aActive = a.is_active !== false;
+          const bActive = b.is_active !== false;
+          if (aActive !== bActive) return aActive ? -1 : 1;
+          return staffScore(b.roles ?? []) - staffScore(a.roles ?? []);
+        });
         const tiers: any[][] = [];
         let i = 0, rowSize = 1;
         while (i < sorted.length) {
@@ -146,14 +156,16 @@ export default async function AboutPage() {
                   <div key={ti} className={colsClass(tier.length)}>
                     {tier.map((member: any) => {
                       const roles: string[] = member.roles?.filter(Boolean) ?? [];
+                      const inactive = member.is_active === false;
                       return (
                         <div
                           key={member.id}
                           className={`rounded-2xl text-center ${cardPad} ${maxW}`}
                           style={{
                             background: "#1A1810",
-                            border: `1px solid ${isTop ? "#C9A844" : "#2E2A18"}`,
-                            boxShadow: isTop ? "0 0 30px rgba(201,168,68,0.08)" : "none",
+                            border: `1px solid ${inactive ? "#2E2A18" : isTop ? "#C9A844" : "#2E2A18"}`,
+                            boxShadow: inactive ? "none" : isTop ? "0 0 30px rgba(201,168,68,0.08)" : "none",
+                            opacity: inactive ? 0.45 : 1,
                           }}
                         >
                           {/* Avatar */}
@@ -163,12 +175,12 @@ export default async function AboutPage() {
                                 src={member.image_url}
                                 alt={member.name}
                                 className={`${imgSize} rounded-full object-cover`}
-                                style={{ border: `2px solid ${isTop ? "#C9A844" : "#2E2A18"}` }}
+                                style={{ border: `2px solid ${inactive ? "#2E2A18" : isTop ? "#C9A844" : "#2E2A18"}`, filter: inactive ? "grayscale(1)" : "none" }}
                               />
                             ) : (
                               <div
                                 className={`${imgSize} rounded-full flex items-center justify-center font-black`}
-                                style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844", fontSize: isTop ? 32 : 22 }}
+                                style={{ background: "rgba(201,168,68,0.1)", color: "#9A9070", fontSize: isTop ? 32 : 22 }}
                               >
                                 {member.name[0]}
                               </div>
@@ -176,9 +188,12 @@ export default async function AboutPage() {
                           </div>
 
                           {/* Name & title */}
-                          <p className={`font-black ${nameSize} leading-snug`} style={{ color: "#F0EAD6" }}>
+                          <p className={`font-black ${nameSize} leading-snug`} style={{ color: inactive ? "#9A9070" : "#F0EAD6" }}>
                             {member.name}
                           </p>
+                          {inactive && (
+                            <span className="inline-block text-xs px-2 py-0.5 rounded-full mt-1" style={{ background: "rgba(100,100,100,0.2)", color: "#9A9070", border: "1px solid #2E2A18" }}>سابقاً</span>
+                          )}
                           {member.title && (
                             <p className="text-xs mt-1" style={{ color: "#9A9070" }}>{member.title}</p>
                           )}
