@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel env *)",
+      "Bash(vercel logs *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(npx tsc *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

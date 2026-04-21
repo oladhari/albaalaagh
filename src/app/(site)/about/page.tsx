@@ -1,9 +1,41 @@
+import { supabaseAdmin as supabase } from "@/lib/supabase";
+
 export const metadata = {
   title: "من نحن | البلاغ",
   description: "تعرف على قناة البلاغ ورسالتها ومنهجها",
 };
 
-export default function AboutPage() {
+export const revalidate = 3600;
+
+async function getStaff() {
+  const { data, error } = await supabase
+    .from("guests")
+    .select("id, name, title, image_url")
+    .eq("is_staff", true)
+    .order("name");
+  if (error) { console.error(error); return []; }
+
+  const staff = data ?? [];
+  if (staff.length === 0) return [];
+
+  const ids = staff.map((s: any) => s.id);
+  const { data: programs } = await supabase
+    .from("guests")
+    .select("host_id")
+    .eq("tier", "program")
+    .in("host_id", ids);
+
+  const counts: Record<string, number> = {};
+  for (const p of programs ?? []) {
+    if (p.host_id) counts[p.host_id] = (counts[p.host_id] ?? 0) + 1;
+  }
+
+  return staff.map((s: any) => ({ ...s, programs_count: counts[s.id] ?? 0 }));
+}
+
+export default async function AboutPage() {
+  const staff = await getStaff();
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
       {/* Header */}
@@ -72,6 +104,52 @@ export default function AboutPage() {
         </div>
 
       </div>
+
+      {/* Staff */}
+      {staff.length > 0 && (
+        <div className="mt-14">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>فريق البلاغ</h2>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+            {staff.map((member: any) => (
+              <div
+                key={member.id}
+                className="flex items-center gap-4 p-4 rounded-xl"
+                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+              >
+                {member.image_url ? (
+                  <img
+                    src={member.image_url}
+                    alt={member.name}
+                    className="w-14 h-14 rounded-full object-cover shrink-0"
+                    style={{ border: "2px solid #2E2A18" }}
+                  />
+                ) : (
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-black shrink-0"
+                    style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
+                  >
+                    {member.name[0]}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-bold text-sm leading-snug" style={{ color: "#F0EAD6" }}>{member.name}</p>
+                  {member.title && (
+                    <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "#9A9070" }}>{member.title}</p>
+                  )}
+                  {member.programs_count > 0 && (
+                    <p className="text-xs mt-1.5 font-semibold" style={{ color: "#C9A844" }}>
+                      {member.programs_count} {member.programs_count === 1 ? "برنامج" : "برامج"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12">

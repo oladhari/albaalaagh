@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
   const body = await req.json();
-  const { name, title, bio, image_url, category } = body;
+  const { name, title, bio, image_url, category, tier, is_staff, program_name } = body;
 
   if (!name || !title || !category) {
     return NextResponse.json({ error: "الاسم والصفة والتصنيف مطلوبة" }, { status: 400 });
@@ -25,12 +25,38 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from("guests")
-    .insert({ name, title, bio: bio ?? "", image_url: image_url ?? null, category })
+    .insert({
+      name,
+      title,
+      bio:          bio          ?? "",
+      image_url:    image_url    ?? null,
+      category,
+      tier:         tier         ?? "guest",
+      is_staff:     is_staff     ?? false,
+      program_name: program_name ?? null,
+    })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
+}
+
+export async function PATCH(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+  const { id, tier, is_staff, program_name, host_id } = await req.json();
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const patch: Record<string, unknown> = {};
+  if (tier         !== undefined) patch.tier         = tier;
+  if (is_staff     !== undefined) patch.is_staff     = is_staff;
+  if (program_name !== undefined) patch.program_name = program_name || null;
+  if (host_id      !== undefined) patch.host_id      = host_id || null;
+
+  const { error } = await supabaseAdmin.from("guests").update(patch).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest) {

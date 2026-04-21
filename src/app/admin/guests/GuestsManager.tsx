@@ -18,6 +18,10 @@ interface Guest {
   bio: string;
   image_url?: string;
   category: string[];
+  tier: "program" | "guest";
+  is_staff: boolean;
+  program_name?: string;
+  host_id?: string | null;
 }
 
 interface Props {
@@ -25,13 +29,14 @@ interface Props {
   initialGuests: Guest[];
 }
 
-const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[] };
+const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[], tier: "guest" as "program" | "guest", is_staff: false, program_name: "" };
 
 export default function GuestsManager({ videos, initialGuests }: Props) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [patching, setPatching] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -99,6 +104,20 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     });
     setGuests((prev) => prev.filter((g) => g.id !== id));
     setDeleting(null);
+  };
+
+  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "host_id">>) => {
+    setPatching(id);
+    const res = await fetch("/api/admin/guests", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, ...updates }),
+    });
+    if (res.ok) {
+      setGuests((prev) => prev.map((g) => g.id === id ? { ...g, ...updates } : g));
+    }
+    setPatching(null);
   };
 
   const inputStyle = {
@@ -303,6 +322,46 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
               />
             </div>
 
+            <div>
+              <label style={labelStyle}>النوع</label>
+              <div className="flex gap-3 mt-1">
+                {(["guest", "program"] as const).map((t) => (
+                  <label key={t} className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "#F0EAD6" }}>
+                    <input
+                      type="radio"
+                      name="tier"
+                      checked={form.tier === t}
+                      onChange={() => setForm((p) => ({ ...p, tier: t }))}
+                    />
+                    {t === "guest" ? "ضيف حلقة" : "برنامج دوري"}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {form.tier === "program" && (
+              <div>
+                <label style={labelStyle}>اسم البرنامج</label>
+                <input
+                  style={inputStyle}
+                  placeholder="مثال: مشهد تونسي، حوار الساعة..."
+                  value={form.program_name}
+                  onChange={(e) => set("program_name", e.target.value)}
+                  onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
+                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                />
+              </div>
+            )}
+
+            <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#9A9070" }}>
+              <input
+                type="checkbox"
+                checked={form.is_staff}
+                onChange={(e) => setForm((p) => ({ ...p, is_staff: e.target.checked }))}
+              />
+              طاقم البلاغ (مخفي عن الجمهور)
+            </label>
+
             {error && <p className="text-xs" style={{ color: "#FF6B6B" }}>{error}</p>}
 
             <div className="flex gap-2">
@@ -343,40 +402,95 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                 {guests.map((guest) => (
                   <div
                     key={guest.id}
-                    className="flex items-center gap-3 p-3 rounded-xl"
+                    className="p-3 rounded-xl space-y-2"
                     style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
                   >
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                      style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-                    >
-                      {guest.name[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "#F0EAD6" }}>
-                        {guest.name}
-                      </p>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-xs" style={{ color: "#9A9070" }}>{guest.title}</span>
-                        {(Array.isArray(guest.category) ? guest.category : [guest.category]).map((c) => (
-                          <span
-                            key={c}
-                            className="text-xs px-1.5 py-0.5 rounded-full"
-                            style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
-                          >
-                            {c}
-                          </span>
-                        ))}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                        style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
+                      >
+                        {guest.name[0]}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: "#F0EAD6" }}>
+                          {guest.name}
+                        </p>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-xs" style={{ color: "#9A9070" }}>{guest.title}</span>
+                          {(Array.isArray(guest.category) ? guest.category : [guest.category]).map((c) => (
+                            <span
+                              key={c}
+                              className="text-xs px-1.5 py-0.5 rounded-full"
+                              style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteGuest(guest.id)}
+                        disabled={deleting === guest.id}
+                        className="text-xs px-2 py-1 rounded shrink-0"
+                        style={{ color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}
+                      >
+                        حذف
+                      </button>
                     </div>
-                    <button
-                      onClick={() => deleteGuest(guest.id)}
-                      disabled={deleting === guest.id}
-                      className="text-xs px-2 py-1 rounded shrink-0"
-                      style={{ color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}
-                    >
-                      حذف
-                    </button>
+                    {/* Tier / staff controls */}
+                    <div className="flex items-center gap-2 flex-wrap pt-1" style={{ borderTop: "1px solid #2E2A18" }}>
+                      <select
+                        value={guest.tier ?? "guest"}
+                        disabled={patching === guest.id}
+                        onChange={(e) => patchGuest(guest.id, { tier: e.target.value as "program" | "guest" })}
+                        className="text-xs rounded px-2 py-1"
+                        style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18" }}
+                      >
+                        <option value="guest">ضيف حلقة</option>
+                        <option value="program">برنامج دوري</option>
+                      </select>
+                      {guest.tier === "program" && (
+                        <>
+                          <input
+                            className="text-xs rounded px-2 py-1"
+                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18", minWidth: "120px" }}
+                            placeholder="اسم البرنامج..."
+                            defaultValue={guest.program_name ?? ""}
+                            onBlur={(e) => {
+                              if (e.target.value !== (guest.program_name ?? "")) {
+                                patchGuest(guest.id, { program_name: e.target.value });
+                              }
+                            }}
+                          />
+                          <select
+                            value={guest.host_id ?? ""}
+                            disabled={patching === guest.id}
+                            onChange={(e) => patchGuest(guest.id, { host_id: e.target.value || null })}
+                            className="text-xs rounded px-2 py-1"
+                            style={{ background: "#111008", color: "#F0EAD6", border: "1px solid #2E2A18" }}
+                          >
+                            <option value="">— المسؤول في البلاغ —</option>
+                            {guests.filter((g) => g.is_staff).map((staff) => (
+                              <option key={staff.id} value={staff.id}>{staff.name}</option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                      <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "#9A9070" }}>
+                        <input
+                          type="checkbox"
+                          checked={guest.is_staff ?? false}
+                          disabled={patching === guest.id}
+                          onChange={(e) => patchGuest(guest.id, { is_staff: e.target.checked })}
+                          className="rounded"
+                        />
+                        طاقم البلاغ (مخفي عن الجمهور)
+                      </label>
+                      {patching === guest.id && (
+                        <span className="text-xs" style={{ color: "#C9A844" }}>جارٍ الحفظ...</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
