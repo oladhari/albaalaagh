@@ -10,7 +10,7 @@ export const revalidate = 3600;
 async function getStaff() {
   const { data, error } = await supabase
     .from("guests")
-    .select("id, name, title, image_url")
+    .select("id, name, title, image_url, roles")
     .eq("is_staff", true)
     .order("name");
   if (error) { console.error(error); return []; }
@@ -137,7 +137,20 @@ export default async function AboutPage() {
                 <div className="min-w-0">
                   <p className="font-bold text-sm leading-snug" style={{ color: "#F0EAD6" }}>{member.name}</p>
                   {member.title && (
-                    <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "#9A9070" }}>{member.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>{member.title}</p>
+                  )}
+                  {member.roles?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {member.roles.filter(Boolean).map((r: string) => (
+                        <span
+                          key={r}
+                          className="text-xs px-1.5 py-0.5 rounded-full"
+                          style={{ background: "rgba(107,203,119,0.12)", color: "#6BCB77", border: "1px solid rgba(107,203,119,0.25)" }}
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
                   )}
                   {member.programs_count > 0 && (
                     <p className="text-xs mt-1.5 font-semibold" style={{ color: "#C9A844" }}>

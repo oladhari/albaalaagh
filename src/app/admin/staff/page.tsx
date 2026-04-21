@@ -42,45 +42,75 @@ export default async function AdminStaffPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-4">
           {staff.map((member: any) => {
             const programs: string[] = member.program_names?.filter(Boolean) ?? [];
+            const roles: string[]   = member.roles?.filter(Boolean) ?? [];
             return (
               <div
                 key={member.id}
-                className="flex gap-4 p-4 rounded-xl"
+                className="flex gap-4 p-5 rounded-xl"
                 style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
               >
+                {/* Avatar */}
                 {member.image_url ? (
                   <img
                     src={member.image_url} alt={member.name}
-                    className="w-14 h-14 rounded-full object-cover shrink-0"
+                    className="w-16 h-16 rounded-full object-cover shrink-0"
                     style={{ border: "2px solid #2E2A18" }}
                   />
                 ) : (
                   <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shrink-0"
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0"
                     style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
                   >
                     {member.name[0]}
                   </div>
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm mb-0.5" style={{ color: "#F0EAD6" }}>{member.name}</p>
-                  <p className="text-xs mb-1" style={{ color: "#C9A844" }}>{member.title}</p>
-                  {member.bio && (
-                    <p className="text-xs line-clamp-2 mb-1" style={{ color: "#9A9070" }}>{member.bio}</p>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: "#F0EAD6" }}>{member.name}</p>
+                    <p className="text-xs" style={{ color: "#C9A844" }}>{member.title}</p>
+                  </div>
+
+                  {/* Roles */}
+                  {roles.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {roles.map((r) => (
+                        <span
+                          key={r}
+                          className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: "rgba(107,203,119,0.15)", color: "#6BCB77", border: "1px solid rgba(107,203,119,0.3)" }}
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
                   )}
+
+                  {/* Programs */}
                   {programs.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {programs.map((p: string) => (
-                        <span key={p} className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}>
+                    <div className="flex flex-wrap gap-1">
+                      {programs.map((p) => (
+                        <span
+                          key={p}
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.2)" }}
+                        >
                           {p}
                         </span>
                       ))}
                     </div>
                   )}
+
+                  {member.bio && (
+                    <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>{member.bio}</p>
+                  )}
                 </div>
+
+                {/* Actions */}
                 <div className="shrink-0 self-start">
                   <Link
                     href={`/admin/guests/${member.id}/edit`}

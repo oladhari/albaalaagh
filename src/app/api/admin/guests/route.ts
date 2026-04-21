@@ -45,16 +45,17 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
-  const { id, tier, is_staff, program_name, program_names, host_id, program_ids } = await req.json();
+  const { id, tier, is_staff, program_name, program_names, host_id, program_ids, roles } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const patch: Record<string, unknown> = {};
-  if (tier         !== undefined) patch.tier         = tier;
-  if (is_staff     !== undefined) patch.is_staff     = is_staff;
-  if (program_name !== undefined) patch.program_name = program_name || null;
-  if (host_id      !== undefined) patch.host_id      = host_id || null;
+  if (tier          !== undefined) patch.tier          = tier;
+  if (is_staff      !== undefined) patch.is_staff      = is_staff;
+  if (program_name  !== undefined) patch.program_name  = program_name || null;
+  if (host_id       !== undefined) patch.host_id       = host_id || null;
   if (program_names !== undefined) patch.program_names = program_names ?? [];
-  if (program_ids  !== undefined) patch.program_ids  = program_ids ?? [];
+  if (program_ids   !== undefined) patch.program_ids   = program_ids  ?? [];
+  if (roles         !== undefined) patch.roles         = roles        ?? [];
 
   const { error } = await supabaseAdmin.from("guests").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

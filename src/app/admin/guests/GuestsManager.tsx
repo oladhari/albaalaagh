@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { STAFF_ROLES } from "@/lib/staff-roles";
 
 export const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
 
@@ -25,6 +26,7 @@ interface Guest {
   program_names?: string[];
   host_id?: string | null;
   program_ids?: string[];
+  roles?: string[];
 }
 
 interface Props {
@@ -117,7 +119,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     setDeleting(null);
   };
 
-  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "program_names" | "host_id" | "program_ids">>) => {
+  const patchGuest = async (id: string, updates: Partial<Pick<Guest, "tier" | "is_staff" | "program_name" | "program_names" | "host_id" | "program_ids" | "roles">>) => {
     setPatching(id);
     const res = await fetch("/api/admin/guests", {
       method: "PATCH",
@@ -582,6 +584,39 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                                 }}
                               >
                                 {prog.program_name ?? prog.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                    {/* Roles — only for staff members */}
+                    {guest.is_staff && (() => {
+                      const linked = guest.roles ?? [];
+                      return (
+                        <div className="flex flex-wrap gap-2 pt-1" style={{ borderTop: "1px solid #2E2A18" }}>
+                          <span className="text-xs self-center shrink-0" style={{ color: "#9A9070" }}>الأدوار:</span>
+                          {STAFF_ROLES.map((role) => {
+                            const active = linked.includes(role);
+                            return (
+                              <button
+                                key={role}
+                                type="button"
+                                disabled={patching === guest.id}
+                                onClick={() => {
+                                  const next = active
+                                    ? linked.filter((r) => r !== role)
+                                    : [...linked, role];
+                                  patchGuest(guest.id, { roles: next });
+                                }}
+                                className="text-xs px-2 py-0.5 rounded-full border transition-all"
+                                style={{
+                                  borderColor: active ? "#6BCB77" : "#2E2A18",
+                                  color:       active ? "#111008" : "#9A9070",
+                                  background:  active ? "#6BCB77" : "transparent",
+                                }}
+                              >
+                                {role}
                               </button>
                             );
                           })}
