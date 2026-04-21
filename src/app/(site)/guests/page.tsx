@@ -12,11 +12,19 @@ export const revalidate = 300;
 async function getGuests() {
   const { data, error } = await supabase
     .from("guests")
-    .select("*")
+    .select("*, writer:writers(name, title, bio, image_url)")
     .eq("is_staff", false)
     .order("name");
   if (error) { console.error(error); return []; }
-  return data ?? [];
+  return (data ?? []).map((g: any) => {
+    if (!g.writer) return g;
+    return {
+      ...g,
+      image_url: g.writer.image_url || g.image_url,
+      bio:       g.writer.bio       || g.bio,
+      title:     g.writer.title     || g.title,
+    };
+  });
 }
 
 export default async function GuestsPage() {

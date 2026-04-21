@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 async function getStaff() {
   const { data, error } = await supabase
     .from("guests")
-    .select("id, name, title, image_url, roles, is_active")
+    .select("id, name, title, image_url, roles, is_active, writer:writers(name, title, bio, image_url)")
     .eq("is_staff", true)
     .order("name");
   if (error) { console.error(error); return []; }
@@ -32,7 +32,15 @@ async function getStaff() {
   }
 
   return staff
-    .map((s: any) => ({ ...s, programs_count: counts[s.id] ?? 0 }))
+    .map((s: any) => {
+      const w = s.writer;
+      return {
+        ...s,
+        image_url: (w?.image_url || s.image_url),
+        title:     (w?.title     || s.title),
+        programs_count: counts[s.id] ?? 0,
+      };
+    })
     .sort((a: any, b: any) => {
       // Active first, then inactive
       if ((a.is_active ?? true) !== (b.is_active ?? true))
