@@ -48,7 +48,7 @@ function sortGuests(list: Guest[]): Guest[] {
 function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) {
   const cats = getCategories(guest);
   const programNames = guest.program_names?.filter(Boolean) ?? [];
-  const badge = isProgram ? (programNames[0] ?? guest.program_name) : cats[0];
+  const badge = isProgram ? null : cats[0];
 
   return (
     <div
@@ -73,17 +73,8 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
         )}
         {badge && (
           <span
-            title={badge}
-            className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full font-medium overflow-hidden"
-            style={{
-              background: "rgba(201,168,68,0.9)",
-              color: "#111008",
-              maxWidth: "calc(100% - 8px)",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-              display: "block",
-              transform: "translateX(-50%)",
-            }}
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium"
+            style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
           >
             {badge}
           </span>
@@ -97,14 +88,13 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
           {guest.title}
         </p>
       )}
-      {/* Show additional program names if more than one */}
-      {isProgram && programNames.length > 1 && (
+      {isProgram && programNames.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1 mt-2">
-          {programNames.slice(1).map((name) => (
+          {programNames.map((name) => (
             <span
               key={name}
-              className="text-xs px-1.5 py-0.5 rounded-full"
-              style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
             >
               {name}
             </span>
@@ -132,9 +122,11 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
             <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-            {sortGuests(programs).map((guest) => (
-              <GuestCard key={guest.id} guest={guest} isProgram />
-            ))}
+            {[...programs]
+              .sort((a, b) => (b.program_names?.length ?? 0) - (a.program_names?.length ?? 0))
+              .map((guest) => (
+                <GuestCard key={guest.id} guest={guest} isProgram />
+              ))}
           </div>
         </section>
       )}
