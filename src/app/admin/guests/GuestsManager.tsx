@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
 
@@ -461,14 +462,23 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                           ))}
                         </div>
                       </div>
-                      <button
-                        onClick={() => deleteGuest(guest.id)}
-                        disabled={deleting === guest.id}
-                        className="text-xs px-2 py-1 rounded shrink-0"
-                        style={{ color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}
-                      >
-                        حذف
-                      </button>
+                      <div className="flex gap-1 shrink-0">
+                        <Link
+                          href={`/admin/guests/${guest.id}/edit`}
+                          className="text-xs px-2 py-1 rounded border"
+                          style={{ color: "#9A9070", borderColor: "#2E2A18" }}
+                        >
+                          تعديل
+                        </Link>
+                        <button
+                          onClick={() => deleteGuest(guest.id)}
+                          disabled={deleting === guest.id}
+                          className="text-xs px-2 py-1 rounded"
+                          style={{ color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}
+                        >
+                          حذف
+                        </button>
+                      </div>
                     </div>
                     {/* Tier / staff controls */}
                     <div className="flex items-center gap-2 flex-wrap pt-1" style={{ borderTop: "1px solid #2E2A18" }}>
