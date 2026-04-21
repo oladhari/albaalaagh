@@ -18,74 +18,36 @@ export default async function OgImage() {
           width: 1200,
           height: 630,
           background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
-          border: "1px solid #2E2A18",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           fontFamily: "Cairo",
-          direction: "rtl",
           position: "relative",
           overflow: "hidden",
           padding: "60px 80px",
         }}
       >
         {/* Top-right radial glow */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 320,
-            height: 320,
-            borderBottomLeftRadius: "100%",
-            background: "radial-gradient(circle, rgba(201,168,68,0.12), transparent 70%)",
-            display: "flex",
-          }}
-        />
+        <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: 320, borderBottomLeftRadius: "100%", background: "radial-gradient(circle, rgba(201,168,68,0.12), transparent 70%)", display: "flex" }} />
         {/* Bottom-left radial glow */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: 480,
-            height: 480,
-            borderTopRightRadius: "100%",
-            background: "radial-gradient(circle, rgba(201,168,68,0.06), transparent 70%)",
-            display: "flex",
-          }}
-        />
+        <div style={{ position: "absolute", bottom: 0, left: 0, width: 480, height: 480, borderTopRightRadius: "100%", background: "radial-gradient(circle, rgba(201,168,68,0.06), transparent 70%)", display: "flex" }} />
 
-        {/* Main content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        {/* Main content — right-aligned to match RTL */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 28 }}>
+
           {/* Title */}
-          <div
-            style={{
-              fontSize: 120,
-              fontWeight: 700,
-              color: "#C9A844",
-              lineHeight: 1.1,
-              letterSpacing: "-1px",
-            }}
-          >
+          <div style={{ fontSize: 120, fontWeight: 700, color: "#C9A844", lineHeight: 1.1, textAlign: "right" }}>
             البلاغ
           </div>
 
           {/* Description */}
-          <div
-            style={{
-              fontSize: 30,
-              color: "#9A9070",
-              lineHeight: 1.7,
-              maxWidth: 780,
-            }}
-          >
-            منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
+          <div style={{ fontSize: 28, color: "#9A9070", lineHeight: 1.7, textAlign: "right", maxWidth: 860 }}>
+            منبر إعلامي تونسي مستقل — حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ومواكبة الحدث التونسي والعربي والدولي
           </div>
 
           {/* Nav pills */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-            {["المقابلات", "الأخبار", "المقالات", "قضايا شرعية", "الضيوف"].map((label) => (
+          <div style={{ display: "flex", gap: 14, justifyContent: "flex-end" }}>
+            {["الضيوف", "قضايا شرعية", "المقالات", "الأخبار", "المقابلات"].map((label) => (
               <div
                 key={label}
                 style={{
@@ -93,7 +55,7 @@ export default async function OgImage() {
                   borderRadius: 999,
                   border: "1px solid rgba(201,168,68,0.3)",
                   color: "#C9A844",
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: 700,
                   background: "rgba(201,168,68,0.12)",
                 }}
@@ -104,23 +66,16 @@ export default async function OgImage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div
-          style={{
-            display: "flex",
-            gap: 56,
-            paddingTop: 32,
-            borderTop: "1px solid #2E2A18",
-          }}
-        >
+        {/* Stats — right-aligned */}
+        <div style={{ display: "flex", gap: 56, paddingTop: 32, borderTop: "1px solid #2E2A18", justifyContent: "flex-end" }}>
           {[
-            { value: "+5876", label: "فيديو على يوتيوب" },
-            { value: "31.7K", label: "مشترك يوتيوب" },
             { value: "+17",   label: "مقال" },
+            { value: "31.7K", label: "مشترك يوتيوب" },
+            { value: "+5876", label: "فيديو على يوتيوب" },
           ].map((stat) => (
-            <div key={stat.label} style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 38, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
-              <div style={{ fontSize: 20, color: "#9A9070", marginTop: 4 }}>{stat.label}</div>
+            <div key={stat.label} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+              <div style={{ fontSize: 36, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
+              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4 }}>{stat.label}</div>
             </div>
           ))}
         </div>
