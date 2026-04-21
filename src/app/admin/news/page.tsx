@@ -46,6 +46,8 @@ export default function AdminNewsPage() {
   const [published, setPublished]     = useState<Record<string, string>>({});
   const [uploading, setUploading]     = useState(false);
   const [deleting, setDeleting]       = useState<string | null>(null);
+  const [urlInput, setUrlInput]       = useState("");
+  const [fetchingUrl, setFetchingUrl] = useState(false);
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
@@ -160,6 +162,36 @@ export default function AdminNewsPage() {
     setDeleting(null);
   };
 
+  const fromUrl = async () => {
+    if (!urlInput.trim()) return;
+    setFetchingUrl(true);
+    setPreview(null);
+    try {
+      const res  = await fetch("/api/admin/news/from-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ url: urlInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "خطأ في جلب الرابط"); return; }
+      setPreview({
+        newsId:       data.newsId,
+        title:        data.title,
+        excerpt:      data.excerpt,
+        content:      data.content,
+        image_url:    data.image_url,
+        geo:          data.geo ?? "general",
+        category:     data.category ?? "عام",
+        published_at: new Date().toISOString().slice(0, 16),
+      });
+      setUrlInput("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setFetchingUrl(false);
+    }
+  };
+
   const fetchFresh = async () => {
     setLoading(true);
     await fetch("/api/cron/fetch-news");
@@ -184,6 +216,32 @@ export default function AdminNewsPage() {
           style={{ borderColor: "#2E2A18", color: DIM }}
         >
           {loading ? "جارٍ التحميل..." : "جلب أخبار جديدة ↺"}
+        </button>
+      </div>
+
+      {/* From URL */}
+      <div
+        className="flex gap-2 mb-6 p-3 rounded-xl"
+        style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      >
+        <input
+          type="url"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && fromUrl()}
+          placeholder="🔗 هل لديك رابط خبر معين؟ الصقه هنا وسننشئ تقريراً منه..."
+          style={{ ...inputStyle, resize: "none", flex: 1 }}
+        />
+        <button
+          onClick={fromUrl}
+          disabled={fetchingUrl || !urlInput.trim()}
+          className="px-4 py-2 rounded-lg text-sm font-bold shrink-0"
+          style={{
+            background: fetchingUrl || !urlInput.trim() ? "#2E2A18" : `linear-gradient(135deg, ${GOLD}, #9A7B28)`,
+            color: fetchingUrl || !urlInput.trim() ? DIM : "#111008",
+          }}
+        >
+          {fetchingUrl ? "⏳ جارٍ الجلب..." : "✍️ إنشاء تقرير"}
         </button>
       </div>
 
