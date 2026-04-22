@@ -23,6 +23,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "الاسم والصفة والتصنيف مطلوبة" }, { status: 400 });
   }
 
+  const { data: existing } = await supabaseAdmin
+    .from("guests")
+    .select("id")
+    .ilike("name", name.trim())
+    .maybeSingle();
+  if (existing) {
+    return NextResponse.json({ error: "يوجد ضيف بهذا الاسم مسبقاً" }, { status: 409 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("guests")
     .insert({

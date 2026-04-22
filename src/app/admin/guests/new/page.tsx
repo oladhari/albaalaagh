@@ -12,6 +12,7 @@ export default function NewGuestPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<{ id: string; title: string }[]>([]);
+  const [existingNames, setExistingNames] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "", title: "", bio: "", image_url: "",
     category: [] as string[],
@@ -23,10 +24,13 @@ export default function NewGuestPage() {
   });
 
   useEffect(() => {
-    fetch("/api/admin/youtube/playlists", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setPlaylists(Array.isArray(data) ? data : []))
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/admin/youtube/playlists", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/admin/guests", { credentials: "include" }).then((r) => r.json()),
+    ]).then(([pl, guests]) => {
+      setPlaylists(Array.isArray(pl) ? pl : []);
+      setExistingNames((Array.isArray(guests) ? guests : []).map((g: any) => g.name.trim().toLowerCase()));
+    }).catch(() => {});
   }, []);
 
   const set = (f: string, v: string) => setForm((p) => ({ ...p, [f]: v }));
@@ -51,10 +55,13 @@ export default function NewGuestPage() {
         : [...p.program_names, title],
     }));
 
-  const handleSave = async (e: React.FormEvent) => {
+  const isDuplicate = existingNames.includes(form.name.trim().toLowerCase());
+
+  const handleSave = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!form.name || !form.title) { setError("الاسم والصفة مطلوبان"); return; }
     if (form.category.length === 0) { setError("يرجى اختيار تصنيف واحد على الأقل"); return; }
+    if (isDuplicate) { setError("يوجد ضيف بهذا الاسم مسبقاً"); return; }
     setSaving(true);
     setError(null);
     try {
@@ -97,8 +104,9 @@ export default function NewGuestPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label style={labelStyle}>الاسم الكامل *</label>
-            <input style={inputStyle} value={form.name} onChange={(e) => set("name", e.target.value)}
-              onFocus={(e) => (e.target.style.borderColor = "#C9A844")} onBlur={(e) => (e.target.style.borderColor = "#2E2A18")} />
+            <input style={{ ...inputStyle, borderColor: isDuplicate ? "#FF6B6B" : "#2E2A18" }} value={form.name} onChange={(e) => set("name", e.target.value)}
+              onFocus={(e) => (e.target.style.borderColor = isDuplicate ? "#FF6B6B" : "#C9A844")} onBlur={(e) => (e.target.style.borderColor = isDuplicate ? "#FF6B6B" : "#2E2A18")} />
+            {isDuplicate && <p className="text-xs mt-1" style={{ color: "#FF6B6B" }}>يوجد ضيف بهذا الاسم مسبقاً</p>}
           </div>
           <div>
             <label style={labelStyle}>الصفة / المنصب *</label>
