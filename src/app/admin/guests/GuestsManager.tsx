@@ -35,16 +35,10 @@ interface Props {
   initialGuests: Guest[];
 }
 
-const emptyForm = { name: "", title: "", bio: "", image_url: "", categories: [] as string[], tier: "guest" as "program" | "guest", is_staff: false, program_name: "", program_names: [] as string[] };
-
 export default function GuestsManager({ videos, initialGuests }: Props) {
   const [guests, setGuests] = useState<Guest[]>(initialGuests);
-  const [form, setForm] = useState(emptyForm);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [patching, setPatching] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
@@ -57,56 +51,6 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
       .then((data) => { if (Array.isArray(data)) setPlaylists(data); })
       .catch(() => {});
   }, []);
-
-  const set = (field: string, value: string) =>
-    setForm((p) => ({ ...p, [field]: value }));
-
-  const toggleCategory = (cat: string) =>
-    setForm((p) => ({
-      ...p,
-      categories: p.categories.includes(cat)
-        ? p.categories.filter((c) => c !== cat)
-        : [...p.categories, cat],
-    }));
-
-  // Fill form from a video title
-  const importFromTitle = (title: string) => {
-    setSelectedTitle(title);
-    // Strip common channel suffixes and separators
-    const cleaned = title
-      .replace(/[|｜\-–—]\s*(البلاغ|albaalaagh|albalag).*/gi, "")
-      .replace(/\s*(حوار|لقاء|مقابلة|نقاش|برنامج|ضيف|مع)\s*/gi, " ")
-      .trim();
-    setForm((p) => ({ ...p, name: cleaned }));
-    // Scroll form into view
-    document.getElementById("guest-form")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const saveGuest = async () => {
-    if (!form.name || !form.title || form.categories.length === 0) {
-      setError("الاسم والصفة والتصنيف مطلوبة");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/guests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ ...form, category: form.categories }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error); return; }
-      setGuests((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
-      setForm(emptyForm);
-      setSelectedTitle(null);
-    } catch {
-      setError("خطأ في الاتصال");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const deleteGuest = async (id: string) => {
     setDeleting(id);
@@ -144,14 +88,6 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
     outline: "none",
     fontFamily: "inherit",
     fontSize: "13px",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: "11px",
-    color: "#9A9070",
-    marginBottom: "4px",
-    fontWeight: "600",
   };
 
   const runAutoImport = async () => {
@@ -250,179 +186,8 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* ── Left: Add guest form + existing guests ── */}
+        {/* ── Left: guests list ── */}
         <div className="space-y-6">
-
-          {/* Add form */}
-          <div
-            id="guest-form"
-            className="p-5 rounded-xl space-y-3"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <h2 className="text-sm font-bold mb-1" style={{ color: "#C9A844" }}>
-              {selectedTitle ? `من: ${selectedTitle.slice(0, 60)}...` : "إضافة ضيف جديد"}
-            </h2>
-
-            <div>
-              <label style={labelStyle}>الاسم الكامل *</label>
-              <input
-                style={inputStyle}
-                placeholder="اسم الضيف..."
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>التصنيف * (يمكن اختيار أكثر من واحد)</label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {CATEGORIES.map((c) => {
-                  const active = form.categories.includes(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => toggleCategory(c)}
-                      className="px-3 py-1 rounded-full text-xs font-medium border transition-all"
-                      style={{
-                        borderColor: active ? "#C9A844" : "#2E2A18",
-                        color:       active ? "#111008" : "#9A9070",
-                        background:  active ? "#C9A844" : "transparent",
-                      }}
-                    >
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>الصفة / المنصب *</label>
-              <input
-                style={inputStyle}
-                placeholder="مثال: وزير سابق، ناشط حقوقي، أستاذ جامعي..."
-                value={form.title}
-                onChange={(e) => set("title", e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>نبذة مختصرة (اختياري)</label>
-              <textarea
-                rows={2}
-                style={{ ...inputStyle, resize: "vertical" }}
-                placeholder="معلومات إضافية عن الضيف..."
-                value={form.bio}
-                onChange={(e) => set("bio", e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>رابط الصورة (اختياري)</label>
-              <input
-                style={inputStyle}
-                placeholder="https://..."
-                value={form.image_url}
-                onChange={(e) => set("image_url", e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>النوع</label>
-              <div className="flex gap-3 mt-1">
-                {(["guest", "program"] as const).map((t) => (
-                  <label key={t} className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "#F0EAD6" }}>
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={form.tier === t}
-                      onChange={() => setForm((p) => ({ ...p, tier: t }))}
-                    />
-                    {t === "guest" ? "ضيف حلقة" : "برنامج دوري"}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {form.tier === "program" && playlists.length > 0 && (
-              <div>
-                <label style={labelStyle}>البرامج (من يوتيوب — يمكن اختيار أكثر من واحد)</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {playlists.map((p) => {
-                    const active = (form.program_names ?? []).includes(p.title);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() =>
-                          setForm((prev) => {
-                            const curr = prev.program_names ?? [];
-                            return {
-                              ...prev,
-                              program_names: active
-                                ? curr.filter((x) => x !== p.title)
-                                : [...curr, p.title],
-                            };
-                          })
-                        }
-                        className="px-3 py-1 rounded-full text-xs font-medium border transition-all"
-                        style={{
-                          borderColor: active ? "#C9A844" : "#2E2A18",
-                          color:       active ? "#111008" : "#9A9070",
-                          background:  active ? "#C9A844" : "transparent",
-                        }}
-                      >
-                        {p.title}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "#9A9070" }}>
-              <input
-                type="checkbox"
-                checked={form.is_staff}
-                onChange={(e) => setForm((p) => ({ ...p, is_staff: e.target.checked }))}
-              />
-              طاقم البلاغ (مخفي عن الجمهور)
-            </label>
-
-            {error && <p className="text-xs" style={{ color: "#FF6B6B" }}>{error}</p>}
-
-            <div className="flex gap-2">
-              <button
-                onClick={saveGuest}
-                disabled={saving}
-                className="flex-1 py-2 rounded-lg text-sm font-bold"
-                style={{
-                  background: "linear-gradient(135deg, #C9A844, #9A7B28)",
-                  color: "#111008",
-                }}
-              >
-                {saving ? "جارٍ الحفظ..." : "إضافة الضيف"}
-              </button>
-              {(form.name || form.title) && (
-                <button
-                  onClick={() => { setForm(emptyForm); setSelectedTitle(null); setError(null); }}
-                  className="px-4 py-2 rounded-lg text-sm border"
-                  style={{ borderColor: "#2E2A18", color: "#9A9070" }}
-                >
-                  إلغاء
-                </button>
-              )}
-            </div>
-          </div>
 
           {/* Existing guests list */}
           <div>
@@ -667,23 +432,18 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
               onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
             />
           </div>
-          <p className="text-xs mb-3" style={{ color: "#9A9070" }}>
-            اضغط على المقطع لاستيراد اسم الضيف منه تلقائياً
-          </p>
-
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pl-1">
             {filteredVideos.map((video) => {
               const alreadyAdded = [...existingNames].some((name) =>
                 video.title.includes(name.split(" ").pop() ?? "")
               );
               return (
-                <button
+                <div
                   key={video.youtube_id}
-                  onClick={() => importFromTitle(video.title)}
-                  className="w-full text-right flex gap-3 p-3 rounded-xl transition-all"
+                  className="w-full text-right flex gap-3 p-3 rounded-xl"
                   style={{
-                    background: selectedTitle === video.title ? "rgba(201,168,68,0.1)" : "#1A1810",
-                    border: `1px solid ${selectedTitle === video.title ? "#C9A844" : "#2E2A18"}`,
+                    background: "#1A1810",
+                    border: "1px solid #2E2A18",
                     opacity: alreadyAdded ? 0.45 : 1,
                   }}
                 >
@@ -700,7 +460,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                       <span className="text-xs" style={{ color: "#6BCB77" }}>✓ مُضاف</span>
                     )}
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
