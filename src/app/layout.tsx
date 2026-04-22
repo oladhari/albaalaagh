@@ -31,6 +31,11 @@ export const metadata: Metadata = {
   other: {
     "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
   },
+  alternates: {
+    types: {
+      "application/rss+xml": "https://www.albaalaagh.com/feed.xml",
+    },
+  },
 };
 
 export default function RootLayout({
