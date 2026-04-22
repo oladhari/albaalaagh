@@ -38,8 +38,13 @@ export default function AvatarUpload({ currentUrl, onUploaded }: Props) {
     const src = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const displayW = Math.min(480, img.naturalWidth);
-      const displayH = Math.round((img.naturalHeight / img.naturalWidth) * displayW);
+      // Constrain to fit inside 480×360 while preserving aspect ratio
+      let displayW = Math.min(480, img.naturalWidth);
+      let displayH = Math.round((img.naturalHeight / img.naturalWidth) * displayW);
+      if (displayH > 360) {
+        displayH = 360;
+        displayW = Math.round((img.naturalWidth / img.naturalHeight) * displayH);
+      }
       const size = Math.round(Math.min(displayW, displayH) * 0.7);
       const x = Math.round((displayW - size) / 2);
       const y = Math.round((displayH - size) / 2);
@@ -156,7 +161,7 @@ export default function AvatarUpload({ currentUrl, onUploaded }: Props) {
       {/* Crop modal */}
       {crop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
-          <div className="rounded-2xl p-6 max-w-lg w-full mx-4" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 overflow-y-auto" style={{ background: "#1A1810", border: "1px solid #2E2A18", maxHeight: "90vh" }}>
             <h3 className="text-sm font-bold mb-4" style={{ color: "#C9A844" }}>اقتصاص الصورة</h3>
             <p className="text-xs mb-4" style={{ color: "#9A9070" }}>اسحب المربع لتحديد الجزء المراد، واسحب الزاوية لتغيير الحجم</p>
 
