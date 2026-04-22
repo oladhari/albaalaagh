@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import GuestsManager from "./GuestsManager";
 import ReviewPanel from "./ReviewPanel";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function AdminGuestsPage() {
   const [videos, { data: guests }] = await Promise.all([

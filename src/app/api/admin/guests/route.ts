@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
   const body = await req.json();
-  const { name, title, bio, image_url, category, tier, is_staff, program_name } = body;
+  const { name, title, bio, image_url, category, tier, is_staff, program_name, program_names, roles, is_active } = body;
 
   if (!name || !title || !category) {
     return NextResponse.json({ error: "الاسم والصفة والتصنيف مطلوبة" }, { status: 400 });
@@ -28,12 +28,15 @@ export async function POST(req: NextRequest) {
     .insert({
       name,
       title,
-      bio:          bio          ?? "",
-      image_url:    image_url    ?? null,
+      bio:           bio           ?? "",
+      image_url:     image_url     ?? null,
       category,
-      tier:         tier         ?? "guest",
-      is_staff:     is_staff     ?? false,
-      program_name: program_name ?? null,
+      tier:          tier          ?? "guest",
+      is_staff:      is_staff      ?? false,
+      program_name:  program_name  ?? null,
+      program_names: program_names ?? [],
+      roles:         roles         ?? [],
+      is_active:     is_active     ?? true,
     })
     .select()
     .single();

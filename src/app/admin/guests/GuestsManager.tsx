@@ -426,9 +426,18 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
 
           {/* Existing guests list */}
           <div>
-            <h2 className="text-sm font-bold mb-3" style={{ color: "#C9A844" }}>
-              الضيوف المُضافون ({guests.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold" style={{ color: "#C9A844" }}>
+                الضيوف المُضافون ({guests.length})
+              </h2>
+              <Link
+                href="/admin/guests/new"
+                className="px-3 py-1.5 rounded-full text-xs font-bold"
+                style={{ background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" }}
+              >
+                + إضافة ضيف جديد
+              </Link>
+            </div>
             {guests.length === 0 ? (
               <p className="text-sm text-center py-8" style={{ color: "#9A9070" }}>
                 لا يوجد ضيوف بعد — اختر مقطعاً من اليمين لإضافة ضيف
