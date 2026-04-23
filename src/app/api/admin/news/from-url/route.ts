@@ -128,6 +128,17 @@ ${bodyText.slice(0, 3000)}
 
   if (insertErr || !row) {
     console.error("[from-url] DB insert error:", insertErr);
+    if (insertErr?.code === "23505") {
+      const { data: existing } = await supabaseAdmin
+        .from("news")
+        .select("id, status")
+        .eq("url", url)
+        .maybeSingle();
+      return NextResponse.json(
+        { error: "هذا الخبر موجود مسبقاً في قاعدة البيانات", existingId: existing?.id ?? null },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ error: "خطأ في قاعدة البيانات" }, { status: 500 });
   }
 
