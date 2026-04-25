@@ -6,6 +6,13 @@ import type { NewsArticle } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 
 type Filter = "pending" | "approved" | "rejected" | "priority";
+type Tone   = "accountability" | "neutral" | "positive";
+
+const TONES: { value: Tone; label: string; color: string }[] = [
+  { value: "accountability", label: "مساءلة",  color: "#FF6B6B" },
+  { value: "neutral",        label: "محايد",    color: "#C9A844" },
+  { value: "positive",       label: "إيجابي",   color: "#6BCB77" },
+];
 
 interface Preview {
   newsId:       string;
@@ -16,7 +23,8 @@ interface Preview {
   geo:          string;
   category:     string;
   published_at: string;
-  editMode?:    boolean; // true = editing existing, false = new publish
+  tone:         Tone;
+  editMode?:    boolean;
 }
 
 const GOLD  = "#C9A844";
@@ -73,11 +81,16 @@ export default function AdminNewsPage() {
     setWorking(null);
   };
 
-  const generate = async (news: NewsArticle) => {
+  const generate = async (news: NewsArticle, tone: Tone = "accountability") => {
     setGenerating(news.id);
     setPreview(null);
     try {
-      const res  = await fetch(`/api/admin/news/${news.id}/generate`, { method: "POST", credentials: "include" });
+      const res  = await fetch(`/api/admin/news/${news.id}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ tone }),
+      });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في الإنشاء"); return; }
       setPreview({
@@ -89,6 +102,7 @@ export default function AdminNewsPage() {
         geo:          data.geo ?? "tunisia",
         category:     data.category ?? "سياسة",
         published_at: new Date().toISOString().slice(0, 16),
+        tone,
       });
     } finally {
       setGenerating(null);
@@ -107,6 +121,7 @@ export default function AdminNewsPage() {
       published_at: news.published_at
         ? new Date(news.published_at).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16),
+      tone:         "accountability" as Tone,
       editMode:     true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -170,6 +185,7 @@ export default function AdminNewsPage() {
         geo:          data.geo ?? "general",
         category:     data.category ?? "عام",
         published_at: new Date().toISOString().slice(0, 16),
+        tone:         "accountability",
       });
       setUrlInput("");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -261,6 +277,28 @@ export default function AdminNewsPage() {
             </h2>
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>✕ إلغاء</button>
           </div>
+
+          {/* Tone switcher — only for generated (non-edit) previews */}
+          {!preview.editMode && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs shrink-0" style={{ color: DIM }}>أسلوب التقرير:</span>
+              {TONES.map((t) => (
+                <button
+                  key={t.value}
+                  disabled={generating === preview.newsId}
+                  onClick={() => generate({ id: preview.newsId } as NewsArticle, t.value)}
+                  className="px-3 py-1 rounded-full text-xs font-bold border transition-all"
+                  style={{
+                    borderColor: preview.tone === t.value ? t.color : "#2E2A18",
+                    color:       preview.tone === t.value ? "#111008" : DIM,
+                    background:  preview.tone === t.value ? t.color : "transparent",
+                  }}
+                >
+                  {generating === preview.newsId && preview.tone === t.value ? "⏳..." : t.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Image */}
           <div>
@@ -477,18 +515,23 @@ export default function AdminNewsPage() {
                       ✓ عرض ↗
                     </a>
                   ) : (news as any).source !== "البلاغ" && (
-                    <button
-                      onClick={() => generate(news)}
-                      disabled={generating === news.id || working === news.id}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                      style={{
-                        background: isPreviewing ? `rgba(201,168,68,0.15)` : "rgba(201,168,68,0.08)",
-                        color: GOLD,
-                        border: `1px solid rgba(201,168,68,0.3)`,
-                      }}
-                    >
-                      {generating === news.id ? "⏳ جارٍ..." : isPreviewing ? "✍️ إعادة" : "✍️ تقرير"}
-                    </button>
+                    generating === news.id ? (
+                      <span className="text-xs text-center" style={{ color: GOLD }}>⏳ جارٍ...</span>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {TONES.map((t) => (
+                          <button
+                            key={t.value}
+                            onClick={() => generate(news, t.value)}
+                            disabled={working === news.id}
+                            className="px-2 py-1 rounded-lg text-xs font-bold border transition-all"
+                            style={{ borderColor: t.color + "55", color: t.color, background: t.color + "15" }}
+                          >
+                            ✍️ {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
               </div>
