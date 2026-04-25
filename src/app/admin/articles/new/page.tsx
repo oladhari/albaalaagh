@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
-import AvatarUpload from "@/components/admin/AvatarUpload";
+import CoverUpload from "@/components/admin/CoverUpload";
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -202,7 +202,7 @@ export default function NewArticlePage() {
 
             <div>
               <label style={labelStyle}>صورة الغلاف</label>
-              <AvatarUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
+              <CoverUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
                 placeholder="أو الصق رابط الصورة مباشرة..."
