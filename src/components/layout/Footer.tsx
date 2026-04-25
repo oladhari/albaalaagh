@@ -98,8 +98,9 @@ export default function Footer() {
                 ["/articles",      "المقالات"],
                 ["/qadaya-sharia", "قضايا شرعية"],
                 ["/guests",        "الضيوف"],
-                ["/about",         "من نحن"],
-                ["/contact",       "تواصل معنا"],
+                ["/about",          "من نحن"],
+                ["/contact",        "تواصل معنا"],
+                ["/privacy-policy", "سياسة الخصوصية"],
               ].map(([href, label]) => (
                 <li key={href}>
                   <Link
