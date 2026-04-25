@@ -14,7 +14,8 @@ async function getLatestNews() {
   const { data } = await supabaseAdmin
     .from("news")
     .select("*")
-    .neq("status", "rejected")
+    .eq("source", "البلاغ")
+    .eq("status", "approved")
     .order("published_at", { ascending: false })
     .limit(6);
   return data ?? [];
