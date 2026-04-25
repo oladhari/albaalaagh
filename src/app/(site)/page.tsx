@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchLiveStreams, fetchFeaturedPlaylists, fetchChannelStats } from "@/lib/youtube";
+import { fetchLiveStreams, fetchFeaturedPlaylists, fetchChannelStats, fetchActiveLiveStream } from "@/lib/youtube";
 import { supabaseAdmin } from "@/lib/supabase";
 import VideoCard from "@/components/ui/VideoCard";
 import ArticleCard from "@/components/ui/ArticleCard";
@@ -7,8 +7,9 @@ import NewsCard from "@/components/ui/NewsCard";
 import SectionHeader from "@/components/ui/SectionHeader";
 import SocialBar from "@/components/sections/SocialBar";
 import NewsTicker from "@/components/sections/NewsTicker";
+import LiveBanner from "@/components/sections/LiveBanner";
 
-export const revalidate = 300;
+export const revalidate = 120;
 
 async function getLatestNews() {
   const { data } = await supabaseAdmin
@@ -46,13 +47,14 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [videos, playlists, news, articles, channelStats, articlesCount] = await Promise.all([
+  const [videos, playlists, news, articles, channelStats, articlesCount, liveStream] = await Promise.all([
     fetchLiveStreams(20),
     fetchFeaturedPlaylists(),
     getLatestNews(),
     getLatestArticles(),
     fetchChannelStats(),
     getArticlesCount(),
+    fetchActiveLiveStream(),
   ]);
 
   const restVideos = videos;
@@ -65,6 +67,9 @@ export default async function HomePage() {
     <>
       {/* News Ticker */}
       <NewsTicker items={tickerItems} />
+
+      {/* Live Stream Banner — only visible when a live broadcast is active */}
+      <LiveBanner liveStream={liveStream} />
 
       {/* ── Hero ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">

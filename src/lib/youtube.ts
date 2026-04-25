@@ -522,6 +522,64 @@ export async function fetchAllVideosWithDescriptions(): Promise<
   return videos;
 }
 
+// ── Detect active live stream ─────────────────────────────────────────────────
+// Cost: 2 units per call (uploads playlist + videos.list), cached 2 minutes.
+// Checks the 5 most recent uploads for liveBroadcastContent === "live".
+
+export interface YTLiveStream {
+  youtube_id: string;
+  title: string;
+  thumbnail_url: string;
+}
+
+export async function fetchActiveLiveStream(): Promise<YTLiveStream | null> {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    // Step 1: uploads playlist ID — 1 unit, cached 24h
+    const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    chUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    chUrl.searchParams.set("id", CHANNEL_ID);
+    chUrl.searchParams.set("part", "contentDetails");
+    const chData = await ytFetch(chUrl, 86400);
+    const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) return null;
+
+    // Step 2: first 5 items from uploads playlist — 1 unit, cached 2 min
+    const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    plUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    plUrl.searchParams.set("playlistId", uploadsId);
+    plUrl.searchParams.set("part", "contentDetails");
+    plUrl.searchParams.set("maxResults", "5");
+    const plData = await ytFetch(plUrl, 120);
+    const ids = (plData.items ?? [])
+      .map((i: any) => i.contentDetails?.videoId)
+      .filter(Boolean) as string[];
+    if (!ids.length) return null;
+
+    // Step 3: check liveBroadcastContent — 1 unit, cached 2 min
+    const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+    vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    vidUrl.searchParams.set("id", ids.join(","));
+    vidUrl.searchParams.set("part", "snippet");
+    const vidData = await ytFetch(vidUrl, 120);
+
+    const live = (vidData.items ?? []).find(
+      (v: any) => v.snippet?.liveBroadcastContent === "live"
+    );
+    if (!live) return null;
+
+    return {
+      youtube_id:    live.id,
+      title:         live.snippet.title ?? "",
+      thumbnail_url:
+        live.snippet.thumbnails?.maxres?.url ||
+        live.snippet.thumbnails?.high?.url   || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 function getMockVideos(count: number): YTVideo[] {
