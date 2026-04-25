@@ -140,11 +140,11 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
       {/* Cover image */}
       {article.image_url && (
-        <div className="mb-8 rounded-xl overflow-hidden">
+        <div className="mb-8 rounded-xl overflow-hidden" style={{ aspectRatio: "16/9" }}>
           <img
             src={article.image_url}
             alt={article.title}
-            className="w-full object-cover max-h-96"
+            className="w-full h-full object-cover object-center"
           />
         </div>
       )}
