@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { timeAgo } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
+import CoverUpload from "@/components/admin/CoverUpload";
 
 type Filter = "pending" | "approved" | "rejected" | "priority";
 
@@ -44,7 +45,6 @@ export default function AdminNewsPage() {
   const [preview, setPreview]     = useState<Preview | null>(null);
   const [publishing, setPublishing]   = useState(false);
   const [published, setPublished]     = useState<Record<string, string>>({});
-  const [uploading, setUploading]     = useState(false);
   const [deleting, setDeleting]       = useState<string | null>(null);
   const [urlInput, setUrlInput]       = useState("");
   const [fetchingUrl, setFetchingUrl] = useState(false);
@@ -92,20 +92,6 @@ export default function AdminNewsPage() {
       });
     } finally {
       setGenerating(null);
-    }
-  };
-
-  const uploadImage = async (file: File) => {
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res  = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: fd });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error ?? "فشل رفع الصورة"); return; }
-      setPreview((p) => p && ({ ...p, image_url: data.url }));
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -276,36 +262,22 @@ export default function AdminNewsPage() {
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>✕ إلغاء</button>
           </div>
 
-          {/* Image — upload file OR paste URL */}
+          {/* Image */}
           <div>
-            <label className="block text-xs font-semibold mb-2" style={{ color: DIM }}>صورة المقال</label>
-            <div className="flex gap-2 items-center mb-2">
-              <label
-                className="px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer shrink-0"
-                style={{ background: uploading ? "rgba(201,168,68,0.05)" : "rgba(201,168,68,0.12)", color: GOLD, border: `1px solid rgba(201,168,68,0.3)` }}
-              >
-                {uploading ? "⏳ جارٍ الرفع..." : "📎 رفع صورة"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploading}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }}
-                />
-              </label>
-              <input
-                type="url"
-                style={{ ...inputStyle, resize: undefined }}
-                placeholder="أو الصق رابط الصورة هنا..."
-                value={preview.image_url ?? ""}
-                onChange={(e) => setPreview((p) => p && ({ ...p, image_url: e.target.value || null }))}
-                onFocus={(e) => (e.target.style.borderColor = GOLD)}
-                onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
-              />
-            </div>
-            {preview.image_url && (
-              <img src={preview.image_url} alt="" className="w-full max-h-48 object-cover rounded-lg" />
-            )}
+            <label className="block text-xs font-semibold mb-2" style={{ color: DIM }}>صورة المقال (16:9)</label>
+            <CoverUpload
+              currentUrl={preview.image_url ?? ""}
+              onUploaded={(url) => setPreview((p) => p && ({ ...p, image_url: url }))}
+            />
+            <input
+              type="url"
+              style={{ ...inputStyle, resize: undefined, marginTop: 8, fontSize: 12 }}
+              placeholder="أو الصق رابط الصورة مباشرة..."
+              value={preview.image_url ?? ""}
+              onChange={(e) => setPreview((p) => p && ({ ...p, image_url: e.target.value || null }))}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+            />
           </div>
 
           <div>
