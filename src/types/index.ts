@@ -109,12 +109,14 @@ export const WRITERS = [
 ] as const;
 
 export const NEWS_SOURCES = [
-  { name: "تيوميديا",         rss: "https://tumedia.net/feed/",                             logo: "" },
-  { name: "موزاييك FM",       rss: "https://www.mosaiquefm.net/ar/rss",                   logo: "" },
-  { name: "نواة",             rss: "https://nawaat.org/feed/",                              logo: "" },
-  { name: "ديوان FM",         rss: "https://diwanfm.net/feed",                              logo: "" },
-  { name: "عربي21",           rss: "https://arabi21.com/feed",                              logo: "" },
-  { name: "الجزيرة",          rss: "https://www.aljazeera.net/rss",                        logo: "" },
-  { name: "العربي الجديد",    rss: "https://www.alaraby.co.uk/rss.xml",                     logo: "" },
-  { name: "القدس العربي",     rss: "https://www.alquds.co.uk/feed/",                        logo: "" },
+  { name: "تيوميديا",              rss: "https://tumedia.net/feed/",                                    logo: "" },
+  { name: "موزاييك FM",            rss: "https://www.mosaiquefm.net/ar/rss",                            logo: "" },
+  { name: "نواة",                  rss: "https://nawaat.org/feed/",                                     logo: "" },
+  { name: "ديوان FM",              rss: "https://diwanfm.net/feed",                                     logo: "" },
+  { name: "تونس تلغراف",           rss: "https://tunisie-telegraph.com/feed/",                          logo: "" },
+  { name: "عربي21",                rss: "https://arabi21.com/feed",                                     logo: "" },
+  { name: "الجزيرة",               rss: "https://www.aljazeera.net/rss",                                logo: "" },
+  { name: "العربي الجديد",         rss: "https://www.alaraby.co.uk/rss.xml",                            logo: "" },
+  { name: "القدس العربي",          rss: "https://www.alquds.co.uk/feed/",                               logo: "" },
+  { name: "الأناضول",              rss: "https://www.aa.com.tr/ar/rss/default?cat=live",                logo: "" },
 ] as const;
