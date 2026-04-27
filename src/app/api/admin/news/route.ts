@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import slugify from "slugify";
+import { postArticleToFacebook } from "@/lib/facebook";
+import { postToTelegram } from "@/lib/telegram";
+import { postToX } from "@/lib/twitter";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -15,6 +19,47 @@ const SOURCE_PRIORITY: Record<string, number> = {
   "القدس العربي":  9,
   "الأناضول":      10,
 };
+
+export async function POST(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+
+  const body = await req.json();
+  const { title, excerpt, content, image_url, category, geo, published_at } = body;
+
+  if (!title || !content) {
+    return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
+  }
+
+  const slug = slugify(title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
+
+  const { data, error } = await supabaseAdmin
+    .from("news")
+    .insert({
+      slug,
+      title,
+      excerpt:      excerpt || null,
+      content,
+      image_url:    image_url || null,
+      source:       "البلاغ",
+      status:       "approved",
+      category:     category || "عام",
+      geo:          geo || "تونس",
+      published_at: published_at ? new Date(published_at).toISOString() : new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await Promise.allSettled([
+    postArticleToFacebook({ title, excerpt, slug: data.slug }),
+    postToTelegram({ title, excerpt, slug: data.slug, type: "news" }),
+    postToX({ title, excerpt, slug: data.slug, type: "news" }),
+  ]);
+
+  return NextResponse.json(data, { status: 201 });
+}
 
 export async function DELETE(req: NextRequest) {
   const unauthed = await requireAdmin();

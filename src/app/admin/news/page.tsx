@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
@@ -45,6 +46,7 @@ const inputStyle = {
 };
 
 export default function AdminNewsPage() {
+  const router = useRouter();
   const [items, setItems]         = useState<NewsArticle[]>([]);
   const [filter, setFilter]       = useState<Filter>("pending");
   const [loading, setLoading]     = useState(true);
@@ -211,14 +213,23 @@ export default function AdminNewsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>قائمة الأخبار</h1>
-        <button
-          onClick={fetchFresh}
-          disabled={loading}
-          className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
-          style={{ borderColor: "#2E2A18", color: DIM }}
-        >
-          {loading ? "جارٍ التحميل..." : "جلب أخبار جديدة ↺"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/admin/news/new")}
+            className="px-4 py-2 rounded-full text-sm font-bold"
+            style={{ background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" }}
+          >
+            ✍️ كتابة تقرير
+          </button>
+          <button
+            onClick={fetchFresh}
+            disabled={loading}
+            className="px-4 py-2 rounded-full text-sm font-bold border transition-all"
+            style={{ borderColor: "#2E2A18", color: DIM }}
+          >
+            {loading ? "جارٍ التحميل..." : "جلب أخبار جديدة ↺"}
+          </button>
+        </div>
       </div>
 
       {/* From URL */}
