@@ -3,10 +3,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { postToTelegram } from "@/lib/telegram";
 import { postToX } from "@/lib/twitter";
+import { uploadToR2 } from "@/lib/r2";
 import slugify from "slugify";
 
-const BASE   = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
-const BUCKET = (process.env.SUPABASE_STORAGE_BUCKET ?? "media").trim();
+const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
 async function copyImageToBucket(sourceUrl: string): Promise<string | null> {
   try {
@@ -16,14 +16,8 @@ async function copyImageToBucket(sourceUrl: string): Promise<string | null> {
     if (!contentType.startsWith("image/")) return null;
     const ext = contentType.split("/")[1]?.split(";")[0] ?? "jpg";
     const buffer = Buffer.from(await res.arrayBuffer());
-    const filename = `news/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabaseAdmin.storage
-      .from(BUCKET)
-      .upload(filename, buffer, { contentType, upsert: false });
-    if (error) return null;
-    // Use filename directly — more reliable than data.path
-    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filename);
-    return urlData.publicUrl;
+    const key = `news/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    return await uploadToR2(key, buffer, contentType);
   } catch {
     return null;
   }
