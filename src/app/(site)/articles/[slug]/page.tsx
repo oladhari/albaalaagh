@@ -10,17 +10,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const article = await getArticle(slug);
   if (!article) return {};
+
+  const base = "https://www.albaalaagh.com";
+  const ogImage = article.cover_image
+    ? article.cover_image
+    : `${base}/api/og/news?title=${encodeURIComponent(article.title)}`;
+
   return {
     title: `${article.title} | البلاغ`,
     description: article.excerpt ?? article.title,
     openGraph: {
       title: article.title,
       description: `${article.writer?.name ? `بقلم ${article.writer.name} — ` : ""}${article.excerpt ?? article.title}`,
-      url: `https://www.albaalaagh.com/articles/${slug}`,
+      url: `${base}/articles/${slug}`,
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "article",
-      ...(article.cover_image ? { images: [{ url: article.cover_image, width: 1280, height: 720 }] } : {}),
+      images: [{ url: ogImage, width: 1280, height: 720 }],
       publishedTime: article.published_at,
       authors: article.writer?.name ? [article.writer.name] : ["البلاغ"],
     },
@@ -29,10 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       "article:author": article.writer?.name ?? "البلاغ",
     },
     twitter: {
-      card: article.cover_image ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: article.title,
       description: article.excerpt ?? article.title,
-      ...(article.cover_image ? { images: [article.cover_image] } : {}),
+      images: [ogImage],
     },
   };
 }
