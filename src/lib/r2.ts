@@ -5,8 +5,8 @@ const BUCKET    = process.env.R2_BUCKET     ?? "albaalaagh";
 const PUBLIC_URL = (process.env.R2_PUBLIC_URL ?? "").replace(/\/$/, "");
 
 const r2 = new AwsClient({
-  accessKeyId:     process.env.R2_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  accessKeyId:     (process.env.R2_ACCESS_KEY_ID ?? "").trim(),
+  secretAccessKey: (process.env.R2_SECRET_ACCESS_KEY ?? "").trim(),
   service: "s3",
   region:  "auto",
 });
