@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       source:       "البلاغ",
       status:       "approved",
       category:     category || "عام",
-      geo:          geo || "تونس",
+      geo:          geo || "tunisia",
       published_at: published_at ? new Date(published_at).toISOString() : new Date().toISOString(),
     })
     .select()

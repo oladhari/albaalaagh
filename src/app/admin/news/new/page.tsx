@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 
-const GEO_OPTIONS = ["تونس", "عربي", "دولي", "general"];
+const GEO_OPTIONS = [
+  { value: "tunisia",       label: "تونس" },
+  { value: "arab",          label: "عربي" },
+  { value: "international", label: "دولي" },
+  { value: "general",       label: "عام" },
+];
 
 export default function NewNewsPage() {
   const router = useRouter();
@@ -17,7 +22,7 @@ export default function NewNewsPage() {
     content: "",
     image_url: "",
     category: "عام",
-    geo: "تونس",
+    geo: "tunisia",
     published_at: new Date().toISOString().slice(0, 10),
   });
 
@@ -156,7 +161,7 @@ export default function NewNewsPage() {
               <label style={labelStyle}>النطاق الجغرافي</label>
               <select value={form.geo} onChange={(e) => set("geo", e.target.value)} style={inputStyle}>
                 {GEO_OPTIONS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
+                  <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </select>
             </div>
