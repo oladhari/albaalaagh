@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       excerpt:      excerpt || null,
       content,
       image_url:    image_url || null,
-      url:          `https://www.albaalaagh.com/news/${slug}`,
+      url:          `https://www.albaalaagh.com/taqrir/${slug}`,
       source:       "البلاغ",
       status:       "approved",
       category:     category || "عام",
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await Promise.allSettled([
-    postArticleToFacebook({ title, excerpt, slug: data.slug }),
+    postArticleToFacebook({ title, excerpt, slug: data.slug, type: "news" }),
     postToTelegram({ title, excerpt, slug: data.slug, type: "news" }),
     postToX({ title, excerpt, slug: data.slug, type: "news" }),
   ]);

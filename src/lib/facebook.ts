@@ -8,12 +8,15 @@ interface PostOptions {
   excerpt?: string;
   slug: string;
   writerName?: string;
+  type?: "article" | "news";
 }
 
 export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
   if (PAGES.length === 0) return;
 
-  const url = `https://www.albaalaagh.com/articles/${opts.slug}`;
+  const url = opts.type === "news"
+    ? `https://www.albaalaagh.com/taqrir/${opts.slug}`
+    : `https://www.albaalaagh.com/articles/${opts.slug}`;
 
   const message = [
     opts.title,
