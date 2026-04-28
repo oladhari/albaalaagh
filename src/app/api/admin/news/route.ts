@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       excerpt:      excerpt || null,
       content,
       image_url:    image_url || null,
+      url:          `https://www.albaalaagh.com/news/${slug}`,
       source:       "البلاغ",
       status:       "approved",
       category:     category || "عام",
