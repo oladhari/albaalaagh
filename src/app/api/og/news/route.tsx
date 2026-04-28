@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   const img   = searchParams.get("img")   ?? "";
 
   const [fontData, imgData] = await Promise.all([
-    fetch(`${origin}/fonts/Cairo-Bold.woff2`)
+    fetch(`${origin}/fonts/Cairo-Bold.ttf`)
       .then((r) => (r.ok ? r.arrayBuffer() : null))
       .catch(() => null),
     img ? toDataUrl(img) : Promise.resolve(null),
