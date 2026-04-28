@@ -1,20 +1,34 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+
+async function toDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "AlbaalaghBot/1.0" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const ct  = res.headers.get("content-type") ?? "image/jpeg";
+    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
   const title = searchParams.get("title") ?? "";
   const img   = searchParams.get("img")   ?? "";
 
-  let fontData: ArrayBuffer | null = null;
-  try {
-    const r = await fetch(`${origin}/fonts/Cairo-Bold.woff2`);
-    if (r.ok) fontData = await r.arrayBuffer();
-  } catch {
-    // font unavailable — render without custom font
-  }
+  const [fontData, imgData] = await Promise.all([
+    fetch(`${origin}/fonts/Cairo-Bold.woff2`)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .catch(() => null),
+    img ? toDataUrl(img) : Promise.resolve(null),
+  ]);
 
   const fontSize = title.length > 80 ? 34 : title.length > 50 ? 40 : 48;
 
@@ -30,10 +44,10 @@ export async function GET(req: NextRequest) {
           fontFamily: "Cairo",
         }}
       >
-        {/* Background image */}
-        {img && (
+        {/* Background image — pre-fetched as data URL so Satori never needs to hit Cloudflare */}
+        {imgData && (
           <img
-            src={img}
+            src={imgData}
             style={{
               position: "absolute",
               inset: 0,
