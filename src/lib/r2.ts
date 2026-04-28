@@ -13,11 +13,20 @@ const r2 = new AwsClient({
 
 export async function uploadToR2(key: string, body: Buffer, contentType: string): Promise<string> {
   const url = `${ENDPOINT}/${BUCKET}/${key}`;
-  const res = await r2.fetch(url, {
-    method:  "PUT",
-    headers: { "Content-Type": contentType },
-    body: body as unknown as BodyInit,
-  });
-  if (!res.ok) throw new Error(`R2 upload failed: ${res.status} ${await res.text()}`);
-  return `${PUBLIC_URL}/${key}`;
+
+  let lastErr: Error | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await r2.fetch(url, {
+        method:  "PUT",
+        headers: { "Content-Type": contentType },
+        body: Buffer.from(body) as unknown as BodyInit,
+      });
+      if (!res.ok) throw new Error(`R2 upload failed: ${res.status} ${await res.text()}`);
+      return `${PUBLIC_URL}/${key}`;
+    } catch (err: any) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
 }
