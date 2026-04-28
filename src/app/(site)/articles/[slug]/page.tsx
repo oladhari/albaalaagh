@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const base = "https://www.albaalaagh.com";
   const ogImage = article.cover_image
-    ? article.cover_image
+    ? `${base}/api/og/news?title=${encodeURIComponent(article.title)}&img=${encodeURIComponent(article.cover_image)}`
     : `${base}/api/og/news?title=${encodeURIComponent(article.title)}`;
 
   return {

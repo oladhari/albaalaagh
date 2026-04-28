@@ -23,11 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
-  // Always provide an og:image so we never inherit the site default from layout.
-  // If the article has its own image, use it directly (most reliable for Facebook).
-  // Otherwise fall back to our branded OG image route (title on dark background).
+  // Always serve og:image through our Vercel OG generator so Facebook's crawler
+  // never hits Cloudflare R2 directly (bot-protection blocks it). The generator
+  // fetches the image server-side and renders a clean 1280×720 PNG.
   const ogImage = article.image_url
-    ? article.image_url
+    ? `${base}/api/og/news?title=${encodeURIComponent(article.title)}&img=${encodeURIComponent(article.image_url)}`
     : `${base}/api/og/news?title=${encodeURIComponent(article.title)}`;
 
   return {
