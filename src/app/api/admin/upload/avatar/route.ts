@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
 import { requireAdmin } from "@/lib/admin-auth";
 import { uploadToR2 } from "@/lib/r2";
 
@@ -12,13 +11,7 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
   const buffer = Buffer.from(await file.arrayBuffer());
-
-  const processed = await sharp(buffer)
-    .resize(400, 400, { fit: "cover", position: "centre" })
-    .jpeg({ quality: 85 })
-    .toBuffer();
-
   const key = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-  const url = await uploadToR2(key, processed, "image/jpeg");
+  const url = await uploadToR2(key, buffer, "image/jpeg");
   return NextResponse.json({ url });
 }
