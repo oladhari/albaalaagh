@@ -1,18 +1,30 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
+// Pre-fetch the image and return a data URL so Satori never hits Cloudflare directly.
+// Uses only Web APIs (fetch, btoa, Uint8Array) — compatible with edge runtime.
 async function toDataUrl(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "AlbaalaghBot/1.0" },
-      signal: AbortSignal.timeout(5000),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     const ct  = res.headers.get("content-type") ?? "image/jpeg";
-    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    const chunk = 8192;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...(bytes.subarray(i, i + chunk) as unknown as number[]));
+    }
+    return `data:${ct};base64,${btoa(binary)}`;
   } catch {
     return null;
   }
@@ -44,7 +56,7 @@ export async function GET(req: NextRequest) {
           fontFamily: "Cairo",
         }}
       >
-        {/* Background image — pre-fetched as data URL so Satori never needs to hit Cloudflare */}
+        {/* Background image as data URL — Satori never fetches Cloudflare */}
         {imgData && (
           <img
             src={imgData}
@@ -84,7 +96,6 @@ export async function GET(req: NextRequest) {
             gap: 12,
           }}
         >
-          {/* Headline */}
           <div
             style={{
               color: "#F0EAD6",
@@ -98,7 +109,6 @@ export async function GET(req: NextRequest) {
             {title}
           </div>
 
-          {/* Brand watermark */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
