@@ -57,79 +57,84 @@ export async function GET(req: NextRequest) {
         }}
       >
         {/* Background image as data URL — Satori never fetches Cloudflare */}
-        {imgData && (
-          <img
-            src={imgData}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 0.55,
-            }}
-          />
-        )}
-
-        {/* Gradient overlay — dark at bottom */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to bottom, rgba(17,16,8,0.15) 0%, rgba(17,16,8,0.6) 40%, rgba(17,16,8,0.97) 75%)",
-            display: "flex",
-          }}
-        />
-
-        {/* Text block pinned to bottom */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: "0 64px 48px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              color: "#F0EAD6",
-              fontSize,
-              fontWeight: 700,
-              lineHeight: 1.55,
-              textAlign: "right",
-              direction: "rtl",
-            }}
-          >
-            {title}
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {imgData ? (
+          <>
+            <img
+              src={imgData}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+            {/* Subtle brand watermark only — image already has the title */}
             <div
               style={{
-                width: 4,
-                height: 20,
-                backgroundColor: "#C9A844",
-                borderRadius: 2,
+                position: "absolute",
+                bottom: 16,
+                right: 20,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(17,16,8,0.55)",
+                borderRadius: 6,
+                padding: "4px 10px",
+              }}
+            >
+              <div style={{ width: 3, height: 14, backgroundColor: "#C9A844", borderRadius: 2 }} />
+              <div style={{ color: "#C9A844", fontSize: 16, fontWeight: 700 }}>
+                albaalaagh.com
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* No image — dark branded card with title */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to bottom, rgba(17,16,8,0.15) 0%, rgba(17,16,8,0.6) 40%, rgba(17,16,8,0.97) 75%)",
+                display: "flex",
               }}
             />
             <div
               style={{
-                color: "#C9A844",
-                fontSize: 20,
-                fontWeight: 700,
-                letterSpacing: 1,
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: "0 64px 48px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 12,
               }}
             >
-              albaalaagh.com
+              <div
+                style={{
+                  color: "#F0EAD6",
+                  fontSize,
+                  fontWeight: 700,
+                  lineHeight: 1.55,
+                  textAlign: "right",
+                  direction: "rtl",
+                }}
+              >
+                {title}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 4, height: 20, backgroundColor: "#C9A844", borderRadius: 2 }} />
+                <div style={{ color: "#C9A844", fontSize: 20, fontWeight: 700, letterSpacing: 1 }}>
+                  albaalaagh.com
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     ),
     {
