@@ -17,7 +17,7 @@ export default function NewArticlePage() {
     cover_image: "",
     category: ARTICLE_CATEGORIES[0] as string,
     writer_id: "",
-    published_at: new Date().toISOString().slice(0, 10),
+    published_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
   });
 
   useEffect(() => {
@@ -191,7 +191,7 @@ export default function NewArticlePage() {
             <div>
               <label style={labelStyle}>تاريخ النشر</label>
               <input
-                type="date"
+                type="datetime-local"
                 style={inputStyle}
                 value={form.published_at}
                 onChange={(e) => set("published_at", e.target.value)}

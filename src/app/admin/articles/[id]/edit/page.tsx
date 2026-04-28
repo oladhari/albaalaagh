@@ -20,7 +20,7 @@ export default function EditArticlePage() {
     cover_image: "",
     category: ARTICLE_CATEGORIES[0] as string,
     writer_id: "",
-    published_at: new Date().toISOString().slice(0, 10),
+    published_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
   });
 
   useEffect(() => {
@@ -37,8 +37,8 @@ export default function EditArticlePage() {
           category: article.category ?? ARTICLE_CATEGORIES[0],
           writer_id: article.writer_id ?? "",
           published_at: article.published_at
-            ? article.published_at.slice(0, 10)
-            : new Date().toISOString().slice(0, 10),
+            ? article.published_at.slice(0, 16)
+            : new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
         });
         setCurrentStatus(article.status ?? "draft");
       }
@@ -241,7 +241,7 @@ export default function EditArticlePage() {
             <div>
               <label style={labelStyle}>تاريخ النشر</label>
               <input
-                type="date"
+                type="datetime-local"
                 style={inputStyle}
                 value={form.published_at}
                 onChange={(e) => set("published_at", e.target.value)}
