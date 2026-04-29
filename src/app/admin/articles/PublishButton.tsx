@@ -23,8 +23,7 @@ export default function PublishButton({ articleId }: { articleId: string }) {
     <button
       onClick={publish}
       disabled={loading}
-      className="px-3 py-1.5 rounded-lg text-xs font-bold"
-      style={{ background: "rgba(107,203,119,0.15)", color: "#6BCB77" }}
+      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-success/15 text-success"
     >
       {loading ? "..." : "نشر"}
     </button>

@@ -78,10 +78,9 @@ export default async function HomePage() {
           {/* Site summary hero */}
           <div className="lg:col-span-2">
             <div
-              className="rounded-2xl overflow-hidden relative flex flex-col justify-between"
+              className="rounded-2xl overflow-hidden relative flex flex-col justify-between border border-border"
               style={{
                 background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
-                border: "1px solid #2E2A18",
                 minHeight: "340px",
                 padding: "40px",
               }}
@@ -111,7 +110,7 @@ export default async function HomePage() {
                 >
                   البلاغ
                 </h1>
-                <p className="text-base leading-relaxed mb-6" style={{ color: "#9A9070", maxWidth: "480px" }}>
+                <p className="text-base leading-relaxed mb-6 text-text-muted" style={{ maxWidth: "480px" }}>
                   منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
                 </p>
 
@@ -127,8 +126,7 @@ export default async function HomePage() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
-                      style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+                      className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80 bg-gold/12 text-gold border border-gold/30"
                     >
                       {item.label}
                     </Link>
@@ -137,15 +135,15 @@ export default async function HomePage() {
               </div>
 
               {/* Stats row */}
-              <div className="relative flex gap-8 mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
+              <div className="relative flex gap-8 mt-8 pt-6 border-t border-border">
                 {[
                   { label: "فيديو على يوتيوب", value: channelStats.videoCount > 0 ? channelStats.videoCount + "+" : "..." },
                   { label: "مشترك يوتيوب",     value: channelStats.subscriberCount > 0 ? formatCount(channelStats.subscriberCount) : "..." },
                   { label: "مقال",              value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
-                    <p className="text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
-                    <p className="text-xs" style={{ color: "#9A9070" }}>{stat.label}</p>
+                    <p className="text-2xl font-black text-gold">{stat.value}</p>
+                    <p className="text-xs text-text-muted">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -155,18 +153,15 @@ export default async function HomePage() {
           {/* Latest news sidebar */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold" style={{ color: "#C9A844" }}>آخر الأخبار</h3>
-              <Link href="/news" className="text-xs" style={{ color: "#9A9070" }}>عرض الكل ←</Link>
+              <h3 className="text-sm font-bold text-gold">آخر الأخبار</h3>
+              <Link href="/news" className="text-xs text-text-muted">عرض الكل ←</Link>
             </div>
             {news.length > 0 ? (
               news.slice(0, 4).map((article: any) => (
                 <NewsCard key={article.id} article={article} />
               ))
             ) : (
-              <div
-                className="rounded-xl p-4 text-center text-sm"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18", color: "#9A9070" }}
-              >
+              <div className="rounded-xl p-4 text-center text-sm bg-bg-card border border-border text-text-muted">
                 لا توجد أخبار منشورة بعد
               </div>
             )}
@@ -202,8 +197,7 @@ export default async function HomePage() {
                 href={`https://www.youtube.com/playlist?list=${playlist.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group rounded-2xl overflow-hidden card-hover flex flex-col"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+                className="group rounded-2xl overflow-hidden card-hover flex flex-col bg-bg-card border border-border"
               >
                 {/* Thumbnail from latest video */}
                 <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -230,31 +224,25 @@ export default async function HomePage() {
 
                 {/* Info */}
                 <div className="p-4 flex flex-col flex-1">
-                  <h3
-                    className="font-black text-base mb-2 group-hover:text-[#C9A844] transition-colors"
-                    style={{ color: "#F0EAD6" }}
-                  >
+                  <h3 className="font-black text-base mb-2 group-hover:text-[#C9A844] transition-colors text-text">
                     {playlist.title}
                   </h3>
                   {playlist.description && (
                     <p
-                      className="text-xs leading-relaxed line-clamp-3 mb-3 flex-1"
-                      style={{ color: "#9A9070", lineHeight: "1.8" }}
+                      className="text-xs leading-relaxed line-clamp-3 mb-3 flex-1 text-text-muted"
+                      style={{ lineHeight: "1.8" }}
                     >
                       {playlist.description}
                     </p>
                   )}
                   {playlist.latestVideo && (
-                    <div
-                      className="mt-auto pt-3 flex items-start gap-2"
-                      style={{ borderTop: "1px solid #2E2A18" }}
-                    >
+                    <div className="mt-auto pt-3 flex items-start gap-2 border-t border-border">
                       <img
                         src={playlist.latestVideo.thumbnail_url}
                         alt=""
                         className="w-14 h-9 rounded object-cover shrink-0"
                       />
-                      <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>
+                      <p className="text-xs line-clamp-2 text-text-muted">
                         آخر حلقة: {playlist.latestVideo.title}
                       </p>
                     </div>
@@ -285,20 +273,14 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <div
-            className="rounded-xl p-8 text-center"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <p className="text-sm" style={{ color: "#9A9070" }}>لا توجد مقالات منشورة بعد</p>
+          <div className="rounded-xl p-8 text-center bg-bg-card border border-border">
+            <p className="text-sm text-text-muted">لا توجد مقالات منشورة بعد</p>
           </div>
         )}
       </section>
 
       {/* ── About banner ── */}
-      <section
-        className="py-12"
-        style={{ background: "#1A1810", borderTop: "1px solid #2E2A18", borderBottom: "1px solid #2E2A18" }}
-      >
+      <section className="py-12 bg-bg-card border-t border-border border-b border-border">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2
             className="text-3xl font-black mb-4"
@@ -311,7 +293,7 @@ export default async function HomePage() {
           >
             البلاغ
           </h2>
-          <p className="text-base leading-loose mb-6" style={{ color: "#9A9070" }}>
+          <p className="text-base leading-loose mb-6 text-text-muted">
             منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة وقيم الإسلام الوسطي. نُجري حوارات معمقة مع شخصيات سياسية وفكرية متنوعة، ساعين إلى تقديم محتوى راقٍ يخدم المواطن التونسي والعربي.
           </p>
           <Link href="/about" className="btn-gold-outline inline-block px-6 py-2.5 rounded-full text-sm font-bold">

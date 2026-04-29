@@ -74,63 +74,53 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: "#9A9070" }}>
+      <nav className="flex items-center gap-2 text-xs mb-6 text-text-muted">
         <Link href="/" className="hover:text-[#C9A844] transition-colors">الرئيسية</Link>
         <span>←</span>
         <Link href="/articles" className="hover:text-[#C9A844] transition-colors">المقالات</Link>
         <span>←</span>
-        <span className="line-clamp-1" style={{ color: "#C9A844" }}>{article.title}</span>
+        <span className="line-clamp-1 text-gold">{article.title}</span>
       </nav>
 
       {/* Category */}
-      <span
-        className="inline-block text-xs px-3 py-1 rounded-full font-medium mb-4"
-        style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
-      >
+      <span className="inline-block text-xs px-3 py-1 rounded-full font-medium mb-4 bg-gold/12 text-gold">
         {article.category}
       </span>
 
       {/* Title */}
-      <h1 className="text-3xl sm:text-4xl font-black leading-snug mb-4" style={{ color: "#F0EAD6" }}>
+      <h1 className="text-3xl sm:text-4xl font-black leading-snug mb-4 text-text">
         {article.title}
       </h1>
 
       {/* Excerpt */}
       {article.excerpt && (
-        <p className="text-lg mb-6" style={{ color: "#9A9070", lineHeight: "1.8" }}>
+        <p className="text-lg mb-6 text-text-muted" style={{ lineHeight: "1.8" }}>
           {article.excerpt}
         </p>
       )}
 
       {/* Author + date */}
-      <div
-        className="flex items-center gap-4 p-4 rounded-xl mb-8"
-        style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-      >
+      <div className="flex items-center gap-4 p-4 rounded-xl mb-8 bg-bg-card border border-border">
         {article.writer?.image_url ? (
           <img
             src={article.writer.image_url}
             alt={article.writer.name}
-            className="w-12 h-12 rounded-full object-cover shrink-0"
-            style={{ border: "2px solid #C9A844" }}
+            className="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-gold"
           />
         ) : (
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
-            style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-          >
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 bg-gold/[0.15] text-gold">
             {article.writer?.name?.[0] ?? "ب"}
           </div>
         )}
         <div>
-          <p className="font-bold text-sm" style={{ color: "#E8D5A3" }}>
+          <p className="font-bold text-sm text-gold-light">
             {article.writer?.name ?? "البلاغ"}
           </p>
           {article.writer?.title && (
-            <p className="text-xs" style={{ color: "#9A9070" }}>{article.writer.title}</p>
+            <p className="text-xs text-text-muted">{article.writer.title}</p>
           )}
         </div>
-        <div className="mr-auto text-xs" style={{ color: "#9A9070" }}>
+        <div className="mr-auto text-xs text-text-muted">
           {formatArabicDate(article.published_at || article.created_at)}
         </div>
       </div>
@@ -156,8 +146,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
       {/* Article content */}
       <div
-        className="article-prose"
-        style={{ color: "#D4C9A8" }}
+        className="article-prose text-text-body"
         dangerouslySetInnerHTML={{ __html: formatContent(article.content) }}
       />
 
@@ -165,32 +154,25 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
       {/* Author bio */}
       {article.writer && (
-        <div
-          className="p-6 rounded-xl"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-        >
-          <h3 className="text-sm font-bold mb-3" style={{ color: "#C9A844" }}>عن الكاتب</h3>
+        <div className="p-6 rounded-xl bg-bg-card border border-border">
+          <h3 className="text-sm font-bold mb-3 text-gold">عن الكاتب</h3>
           <div className="flex gap-4 items-start">
             {article.writer.image_url ? (
               <img
                 src={article.writer.image_url}
                 alt={article.writer.name}
-                className="w-16 h-16 rounded-full object-cover shrink-0"
-                style={{ border: "2px solid #C9A844" }}
+                className="w-16 h-16 rounded-full object-cover shrink-0 border-2 border-gold"
               />
             ) : (
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0"
-                style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-              >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0 bg-gold/[0.15] text-gold">
                 {article.writer.name[0]}
               </div>
             )}
             <div>
-              <p className="font-bold" style={{ color: "#E8D5A3" }}>{article.writer.name}</p>
-              <p className="text-sm mb-2" style={{ color: "#C9A844" }}>{article.writer.title}</p>
+              <p className="font-bold text-gold-light">{article.writer.name}</p>
+              <p className="text-sm mb-2 text-gold">{article.writer.title}</p>
               {article.writer.bio && (
-                <p className="text-sm leading-relaxed" style={{ color: "#9A9070" }}>{article.writer.bio}</p>
+                <p className="text-sm leading-relaxed text-text-muted">{article.writer.bio}</p>
               )}
             </div>
           </div>
@@ -198,7 +180,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       )}
 
       <div className="mt-8">
-        <Link href="/articles" className="text-sm font-medium" style={{ color: "#9A9070" }}>
+        <Link href="/articles" className="text-sm font-medium text-text-muted">
           → العودة إلى المقالات
         </Link>
       </div>

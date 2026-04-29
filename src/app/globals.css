@@ -10,6 +10,9 @@
   --color-border:       #2E2A18;
   --color-text:         #F0EAD6;
   --color-text-muted:   #9A9070;
+  --color-text-body:    #D4C9A8;
+  --color-success:      #6BCB77;
+  --color-danger:       #FF6B6B;
   --font-arabic:        var(--font-cairo);
 }
 

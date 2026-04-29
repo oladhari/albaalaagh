@@ -17,9 +17,9 @@ const iconSvgs: Record<string, ReactElement> = {
 
 export default function SocialBar() {
   return (
-    <section className="py-10" style={{ borderBottom: "1px solid #2E2A18" }}>
+    <section className="py-10 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-sm mb-6" style={{ color: "#9A9070" }}>
+        <p className="text-center text-sm mb-6 text-text-muted">
           تابعنا على جميع المنصات
         </p>
         <div className="flex flex-wrap justify-center gap-4">
@@ -29,12 +29,7 @@ export default function SocialBar() {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 min-w-[72px]"
-              style={{
-                background: "#1A1810",
-                border: "1px solid #2E2A18",
-                color: "#9A9070",
-              }}
+              className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 min-w-[72px] bg-bg-card border border-border text-text-muted"
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.color = "#C9A844";
                 (e.currentTarget as HTMLElement).style.borderColor = "#C9A844";

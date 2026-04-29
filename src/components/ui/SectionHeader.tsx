@@ -28,7 +28,7 @@ export default function SectionHeader({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm" style={{ color: "#9A9070" }}>
+          <p className="text-sm text-text-muted">
             {subtitle}
           </p>
         )}
@@ -42,12 +42,7 @@ export default function SectionHeader({
       {linkHref && (
         <a
           href={linkHref}
-          className="text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200"
-          style={{
-            color: "#C9A844",
-            borderColor: "#2E2A18",
-            background: "transparent",
-          }}
+          className="text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 text-gold border-border"
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.08)";
           }}

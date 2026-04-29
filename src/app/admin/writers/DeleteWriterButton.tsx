@@ -30,15 +30,13 @@ export default function DeleteWriterButton({ writerId }: { writerId: string }) {
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: "rgba(255,107,107,0.2)", color: "#FF6B6B" }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-danger/20 text-danger"
         >
           {loading ? "..." : "تأكيد"}
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium border"
-          style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-text-muted"
         >
           إلغاء
         </button>
@@ -49,8 +47,7 @@ export default function DeleteWriterButton({ writerId }: { writerId: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border self-start"
-      style={{ borderColor: "#2E2A18", color: "#FF6B6B" }}
+      className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-danger self-start"
     >
       حذف
     </button>

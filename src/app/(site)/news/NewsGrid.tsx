@@ -52,10 +52,10 @@ export default function NewsGrid({
   if (articles.length === 0 && editorials.length === 0) {
     return (
       <div className="text-center py-20">
-        <p className="text-lg mb-2" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة بعد</p>
-        <p className="text-sm" style={{ color: "#9A9070" }}>
+        <p className="text-lg mb-2 text-text-muted">لا توجد أخبار منشورة بعد</p>
+        <p className="text-sm text-text-muted">
           توجه إلى{" "}
-          <a href="/admin/news" style={{ color: "#C9A844" }}>لوحة الإدارة</a>
+          <a href="/admin/news" className="text-gold">لوحة الإدارة</a>
           {" "}للموافقة على الأخبار
         </p>
       </div>
@@ -70,12 +70,12 @@ export default function NewsGrid({
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-1 h-6 rounded-full" style={{ background: "linear-gradient(180deg, #C9A844, #9A7B28)" }} />
-            <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>تقارير البلاغ</h2>
+            <h2 className="text-xl font-black text-gold">تقارير البلاغ</h2>
             <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
             <Link
               href="/taqrir"
-              className="text-xs font-bold px-3 py-1 rounded-full border transition-all"
-              style={{ borderColor: "rgba(201,168,68,0.35)", color: "#C9A844" }}
+              className="text-xs font-bold px-3 py-1 rounded-full border transition-all text-gold"
+              style={{ borderColor: "rgba(201,168,68,0.35)" }}
             >
               عرض الكل ({editorials.length}) ←
             </Link>
@@ -97,10 +97,9 @@ export default function NewsGrid({
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all${activeCategory === cat ? " text-gold" : " text-text-muted"}`}
             style={{
               borderColor: activeCategory === cat ? "#C9A844" : "#2E2A18",
-              color:       activeCategory === cat ? "#C9A844" : "#9A9070",
               background:  activeCategory === cat ? "rgba(201,168,68,0.08)" : "transparent",
             }}
           >
@@ -111,7 +110,7 @@ export default function NewsGrid({
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p style={{ color: "#9A9070" }}>لا توجد أخبار في هذا التصنيف</p>
+          <p className="text-text-muted">لا توجد أخبار في هذا التصنيف</p>
         </div>
       ) : (
         <div className="space-y-12">
@@ -119,11 +118,11 @@ export default function NewsGrid({
             <div key={section.key}>
               <div className="flex items-center gap-3 mb-5">
                 <span className="text-lg">{section.flag}</span>
-                <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>
+                <h2 className="text-xl font-black text-gold">
                   {section.label}
                 </h2>
                 <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
-                <span className="text-xs" style={{ color: "#9A9070" }}>
+                <span className="text-xs text-text-muted">
                   {byGeo[section.key].length} خبر
                 </span>
               </div>

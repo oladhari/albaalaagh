@@ -20,8 +20,7 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
       href={article.url}
       target={isInternal ? "_self" : "_blank"}
       rel={isInternal ? undefined : "noopener noreferrer"}
-      className="group flex gap-3 p-3 rounded-xl card-hover"
-      style={{ background: "#1A1810", border: `1px solid ${isInternal ? "rgba(201,168,68,0.25)" : "#2E2A18"}` }}
+      className={`group flex gap-3 p-3 rounded-xl card-hover bg-bg-card ${isInternal ? "border border-gold/25" : "border border-border"}`}
     >
       {validImage && (
         <div className="shrink-0 w-24 h-16 rounded-lg overflow-hidden">
@@ -39,27 +38,25 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {article.source && (
             <span
-              className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+              className="text-xs px-2 py-0.5 rounded-full font-medium bg-gold/12 text-gold"
             >
               {article.source}
             </span>
           )}
           {article.category && (
-            <span className="text-xs" style={{ color: "#9A9070" }}>{article.category}</span>
+            <span className="text-xs text-text-muted">{article.category}</span>
           )}
-          <span className="text-xs mr-auto" style={{ color: "#9A9070" }}>
+          <span className="text-xs mr-auto text-text-muted">
             {timeAgo(article.published_at)}
           </span>
         </div>
         <h3
-          className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-[#C9A844] transition-colors"
-          style={{ color: "#F0EAD6" }}
+          className="text-sm font-semibold leading-snug line-clamp-2 group-hover:text-[#C9A844] transition-colors text-text"
         >
           {article.title}
         </h3>
         {article.excerpt && (
-          <p className="text-xs mt-1 line-clamp-2" style={{ color: "#9A9070" }}>
+          <p className="text-xs mt-1 line-clamp-2 text-text-muted">
             {article.excerpt}
           </p>
         )}

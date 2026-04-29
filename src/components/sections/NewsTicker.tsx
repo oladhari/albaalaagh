@@ -15,8 +15,8 @@ export default function NewsTicker({ items }: NewsTickerProps) {
 
   return (
     <div
-      className="w-full overflow-hidden flex items-center"
-      style={{ background: "#1A1810", borderBottom: "1px solid #2E2A18", height: "40px" }}
+      className="w-full overflow-hidden flex items-center bg-bg-card border-b border-border"
+      style={{ height: "40px" }}
     >
       {/* Label */}
       <div
@@ -41,9 +41,9 @@ export default function NewsTicker({ items }: NewsTickerProps) {
           }}
         >
           {doubled.map((item, i) => (
-            <span key={i} className="text-sm shrink-0" style={{ color: "#F0EAD6" }}>
+            <span key={i} className="text-sm shrink-0 text-text">
               {item}
-              <span className="mx-4" style={{ color: "#C9A844" }}>◆</span>
+              <span className="mx-4 text-gold">◆</span>
             </span>
           ))}
         </div>

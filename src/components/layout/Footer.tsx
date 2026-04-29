@@ -60,8 +60,8 @@ const SocialIcon = ({ icon, name }: { icon: string; name: string }) => {
 export default function Footer() {
   return (
     <footer
-      className="mt-auto pt-12 pb-6"
-      style={{ borderTop: "1px solid #2E2A18", background: "#0D0C06" }}
+      className="mt-auto pt-12 pb-6 border-t border-border"
+      style={{ background: "#0D0C06" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -81,14 +81,14 @@ export default function Footer() {
             >
               البلاغ
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "#9A9070" }}>
+            <p className="text-sm leading-relaxed text-text-muted">
               منبر سياسي تونسي يتخصص في الحوار المعمق مع شخصيات سياسية وفكرية بارزة. نصنع المحتوى الجاد الذي يحترم عقل المتلقي.
             </p>
           </div>
 
           {/* Nav links */}
           <div>
-            <h3 className="text-sm font-bold mb-4" style={{ color: "#C9A844" }}>
+            <h3 className="text-sm font-bold mb-4 text-gold">
               روابط سريعة
             </h3>
             <ul className="space-y-2">
@@ -105,8 +105,7 @@ export default function Footer() {
                 <li key={href}>
                   <Link
                     href={href}
-                    className="text-sm transition-colors duration-200"
-                    style={{ color: "#9A9070" }}
+                    className="text-sm transition-colors duration-200 text-text-muted"
                     onMouseEnter={(e) => (e.currentTarget.style.color = "#C9A844")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "#9A9070")}
                   >
@@ -119,7 +118,7 @@ export default function Footer() {
 
           {/* Social */}
           <div>
-            <h3 className="text-sm font-bold mb-4" style={{ color: "#C9A844" }}>
+            <h3 className="text-sm font-bold mb-4 text-gold">
               تابعنا
             </h3>
             <div className="flex flex-wrap gap-3">
@@ -130,8 +129,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title={s.name}
-                  className="p-2 rounded-lg transition-all duration-200"
-                  style={{ color: "#9A9070", background: "#1A1810" }}
+                  className="p-2 rounded-lg transition-all duration-200 text-text-muted bg-bg-card"
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.color = "#C9A844";
                     (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.1)";
@@ -148,8 +146,7 @@ export default function Footer() {
               <a
                 href="/feed.xml"
                 title="اشترك عبر RSS"
-                className="p-2 rounded-lg transition-all duration-200"
-                style={{ color: "#9A9070", background: "#1A1810" }}
+                className="p-2 rounded-lg transition-all duration-200 text-text-muted bg-bg-card"
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.color = "#E8813A";
                   (e.currentTarget as HTMLElement).style.background = "rgba(232,129,58,0.1)";
@@ -168,13 +165,10 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div
-          className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs"
-          style={{ borderTop: "1px solid #2E2A18", color: "#9A9070" }}
-        >
+        <div className="pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs border-t border-border text-text-muted">
           <span>© {new Date().getFullYear()} قناة البلاغ. جميع الحقوق محفوظة.</span>
           <div className="flex items-center gap-4">
-            <a href="/feed.xml" className="flex items-center gap-1.5 transition-colors" style={{ color: "#9A9070" }}
+            <a href="/feed.xml" className="flex items-center gap-1.5 transition-colors text-text-muted"
               onMouseEnter={(e) => (e.currentTarget.style.color = "#E8813A")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#9A9070")}
             >
@@ -183,7 +177,7 @@ export default function Footer() {
               </svg>
               RSS
             </a>
-            <a href="https://www.albaalaagh.com" style={{ color: "#C9A844" }}>
+            <a href="https://www.albaalaagh.com" className="text-gold">
               albaalaagh.com
             </a>
           </div>
