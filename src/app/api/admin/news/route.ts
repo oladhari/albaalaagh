@@ -5,6 +5,7 @@ import slugify from "slugify";
 import { postArticleToFacebook } from "@/lib/facebook";
 import { postToTelegram } from "@/lib/telegram";
 import { postToX } from "@/lib/twitter";
+import { postToLinkedIn } from "@/lib/linkedin";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
     postArticleToFacebook({ title, excerpt, slug: data.slug, type: "news" }),
     postToTelegram({ title, excerpt, slug: data.slug, type: "news" }),
     postToX({ title, excerpt, slug: data.slug, type: "news" }),
+    postToLinkedIn({ title, excerpt, slug: data.slug, type: "news" }),
   ]);
 
   return NextResponse.json(data, { status: 201 });

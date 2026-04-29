@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { postArticleToFacebook } from "@/lib/facebook";
 import { postToTelegram } from "@/lib/telegram";
 import { postToX } from "@/lib/twitter";
+import { postToLinkedIn } from "@/lib/linkedin";
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
       postArticleToFacebook(postOpts),
       postToTelegram(postOpts),
       postToX(postOpts),
+      postToLinkedIn(postOpts),
     ]);
   }
 
