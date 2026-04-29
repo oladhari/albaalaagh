@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
-import { postArticleToFacebook } from "@/lib/facebook";
-import { postToTelegram } from "@/lib/telegram";
-import { postToX } from "@/lib/twitter";
-import { postToLinkedIn } from "@/lib/linkedin";
+import { shareToAll } from "@/lib/share";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthed = await requireAdmin();
@@ -67,12 +64,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       slug: data.slug,
       writerName: (data.writer as any)?.name,
     };
-    await Promise.allSettled([
-      postArticleToFacebook(postOpts),
-      postToTelegram({ ...postOpts, type: "article" }),
-      postToX({ ...postOpts, type: "article" }),
-      postToLinkedIn({ ...postOpts, type: "article" }),
-    ]);
+    await shareToAll({ ...postOpts, type: "article" });
   }
 
   return NextResponse.json(data);

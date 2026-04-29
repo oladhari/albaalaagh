@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import slugify from "slugify";
 import { requireAdmin } from "@/lib/admin-auth";
-import { postArticleToFacebook } from "@/lib/facebook";
-import { postToTelegram } from "@/lib/telegram";
-import { postToX } from "@/lib/twitter";
-import { postToLinkedIn } from "@/lib/linkedin";
+import { shareToAll } from "@/lib/share";
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -54,12 +51,7 @@ export async function POST(req: NextRequest) {
       writerName: writerRes?.data?.name,
       type: "article" as const,
     };
-    await Promise.allSettled([
-      postArticleToFacebook(postOpts),
-      postToTelegram(postOpts),
-      postToX(postOpts),
-      postToLinkedIn(postOpts),
-    ]);
+    await shareToAll(postOpts);
   }
 
   return NextResponse.json(data, { status: 201 });

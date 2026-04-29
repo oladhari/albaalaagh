@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import slugify from "slugify";
-import { postArticleToFacebook } from "@/lib/facebook";
-import { postToTelegram } from "@/lib/telegram";
-import { postToX } from "@/lib/twitter";
-import { postToLinkedIn } from "@/lib/linkedin";
+import { shareToAll } from "@/lib/share";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -54,12 +51,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await Promise.allSettled([
-    postArticleToFacebook({ title, excerpt, slug: data.slug, type: "news" }),
-    postToTelegram({ title, excerpt, slug: data.slug, type: "news" }),
-    postToX({ title, excerpt, slug: data.slug, type: "news" }),
-    postToLinkedIn({ title, excerpt, slug: data.slug, type: "news" }),
-  ]);
+  await shareToAll({ title, excerpt, slug: data.slug, type: "news" });
 
   return NextResponse.json(data, { status: 201 });
 }

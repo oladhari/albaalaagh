@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
-import { postToTelegram } from "@/lib/telegram";
-import { postToX } from "@/lib/twitter";
-import { postToLinkedIn } from "@/lib/linkedin";
+import { shareToAll } from "@/lib/share";
 import { uploadToR2 } from "@/lib/r2";
 import slugify from "slugify";
 
@@ -22,39 +20,6 @@ async function copyImageToBucket(sourceUrl: string): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-async function postToFacebook(title: string, excerpt: string, slug: string) {
-  const PAGES = [
-    { id: process.env.FB_PAGE1_ID, token: process.env.FB_PAGE1_TOKEN },
-    { id: process.env.FB_PAGE2_ID, token: process.env.FB_PAGE2_TOKEN },
-  ].filter((p) => p.id && p.token);
-  if (PAGES.length === 0) return;
-
-  const url     = `${BASE}/taqrir/${slug}`;
-  const message = [
-    title,
-    excerpt ? `\n${excerpt}` : null,
-    `\n🔗 اقرأ التقرير كاملاً: ${url}`,
-    "\n\n#البلاغ #تونس",
-  ].filter(Boolean).join("\n");
-
-  const results = await Promise.allSettled(
-    PAGES.map((page) =>
-      fetch(`https://graph.facebook.com/${page.id}/feed`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, link: url, access_token: page.token }),
-      }).then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) console.error(`Facebook page ${page.id} failed:`, JSON.stringify(json));
-        else console.log(`Facebook page ${page.id} posted ok`);
-      })
-    )
-  );
-  results.forEach((r, i) => {
-    if (r.status === "rejected") console.error(`Facebook page ${i} rejected:`, r.reason);
-  });
 }
 
 // POST — publish a new البلاغ article into the news table
@@ -92,12 +57,7 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await Promise.allSettled([
-    postToFacebook(title, excerpt, slug),
-    postToTelegram({ title, excerpt, slug, type: "news" }),
-    postToX({ title, excerpt, slug, type: "news" }),
-    postToLinkedIn({ title, excerpt, slug, type: "news" }),
-  ]);
+  await shareToAll({ title, excerpt, slug, type: "news" });
 
   return NextResponse.json({ ok: true, slug, url });
 }
