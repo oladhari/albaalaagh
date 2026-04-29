@@ -131,29 +131,28 @@ export default function CoverUpload({ currentUrl, onUploaded }: Props) {
 
       <div className="flex items-center gap-4 mb-3">
         {currentUrl ? (
-          <img src={currentUrl} alt="" className="w-32 h-[72px] rounded-lg object-cover shrink-0" style={{ border: "2px solid #C9A844" }} />
+          <img src={currentUrl} alt="" className="w-32 h-[72px] rounded-lg object-cover shrink-0 border-2 border-gold" />
         ) : (
-          <div className="w-32 h-[72px] rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(201,168,68,0.1)", border: "2px dashed #2E2A18" }}>
-            <span style={{ color: "#9A9070", fontSize: 11 }}>16:9</span>
+          <div className="w-32 h-[72px] rounded-lg flex items-center justify-center shrink-0 bg-gold/10 border-2 border-dashed border-border">
+            <span className="text-text-muted" style={{ fontSize: 11 }}>16:9</span>
           </div>
         )}
         <button
           type="button"
           onClick={openPicker}
-          className="px-4 py-2 rounded-lg text-sm font-medium border transition-all"
-          style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.06)" }}
+          className="px-4 py-2 rounded-lg text-sm font-medium border transition-all border-gold text-gold bg-gold/[0.06]"
         >
           {currentUrl ? "تغيير الصورة" : "رفع صورة"}
         </button>
       </div>
 
-      {error && <p className="text-xs mb-2" style={{ color: "#FF6B6B" }}>{error}</p>}
+      {error && <p className="text-xs mb-2 text-danger">{error}</p>}
 
       {crop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
-          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 overflow-y-auto" style={{ background: "#1A1810", border: "1px solid #2E2A18", maxHeight: "90vh" }}>
-            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>اقتصاص صورة الغلاف (16:9 — {OUT_W}×{OUT_H})</h3>
-            <p className="text-xs mb-4" style={{ color: "#9A9070" }}>اسحب الإطار لتحديد المنطقة، واسحب الزاوية لتغيير الحجم</p>
+          <div className="rounded-2xl p-6 max-w-lg w-full mx-4 overflow-y-auto bg-bg-card border border-border" style={{ maxHeight: "90vh" }}>
+            <h3 className="text-sm font-bold mb-2 text-gold">اقتصاص صورة الغلاف (16:9 — {OUT_W}×{OUT_H})</h3>
+            <p className="text-xs mb-4 text-text-muted">اسحب الإطار لتحديد المنطقة، واسحب الزاوية لتغيير الحجم</p>
 
             <div
               className="relative mx-auto overflow-hidden select-none"
@@ -178,13 +177,13 @@ export default function CoverUpload({ currentUrl, onUploaded }: Props) {
                     <div className="absolute"                            style={{ top: crop.y, left: 0, width: crop.x, height: h, background: "rgba(0,0,0,0.55)" }} />
                     <div className="absolute"                            style={{ top: crop.y, left: crop.x + crop.w, right: 0, height: h, background: "rgba(0,0,0,0.55)" }} />
                     <div
-                      className="absolute"
-                      style={{ left: crop.x, top: crop.y, width: crop.w, height: h, border: "2px solid #C9A844", cursor: "move", boxSizing: "border-box" }}
+                      className="absolute border-2 border-gold"
+                      style={{ left: crop.x, top: crop.y, width: crop.w, height: h, cursor: "move", boxSizing: "border-box" }}
                       onMouseDown={(e) => onMouseDown(e, "drag")}
                     >
                       <div
-                        className="absolute w-4 h-4 rounded-full"
-                        style={{ bottom: -8, right: -8, background: "#C9A844", cursor: "se-resize" }}
+                        className="absolute w-4 h-4 rounded-full bg-gold"
+                        style={{ bottom: -8, right: -8, cursor: "se-resize" }}
                         onMouseDown={(e) => { e.stopPropagation(); onMouseDown(e, "resize"); }}
                       />
                     </div>
@@ -200,8 +199,7 @@ export default function CoverUpload({ currentUrl, onUploaded }: Props) {
                 {uploading ? "جارٍ الرفع..." : "تأكيد واستخدام الصورة"}
               </button>
               <button type="button" onClick={() => setCrop(null)}
-                className="px-5 py-2.5 rounded-full text-sm border"
-                style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
+                className="px-5 py-2.5 rounded-full text-sm border border-border text-text-muted">
                 إلغاء
               </button>
             </div>

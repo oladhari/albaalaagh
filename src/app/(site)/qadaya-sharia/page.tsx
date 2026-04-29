@@ -32,7 +32,7 @@ export default async function QadayaShariaPage() {
 
       {articles.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-lg mb-2" style={{ color: "#9A9070" }}>لا توجد مقالات منشورة بعد</p>
+          <p className="text-lg mb-2 text-text-muted">لا توجد مقالات منشورة بعد</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

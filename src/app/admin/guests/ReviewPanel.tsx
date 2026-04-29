@@ -186,7 +186,7 @@ export default function ReviewPanel() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold mb-2" style={{ color: "#F0EAD6" }}>
+                            <p className="text-sm font-bold mb-2 text-text">
                               {u.current_name}
                             </p>
                             <Diff label="الاسم"      before={u.current_name}     after={u.name} />
@@ -250,7 +250,7 @@ export default function ReviewPanel() {
                       <span style={{ color: RED }}>⚠️</span>
                       <div>
                         {d.names.map((name, j) => (
-                          <p key={j} className="text-sm font-bold" style={{ color: "#F0EAD6" }}>{name}</p>
+                          <p key={j} className="text-sm font-bold text-text">{name}</p>
                         ))}
                       </div>
                     </div>
@@ -272,7 +272,7 @@ export default function ReviewPanel() {
                   <div key={u.id} className="p-3 rounded-xl flex items-start gap-3" style={inputStyle}>
                     <span style={{ color: GOLD }}>❓</span>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: "#F0EAD6" }}>{u.name}</p>
+                      <p className="text-sm font-semibold text-text">{u.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: DIM }}>{u.reason}</p>
                     </div>
                   </div>

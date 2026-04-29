@@ -73,7 +73,7 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-black mb-8" style={{ color: "#F0EAD6" }}>لوحة التحكم</h1>
+      <h1 className="text-2xl font-black mb-8 text-text">لوحة التحكم</h1>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-10">
@@ -81,31 +81,26 @@ export default async function AdminDashboard() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="p-4 rounded-xl card-hover"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+            className="p-4 rounded-xl card-hover bg-bg-card border border-border"
           >
             <p className="text-3xl font-black mb-1" style={{ color: stat.color }}>
               {stat.value}
             </p>
-            <p className="text-xs leading-snug" style={{ color: "#9A9070" }}>{stat.label}</p>
+            <p className="text-xs leading-snug text-text-muted">{stat.label}</p>
           </Link>
         ))}
       </div>
 
       {/* Quick actions */}
-      <div className="p-5 rounded-xl mb-8" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
-        <h2 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>إجراءات سريعة</h2>
+      <div className="p-5 rounded-xl mb-8 bg-bg-card border border-border">
+        <h2 className="text-xs font-bold mb-3 text-gold">إجراءات سريعة</h2>
         <div className="flex flex-wrap gap-2">
           {QUICK_ACTIONS.map((action) => (
             <Link
               key={action.label}
               href={action.href}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-              style={
-                action.primary
-                  ? { background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" }
-                  : { border: "1px solid #2E2A18", color: "#9A9070" }
-              }
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-all${action.primary ? "" : " border border-border text-text-muted"}`}
+              style={action.primary ? { background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" } : undefined}
             >
               {action.label}
             </Link>
@@ -120,10 +115,10 @@ export default async function AdminDashboard() {
         {stats.pendingNews > 0 && (
           <div className="p-4 rounded-xl lg:col-span-3" style={{ background: "rgba(255,107,107,0.06)", border: "1px solid rgba(255,107,107,0.25)" }}>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold" style={{ color: "#FF6B6B" }}>
+              <span className="text-sm font-bold text-danger">
                 ⚠️ {stats.pendingNews} خبر بانتظار مراجعتك
               </span>
-              <Link href="/admin/news" className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}>
+              <Link href="/admin/news" className="text-xs font-bold px-3 py-1 rounded-full text-danger" style={{ background: "rgba(255,107,107,0.15)" }}>
                 مراجعة الآن ←
               </Link>
             </div>
@@ -131,10 +126,10 @@ export default async function AdminDashboard() {
         )}
 
         {/* Recent editorials */}
-        <div className="p-4 rounded-xl" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
+        <div className="p-4 rounded-xl bg-bg-card border border-border">
           <h3 className="text-xs font-bold mb-3" style={{ color: "#4D96FF" }}>آخر تقارير البلاغ</h3>
           {activity.editorials.length === 0 ? (
-            <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد تقارير بعد</p>
+            <p className="text-xs text-text-muted">لا توجد تقارير بعد</p>
           ) : (
             <div className="space-y-2">
               {activity.editorials.map((e: any) => (
@@ -143,12 +138,11 @@ export default async function AdminDashboard() {
                     href={`/taqrir/${e.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-medium line-clamp-2 hover:text-[#C9A844] transition-colors"
-                    style={{ color: "#F0EAD6" }}
+                    className="text-xs font-medium line-clamp-2 hover:text-[#C9A844] transition-colors text-text"
                   >
                     {e.title} ↗
                   </a>
-                  <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>{formatArabicDate(e.published_at)}</p>
+                  <p className="text-xs mt-0.5 text-text-muted">{formatArabicDate(e.published_at)}</p>
                 </div>
               ))}
             </div>
@@ -156,10 +150,10 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Recent articles */}
-        <div className="p-4 rounded-xl" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
-          <h3 className="text-xs font-bold mb-3" style={{ color: "#6BCB77" }}>آخر مقالات الكتّاب</h3>
+        <div className="p-4 rounded-xl bg-bg-card border border-border">
+          <h3 className="text-xs font-bold mb-3 text-success">آخر مقالات الكتّاب</h3>
           {activity.articles.length === 0 ? (
-            <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد مقالات بعد</p>
+            <p className="text-xs text-text-muted">لا توجد مقالات بعد</p>
           ) : (
             <div className="space-y-2">
               {activity.articles.map((a: any) => (
@@ -168,12 +162,11 @@ export default async function AdminDashboard() {
                     href={`/articles/${a.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-medium line-clamp-2 hover:text-[#C9A844] transition-colors"
-                    style={{ color: "#F0EAD6" }}
+                    className="text-xs font-medium line-clamp-2 hover:text-[#C9A844] transition-colors text-text"
                   >
                     {a.title} ↗
                   </a>
-                  <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
+                  <p className="text-xs mt-0.5 text-text-muted">
                     {a.writer?.name} · {formatArabicDate(a.published_at)}
                   </p>
                 </div>
@@ -183,16 +176,16 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Recent approved news */}
-        <div className="p-4 rounded-xl" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
-          <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>آخر الأخبار المنشورة</h3>
+        <div className="p-4 rounded-xl bg-bg-card border border-border">
+          <h3 className="text-xs font-bold mb-3 text-gold">آخر الأخبار المنشورة</h3>
           {activity.news.length === 0 ? (
-            <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة</p>
+            <p className="text-xs text-text-muted">لا توجد أخبار منشورة</p>
           ) : (
             <div className="space-y-2">
               {activity.news.map((n: any) => (
                 <div key={n.id}>
-                  <p className="text-xs font-medium line-clamp-2" style={{ color: "#F0EAD6" }}>{n.title}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
+                  <p className="text-xs font-medium line-clamp-2 text-text">{n.title}</p>
+                  <p className="text-xs mt-0.5 text-text-muted">
                     {n.source} · {formatArabicDate(n.published_at)}
                   </p>
                 </div>

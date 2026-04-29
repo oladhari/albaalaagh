@@ -23,8 +23,7 @@ export default function VideoCard({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block rounded-xl overflow-hidden card-hover"
-      style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      className="group block rounded-xl overflow-hidden card-hover bg-bg-card border border-border"
     >
       {/* Thumbnail */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -37,19 +36,16 @@ export default function VideoCard({
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
           style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(201,168,68,0.9)" }}
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current" style={{ color: "#111008", marginRight: "-3px" }}>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gold/90">
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-bg" style={{ marginRight: "-3px" }}>
               <path d="M8 5v14l11-7z"/>
             </svg>
           </div>
         </div>
         {/* YouTube badge */}
         <div
-          className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-xs font-bold"
-          style={{ background: "rgba(17,16,8,0.85)", color: "#C9A844" }}
+          className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-xs font-bold text-gold"
+          style={{ background: "rgba(17,16,8,0.85)" }}
         >
           يوتيوب
         </div>
@@ -58,14 +54,13 @@ export default function VideoCard({
       {/* Info */}
       <div className="p-3">
         <h3
-          className={`font-bold leading-snug line-clamp-2 mb-1 group-hover:text-gold transition-colors ${
+          className={`font-bold leading-snug line-clamp-2 mb-1 group-hover:text-gold transition-colors text-text ${
             size === "lg" ? "text-base" : "text-sm"
           }`}
-          style={{ color: "#F0EAD6" }}
         >
           {title}
         </h3>
-        <p className="text-xs" style={{ color: "#9A9070" }}>
+        <p className="text-xs text-text-muted">
           {formatArabicDate(published_at)}
         </p>
       </div>

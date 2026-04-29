@@ -41,8 +41,8 @@ export default async function GuestsPage() {
 
       {all.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-lg mb-2" style={{ color: "#9A9070" }}>قريباً</p>
-          <p className="text-sm" style={{ color: "#9A9070" }}>
+          <p className="text-lg mb-2 text-text-muted">قريباً</p>
+          <p className="text-sm text-text-muted">
             سيتم نشر قائمة ضيوف البلاغ قريباً
           </p>
         </div>

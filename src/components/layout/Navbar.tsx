@@ -22,11 +22,10 @@ export default function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full"
+      className="sticky top-0 z-50 w-full border-b border-border"
       style={{
         background: "rgba(17,16,8,0.92)",
         backdropFilter: "blur(12px)",
-        borderBottom: "1px solid #2E2A18",
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,12 +54,11 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
-                  style={{
-                    color:           active ? "#C9A844" : "#9A9070",
-                    backgroundColor: active ? "rgba(201,168,68,0.08)" : "transparent",
-                    borderBottom:    active ? "1px solid #C9A844" : "1px solid transparent",
-                  }}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    active
+                      ? "text-gold bg-gold/8 border-b border-gold"
+                      : "text-text-muted border-b border-transparent"
+                  }`}
                   onMouseEnter={(e) => {
                     if (!active) (e.currentTarget as HTMLElement).style.color = "#E8D5A3";
                   }}
@@ -93,8 +91,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-md"
-            style={{ color: "#C9A844" }}
+            className="md:hidden p-2 rounded-md text-gold"
             onClick={() => setOpen(!open)}
             aria-label="القائمة"
           >
@@ -105,10 +102,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div
-          className="md:hidden px-4 pb-4 space-y-1"
-          style={{ borderTop: "1px solid #2E2A18" }}
-        >
+        <div className="md:hidden px-4 pb-4 space-y-1 border-t border-border">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
@@ -116,11 +110,9 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="block px-4 py-3 rounded-lg text-sm font-medium"
-                style={{
-                  color:           active ? "#C9A844" : "#9A9070",
-                  backgroundColor: active ? "rgba(201,168,68,0.08)" : "transparent",
-                }}
+                className={`block px-4 py-3 rounded-lg text-sm font-medium ${
+                  active ? "text-gold bg-gold/8" : "text-text-muted"
+                }`}
               >
                 {link.label}
               </Link>

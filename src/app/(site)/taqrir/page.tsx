@@ -32,7 +32,7 @@ export default async function TaqrirListPage() {
 
       {editorials.length === 0 ? (
         <div className="text-center py-20">
-          <p style={{ color: "#9A9070" }}>لا توجد تقارير بعد</p>
+          <p className="text-text-muted">لا توجد تقارير بعد</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -40,8 +40,7 @@ export default async function TaqrirListPage() {
             <Link
               key={article.id}
               href={`/taqrir/${article.slug}`}
-              className="group flex flex-col rounded-xl overflow-hidden transition-all card-hover"
-              style={{ background: "#1A1810", border: "1px solid #C9A844" }}
+              className="group flex flex-col rounded-xl overflow-hidden transition-all card-hover bg-bg-card border border-gold"
             >
               {article.image_url && (
                 <div className="overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -54,25 +53,22 @@ export default async function TaqrirListPage() {
               )}
               <div className="flex flex-col flex-1 p-4 gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full font-bold"
-                    style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-                  >
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-gold/[0.15] text-gold">
                     تقرير البلاغ
                   </span>
                   {article.category && (
-                    <span className="text-xs" style={{ color: "#9A9070" }}>{article.category}</span>
+                    <span className="text-xs text-text-muted">{article.category}</span>
                   )}
                 </div>
-                <h2 className="text-sm font-bold leading-snug flex-1" style={{ color: "#F0EAD6" }}>
+                <h2 className="text-sm font-bold leading-snug flex-1 text-text">
                   {article.title}
                 </h2>
                 {article.excerpt && (
-                  <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>
+                  <p className="text-xs line-clamp-2 text-text-muted">
                     {article.excerpt}
                   </p>
                 )}
-                <p className="text-xs mt-auto pt-2" style={{ color: "#9A9070", borderTop: "1px solid #2E2A18" }}>
+                <p className="text-xs mt-auto pt-2 text-text-muted border-t border-border">
                   {formatArabicDate(article.published_at)}
                 </p>
               </div>
