@@ -56,20 +56,25 @@ export async function postToLinkedIn(opts: PostOptions): Promise<void> {
     },
   };
 
-  await fetch("https://api.linkedin.com/v2/ugcPosts", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      "X-Restli-Protocol-Version": "2.0.0",
-    },
-    body: JSON.stringify(body),
-  }).then(async (res) => {
+  console.error("LinkedIn: attempting post for", opts.slug);
+  try {
+    const res = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify(body),
+    });
     if (!res.ok) {
       const err = await res.json().catch(() => res.text());
       console.error("LinkedIn post failed:", JSON.stringify(err));
     } else {
-      console.log("LinkedIn post succeeded");
+      const data = await res.json();
+      console.error("LinkedIn post succeeded:", data.id);
     }
-  });
+  } catch (err: any) {
+    console.error("LinkedIn fetch error:", err.message);
+  }
 }
