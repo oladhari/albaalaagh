@@ -1,9 +1,4 @@
-const ACCESS_TOKEN = process.env.LINKEDIN_ACCESS_TOKEN;
-// Set LINKEDIN_ORGANIZATION_ID for a company page (w_organization_social scope)
-// or LINKEDIN_PERSON_ID for a personal profile (w_member_social scope)
-const ORG_ID       = process.env.LINKEDIN_ORGANIZATION_ID;
-const PERSON_ID    = process.env.LINKEDIN_PERSON_ID;
-const BASE_URL     = "https://www.albaalaagh.com";
+const BASE_URL = "https://www.albaalaagh.com";
 
 interface PostOptions {
   title: string;
@@ -14,13 +9,18 @@ interface PostOptions {
 }
 
 export async function postToLinkedIn(opts: PostOptions): Promise<void> {
-  if (!ACCESS_TOKEN) return;
+  const ACCESS_TOKEN = process.env.LINKEDIN_ACCESS_TOKEN;
+  const ORG_ID       = process.env.LINKEDIN_ORGANIZATION_ID;
+  const PERSON_ID    = process.env.LINKEDIN_PERSON_ID;
+
+  if (!ACCESS_TOKEN) { console.error("LinkedIn: missing access token"); return; }
+
   const author = ORG_ID
     ? `urn:li:organization:${ORG_ID}`
     : PERSON_ID
     ? `urn:li:person:${PERSON_ID}`
     : null;
-  if (!author) return;
+  if (!author) { console.error("LinkedIn: missing person/org ID"); return; }
 
   const url = opts.type === "article"
     ? `${BASE_URL}/articles/${opts.slug}`
