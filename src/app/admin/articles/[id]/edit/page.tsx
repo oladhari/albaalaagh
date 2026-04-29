@@ -149,7 +149,7 @@ export default function EditArticlePage() {
               color: form.title ? "#111008" : "#9A9070",
             }}
           >
-            {saving ? "جارٍ الحفظ..." : "نشر المقال على فيسبوك وتيليغرام وX"}
+            {saving ? "جارٍ الحفظ..." : "نشر المقال على فيسبوك وتيليغرام وX ولينكدإن"}
           </button>
         </div>
       </div>

@@ -70,7 +70,7 @@ export default function NewNewsPage() {
         <div>
           <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>كتابة تقرير جديد</h1>
           <p className="text-xs mt-1" style={{ color: "#9A9070" }}>
-            سيُنشر باسم <span style={{ color: "#C9A844" }}>البلاغ</span> ويُشارك على فيسبوك وتيليغرام وX
+            سيُنشر باسم <span style={{ color: "#C9A844" }}>البلاغ</span> ويُشارك على فيسبوك وتيليغرام وX ولينكدإن
           </p>
         </div>
         <div className="flex gap-3">
