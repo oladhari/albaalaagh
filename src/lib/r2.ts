@@ -17,10 +17,14 @@ export async function uploadToR2(key: string, body: Buffer, contentType: string)
   let lastErr: Error | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      const buf = Buffer.from(body);
       const res = await r2.fetch(url, {
         method:  "PUT",
-        headers: { "Content-Type": contentType },
-        body: Buffer.from(body) as unknown as BodyInit,
+        headers: {
+          "Content-Type":   contentType,
+          "Content-Length": buf.length.toString(),
+        },
+        body: buf as unknown as BodyInit,
       });
       if (!res.ok) throw new Error(`R2 upload failed: ${res.status} ${await res.text()}`);
       return `${PUBLIC_URL}/${key}`;
