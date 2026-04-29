@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { postToTelegram } from "@/lib/telegram";
 import { postToX } from "@/lib/twitter";
+import { postToLinkedIn } from "@/lib/linkedin";
 import { uploadToR2 } from "@/lib/r2";
 import slugify from "slugify";
 
@@ -91,9 +92,12 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await postToFacebook(title, excerpt, slug).catch(console.error);
-  await postToTelegram({ title, excerpt, slug, type: "news" }).catch(console.error);
-  await postToX({ title, excerpt, slug, type: "news" }).catch(console.error);
+  await Promise.allSettled([
+    postToFacebook(title, excerpt, slug),
+    postToTelegram({ title, excerpt, slug, type: "news" }),
+    postToX({ title, excerpt, slug, type: "news" }),
+    postToLinkedIn({ title, excerpt, slug, type: "news" }),
+  ]);
 
   return NextResponse.json({ ok: true, slug, url });
 }

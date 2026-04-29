@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { postArticleToFacebook } from "@/lib/facebook";
 import { postToTelegram } from "@/lib/telegram";
 import { postToX } from "@/lib/twitter";
+import { postToLinkedIn } from "@/lib/linkedin";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthed = await requireAdmin();
@@ -66,9 +67,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       slug: data.slug,
       writerName: (data.writer as any)?.name,
     };
-    postArticleToFacebook(postOpts).catch(console.error);
-    postToTelegram({ ...postOpts, type: "article" }).catch(console.error);
-    postToX({ ...postOpts, type: "article" }).catch(console.error);
+    await Promise.allSettled([
+      postArticleToFacebook(postOpts),
+      postToTelegram({ ...postOpts, type: "article" }),
+      postToX({ ...postOpts, type: "article" }),
+      postToLinkedIn({ ...postOpts, type: "article" }),
+    ]);
   }
 
   return NextResponse.json(data);
