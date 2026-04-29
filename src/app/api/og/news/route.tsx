@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
           fontFamily: "Cairo",
         }}
       >
-        {/* Background image at reduced opacity */}
+        {/* Background image — full opacity, no gradient */}
         {imgData && (
           <img
             src={imgData}
@@ -64,38 +64,25 @@ export async function GET(req: NextRequest) {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              opacity: 0.55,
             }}
           />
         )}
 
-        {/* Gradient overlay — dark at bottom */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to bottom, rgba(17,16,8,0.15) 0%, rgba(17,16,8,0.6) 40%, rgba(17,16,8,0.97) 75%)",
-            display: "flex",
-          }}
-        />
-
-        {/* Bottom bar — title only when no image, always show brand */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: "0 64px 48px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 12,
-          }}
-        >
-          {/* Show title text only when there is no background image */}
-          {!imgData && (
+        {/* No-image fallback: title text */}
+        {!imgData && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: "0 64px 48px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 12,
+            }}
+          >
             <div
               style={{
                 color: "#F0EAD6",
@@ -108,30 +95,36 @@ export async function GET(req: NextRequest) {
             >
               {title}
             </div>
-          )}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 4, height: 20, backgroundColor: "#C9A844", borderRadius: 2 }} />
+              <div style={{ color: "#C9A844", fontSize: 20, fontWeight: 700, letterSpacing: 1 }}>
+                albaalaagh.com
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Brand watermark — always visible */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 4,
-                height: 20,
-                backgroundColor: "#C9A844",
-                borderRadius: 2,
-              }}
-            />
-            <div
-              style={{
-                color: "#C9A844",
-                fontSize: 20,
-                fontWeight: 700,
-                letterSpacing: 1,
-              }}
-            >
+        {/* Small watermark when image is present */}
+        {imgData && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 16,
+              right: 20,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(0,0,0,0.45)",
+              borderRadius: 6,
+              padding: "4px 12px",
+            }}
+          >
+            <div style={{ width: 3, height: 14, backgroundColor: "#C9A844", borderRadius: 2 }} />
+            <div style={{ color: "#C9A844", fontSize: 16, fontWeight: 700 }}>
               albaalaagh.com
             </div>
           </div>
-        </div>
+        )}
       </div>
     ),
     {
