@@ -3,44 +3,32 @@ import { supabaseAdmin } from "@/lib/supabase";
 import NewsGrid from "./NewsGrid";
 
 export const metadata = {
-  title: "الأخبار | البلاغ",
-  description: "آخر الأخبار التونسية والعربية",
+  title: "أخبار البلاغ | البلاغ",
+  description: "أخبار تونس والعالم العربي من تحرير البلاغ",
 };
 
 export const revalidate = 300;
 
 async function getNews() {
-  const [regularRes, editorialsRes] = await Promise.all([
-    supabaseAdmin
-      .from("news")
-      .select("*")
-      .neq("status", "rejected")
-      .neq("source", "البلاغ")
-      .order("published_at", { ascending: false })
-      .limit(90),
-    supabaseAdmin
-      .from("news")
-      .select("*")
-      .eq("source", "البلاغ")
-      .eq("status", "approved")
-      .order("published_at", { ascending: false }),
-  ]);
-  return {
-    regular:    regularRes.data    ?? [],
-    editorials: editorialsRes.data ?? [],
-  };
+  const { data } = await supabaseAdmin
+    .from("news")
+    .select("*")
+    .eq("source", "البلاغ")
+    .eq("status", "approved")
+    .order("published_at", { ascending: false });
+  return data ?? [];
 }
 
 export default async function NewsPage() {
-  const { regular, editorials } = await getNews();
+  const articles = await getNews();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
-        title="الأخبار"
-        subtitle="أخبار منتقاة من تونس والعالم العربي"
+        title="أخبار البلاغ"
+        subtitle="أخبار تونس والعالم العربي من تحرير البلاغ"
       />
-      <NewsGrid articles={regular} editorials={editorials} />
+      <NewsGrid articles={articles} />
     </div>
   );
 }
