@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ARTICLE_CATEGORIES } from "@/types";
+import { NEWS_CATEGORIES } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 
 const GEO_OPTIONS = [
@@ -151,7 +151,7 @@ export default function NewNewsPage() {
               <label style={labelStyle}>التصنيف</label>
               <select value={form.category} onChange={(e) => set("category", e.target.value)} style={inputStyle}>
                 <option value="عام">عام</option>
-                {ARTICLE_CATEGORIES.map((cat) => (
+                {NEWS_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>

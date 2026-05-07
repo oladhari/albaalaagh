@@ -89,6 +89,10 @@ export const ARTICLE_CATEGORIES = [
   "سياسة", "دين", "فكر وفلسفة", "اقتصاد", "مجتمع", "ثقافة", "دولي"
 ] as const;
 
+export const NEWS_CATEGORIES = [
+  "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"
+] as const;
+
 export const VIDEO_CATEGORIES = [
   "مقابلات سياسية", "حوارات فكرية", "شهادات", "تحليلات", "متنوع"
 ] as const;

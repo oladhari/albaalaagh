@@ -3,7 +3,7 @@
 import { useState } from "react";
 import NewsCard from "@/components/ui/NewsCard";
 
-const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "قضاء", "أمن", "مجتمع", "دولي", "ثقافة", "رياضة"];
+const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "ثقافة", "رياضة", "بيئة", "صحة", "تعليم", "عام"];
 
 const GEO_SECTIONS = [
   { key: "tunisia",       label: "أخبار تونس",          flag: "🇹🇳" },
