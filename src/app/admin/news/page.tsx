@@ -449,6 +449,11 @@ export default function AdminNewsPage() {
                     {news.category && (
                       <span className="text-xs" style={{ color: DIM }}>{news.category}</span>
                     )}
+                    {(news as any).geo && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(107,203,119,0.1)", color: GREEN }}>
+                        {{ tunisia: "🇹🇳 تونس", arab: "🌍 عربي", international: "🌐 دولي", general: "📰 عام" }[(news as any).geo] ?? (news as any).geo}
+                      </span>
+                    )}
                     <span className="text-xs mr-auto" style={{ color: DIM }}>{timeAgo(news.published_at)}</span>
                   </div>
                   <p className="text-sm font-semibold leading-snug mb-1" style={{ color: "#F0EAD6" }}>{news.title}</p>
