@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabaseAdmin
       .from("articles")
       .select("slug, published_at")
-      .eq("status", "published")
+      .eq("published", true)
       .order("published_at", { ascending: false }),
   ]);
 
