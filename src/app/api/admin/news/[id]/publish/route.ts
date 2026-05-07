@@ -71,7 +71,7 @@ export async function PATCH(
   if (unauthed) return unauthed;
 
   const { id } = await params;
-  const { title, excerpt, content, image_url, published_at } = await req.json();
+  const { title, excerpt, content, image_url, published_at, geo, category } = await req.json();
 
   const patch: Record<string, unknown> = {};
   if (title        !== undefined) patch.title        = title;
@@ -79,6 +79,8 @@ export async function PATCH(
   if (content      !== undefined) patch.content      = content;
   if (image_url    !== undefined) patch.image_url    = image_url || null;
   if (published_at !== undefined) patch.published_at = new Date(published_at).toISOString();
+  if (geo          !== undefined) patch.geo          = geo;
+  if (category     !== undefined) patch.category     = category;
 
   const { error } = await supabaseAdmin.from("news").update(patch).eq("id", id).eq("source", "البلاغ");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -353,6 +353,38 @@ export default function AdminNewsPage() {
             />
           </div>
 
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>التصنيف</label>
+              <select
+                style={{ ...inputStyle, resize: undefined }}
+                value={preview.category}
+                onChange={(e) => setPreview((p) => p && ({ ...p, category: e.target.value }))}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+              >
+                {["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>المنطقة الجغرافية</label>
+              <select
+                style={{ ...inputStyle, resize: undefined }}
+                value={preview.geo}
+                onChange={(e) => setPreview((p) => p && ({ ...p, geo: e.target.value }))}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
+              >
+                <option value="tunisia">🇹🇳 تونس</option>
+                <option value="arab">🌍 عربي</option>
+                <option value="international">🌐 دولي</option>
+                <option value="general">📰 عام</option>
+              </select>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold mb-1" style={{ color: DIM }}>تاريخ النشر</label>
             <input
