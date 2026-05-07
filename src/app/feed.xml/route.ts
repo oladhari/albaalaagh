@@ -25,6 +25,7 @@ export async function GET() {
       .from("news")
       .select("id, slug, title, excerpt, image_url, source, published_at, category")
       .eq("status", "approved")
+      .eq("source", "البلاغ")
       .order("published_at", { ascending: false })
       .limit(50),
     supabaseAdmin
