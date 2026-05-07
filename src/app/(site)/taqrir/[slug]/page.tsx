@@ -71,7 +71,27 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: article.excerpt ?? article.title,
+    datePublished: article.published_at,
+    dateModified: article.published_at,
+    author: { "@type": "Organization", name: "تحرير البلاغ", url: base },
+    publisher: {
+      "@type": "Organization",
+      name: "البلاغ",
+      url: base,
+      logo: { "@type": "ImageObject", url: `${base}/icon.ico` },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/taqrir/${slug}` },
+    ...(article.image_url ? { image: article.image_url } : {}),
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-xs mb-6 flex items-center gap-2" style={{ color: "#9A9070" }}>
@@ -155,5 +175,6 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
         dangerouslySetInnerHTML={{ __html: formatContent(article.content ?? "") }}
       />
     </div>
+    </>
   );
 }

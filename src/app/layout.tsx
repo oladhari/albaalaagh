@@ -13,7 +13,16 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: "البلاغ | قناة سياسية تونسية",
   description: "قناة البلاغ - منبر سياسي تونسي متخصص في الحوارات السياسية والفكرية مع شخصيات بارزة من وزراء وبرلمانيين ومفكرين وناشطين",
-  keywords: ["البلاغ", "تونس", "سياسة", "مقابلات", "أخبار تونسية"],
+  keywords: [
+    "البلاغ", "albaalaagh", "تونس", "سياسة تونسية", "أخبار تونس",
+    "مقابلات سياسية", "حوارات سياسية", "برلمان تونس", "وزراء تونس",
+    "ناشطون تونسيون", "مفكرون", "إعلام تونسي", "تحليل سياسي",
+  ],
+  authors: [{ name: "البلاغ", url: "https://www.albaalaagh.com" }],
+  creator: "البلاغ",
+  publisher: "البلاغ",
+  metadataBase: new URL("https://www.albaalaagh.com"),
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "ar_TN",

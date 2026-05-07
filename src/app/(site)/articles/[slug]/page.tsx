@@ -71,7 +71,30 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   if (!article) notFound();
 
+  const base = "https://www.albaalaagh.com";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt ?? article.title,
+    datePublished: article.published_at,
+    dateModified: article.published_at,
+    author: article.writer
+      ? { "@type": "Person", name: article.writer.name }
+      : { "@type": "Organization", name: "البلاغ" },
+    publisher: {
+      "@type": "Organization",
+      name: "البلاغ",
+      url: base,
+      logo: { "@type": "ImageObject", url: `${base}/icon.ico` },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/articles/${slug}` },
+    ...(article.cover_image ? { image: article.cover_image } : {}),
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: "#9A9070" }}>
@@ -203,5 +226,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         </Link>
       </div>
     </div>
+    </>
   );
 }
