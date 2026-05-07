@@ -451,7 +451,7 @@ export default function AdminNewsPage() {
                     )}
                     {(news as any).geo && (
                       <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(107,203,119,0.1)", color: GREEN }}>
-                        {{ tunisia: "🇹🇳 تونس", arab: "🌍 عربي", international: "🌐 دولي", general: "📰 عام" }[(news as any).geo] ?? (news as any).geo}
+                        {(({ tunisia: "🇹🇳 تونس", arab: "🌍 عربي", international: "🌐 دولي", general: "📰 عام" } as Record<string, string>)[(news as any).geo]) ?? (news as any).geo}
                       </span>
                     )}
                     <span className="text-xs mr-auto" style={{ color: DIM }}>{timeAgo(news.published_at)}</span>
