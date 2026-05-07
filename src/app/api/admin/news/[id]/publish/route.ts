@@ -82,8 +82,13 @@ export async function PATCH(
   if (geo          !== undefined) patch.geo          = geo;
   if (category     !== undefined) patch.category     = category;
 
-  const { error } = await supabaseAdmin.from("news").update(patch).eq("id", id).eq("source", "البلاغ");
+  const { data: updated, error } = await supabaseAdmin
+    .from("news")
+    .update(patch)
+    .eq("id", id)
+    .select("id");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!updated?.length) return NextResponse.json({ error: "لم يتم العثور على المقال" }, { status: 404 });
 
   return NextResponse.json({ ok: true });
 }

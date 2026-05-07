@@ -111,15 +111,20 @@ export default function AdminNewsPage() {
     }
   };
 
+  const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"];
+  const VALID_GEOS = ["tunisia", "arab", "international", "general"];
+
   const openEdit = (news: any) => {
+    const rawCat = news.category ?? "سياسة";
+    const rawGeo = news.geo ?? "general";
     setPreview({
       newsId:       news.id,
       title:        news.title,
       excerpt:      news.excerpt ?? "",
       content:      news.content ?? "",
       image_url:    news.image_url ?? null,
-      geo:          news.geo ?? "general",
-      category:     news.category ?? "سياسة",
+      geo:          VALID_GEOS.includes(rawGeo) ? rawGeo : "general",
+      category:     VALID_CATEGORIES.includes(rawCat) ? rawCat : "عام",
       published_at: news.published_at
         ? new Date(news.published_at).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16),
