@@ -5,11 +5,10 @@ import { useRef, useState, useCallback } from "react";
 interface Props {
   currentUrl: string;
   onUploaded: (url: string) => void;
+  aspect?: number;       // default 16/9
+  outputWidth?: number;  // default 1280
+  outputHeight?: number; // default 720
 }
-
-const ASPECT = 16 / 9;
-const OUT_W  = 1280;
-const OUT_H  = 720;
 
 interface CropState {
   src: string;
@@ -26,7 +25,10 @@ interface CropState {
   displayH: number;
 }
 
-export default function CoverUpload({ currentUrl, onUploaded }: Props) {
+export default function CoverUpload({ currentUrl, onUploaded, aspect = 16 / 9, outputWidth = 1280, outputHeight = 720 }: Props) {
+  const ASPECT = aspect;
+  const OUT_W  = outputWidth;
+  const OUT_H  = outputHeight;
   const fileRef = useRef<HTMLInputElement>(null);
   const imgRef  = useRef<HTMLImageElement>(null);
   const [crop, setCrop]         = useState<CropState | null>(null);
@@ -133,8 +135,11 @@ export default function CoverUpload({ currentUrl, onUploaded }: Props) {
         {currentUrl ? (
           <img src={currentUrl} alt="" className="w-32 h-[72px] rounded-lg object-cover shrink-0" style={{ border: "2px solid #C9A844" }} />
         ) : (
-          <div className="w-32 h-[72px] rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(201,168,68,0.1)", border: "2px dashed #2E2A18" }}>
-            <span style={{ color: "#9A9070", fontSize: 11 }}>16:9</span>
+          <div
+            className="rounded-lg flex items-center justify-center shrink-0"
+            style={{ width: 128, height: Math.round(128 / ASPECT), background: "rgba(201,168,68,0.1)", border: "2px dashed #2E2A18" }}
+          >
+            <span style={{ color: "#9A9070", fontSize: 11 }}>{ASPECT === 1 ? "1:1" : "16:9"}</span>
           </div>
         )}
         <button
@@ -152,7 +157,7 @@ export default function CoverUpload({ currentUrl, onUploaded }: Props) {
       {crop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
           <div className="rounded-2xl p-6 max-w-lg w-full mx-4 overflow-y-auto" style={{ background: "#1A1810", border: "1px solid #2E2A18", maxHeight: "90vh" }}>
-            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>اقتصاص صورة الغلاف (16:9 — {OUT_W}×{OUT_H})</h3>
+            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>اقتصاص الصورة ({ASPECT === 1 ? "1:1" : "16:9"} — {OUT_W}×{OUT_H})</h3>
             <p className="text-xs mb-4" style={{ color: "#9A9070" }}>اسحب الإطار لتحديد المنطقة، واسحب الزاوية لتغيير الحجم</p>
 
             <div

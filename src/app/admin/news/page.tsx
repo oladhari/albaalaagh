@@ -352,6 +352,9 @@ export default function AdminNewsPage() {
             <CoverUpload
               currentUrl={preview.facebook_image ?? ""}
               onUploaded={(url) => setPreview((p) => p && ({ ...p, facebook_image: url }))}
+              aspect={1}
+              outputWidth={1080}
+              outputHeight={1080}
             />
             {preview.facebook_image && (
               <button
