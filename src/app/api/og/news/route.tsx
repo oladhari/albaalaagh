@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
   const fontSize = title.length > 80 ? 34 : title.length > 50 ? 40 : 48;
 
-  return new ImageResponse(
+  const imageResponse = new ImageResponse(
     (
       <div
         style={{
@@ -133,4 +133,13 @@ export async function GET(req: NextRequest) {
       fonts: fontData ? [{ name: "Cairo", data: fontData, weight: 700, style: "normal" }] : [],
     }
   );
+
+  return new Response(imageResponse.body, {
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=2592000, immutable",
+      "CDN-Cache-Control": "public, max-age=2592000, immutable",
+      "Vercel-CDN-Cache-Control": "public, max-age=2592000, immutable",
+    },
+  });
 }
