@@ -10,6 +10,7 @@ export interface ShareOptions {
   slug: string;
   writerName?: string;
   type: "article" | "news";
+  facebook_image?: string | null;
 }
 
 export async function shareToAll(opts: ShareOptions): Promise<void> {

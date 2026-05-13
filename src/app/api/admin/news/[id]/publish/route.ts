@@ -30,7 +30,7 @@ export async function POST(
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
 
-  const { title, excerpt, content, image_url, geo, category } = await req.json();
+  const { title, excerpt, content, image_url, facebook_image, geo, category } = await req.json();
   if (!title || !content) {
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
   }
@@ -46,18 +46,19 @@ export async function POST(
     content,
     title,
     excerpt,
-    image_url:    ownedImageUrl ?? image_url ?? null,
-    source:       "البلاغ",
+    image_url:      ownedImageUrl ?? image_url ?? null,
+    facebook_image: facebook_image || null,
+    source:         "البلاغ",
     url,
-    status:       "approved",
-    geo:          geo       ?? "general",
-    category:     category  ?? "سياسة",
-    published_at: new Date().toISOString(),
+    status:         "approved",
+    geo:            geo       ?? "general",
+    category:       category  ?? "سياسة",
+    published_at:   new Date().toISOString(),
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await shareToAll({ title, excerpt, slug, type: "news" });
+  await shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null });
 
   return NextResponse.json({ ok: true, slug, url });
 }

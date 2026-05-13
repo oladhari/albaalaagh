@@ -16,16 +16,17 @@ const TONES: { value: Tone; label: string; color: string }[] = [
 ];
 
 interface Preview {
-  newsId:       string;
-  title:        string;
-  excerpt:      string;
-  content:      string;
-  image_url:    string | null;
-  geo:          string;
-  category:     string;
-  published_at: string;
-  tone:         Tone;
-  editMode?:    boolean;
+  newsId:         string;
+  title:          string;
+  excerpt:        string;
+  content:        string;
+  image_url:      string | null;
+  facebook_image: string | null;
+  geo:            string;
+  category:       string;
+  published_at:   string;
+  tone:           Tone;
+  editMode?:      boolean;
 }
 
 const GOLD  = "#C9A844";
@@ -96,14 +97,15 @@ export default function AdminNewsPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في الإنشاء"); return; }
       setPreview({
-        newsId:       news.id,
-        title:        data.title,
-        excerpt:      data.excerpt,
-        content:      data.content,
-        image_url:    data.image_url,
-        geo:          data.geo ?? "tunisia",
-        category:     data.category ?? "سياسة",
-        published_at: new Date().toISOString().slice(0, 16),
+        newsId:         news.id,
+        title:          data.title,
+        excerpt:        data.excerpt,
+        content:        data.content,
+        image_url:      data.image_url,
+        facebook_image: null,
+        geo:            data.geo ?? "tunisia",
+        category:       data.category ?? "سياسة",
+        published_at:   new Date().toISOString().slice(0, 16),
         tone,
       });
     } finally {
@@ -118,18 +120,19 @@ export default function AdminNewsPage() {
     const rawCat = news.category ?? "سياسة";
     const rawGeo = news.geo ?? "general";
     setPreview({
-      newsId:       news.id,
-      title:        news.title,
-      excerpt:      news.excerpt ?? "",
-      content:      news.content ?? "",
-      image_url:    news.image_url ?? null,
-      geo:          VALID_GEOS.includes(rawGeo) ? rawGeo : "general",
-      category:     VALID_CATEGORIES.includes(rawCat) ? rawCat : "عام",
-      published_at: news.published_at
+      newsId:         news.id,
+      title:          news.title,
+      excerpt:        news.excerpt ?? "",
+      content:        news.content ?? "",
+      image_url:      news.image_url ?? null,
+      facebook_image: news.facebook_image ?? null,
+      geo:            VALID_GEOS.includes(rawGeo) ? rawGeo : "general",
+      category:       VALID_CATEGORIES.includes(rawCat) ? rawCat : "عام",
+      published_at:   news.published_at
         ? new Date(news.published_at).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16),
-      tone:         "accountability" as Tone,
-      editMode:     true,
+      tone:           "accountability" as Tone,
+      editMode:       true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -184,14 +187,15 @@ export default function AdminNewsPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في جلب الرابط"); return; }
       setPreview({
-        newsId:       data.newsId,
-        title:        data.title,
-        excerpt:      data.excerpt,
-        content:      data.content,
-        image_url:    data.image_url,
-        geo:          data.geo ?? "general",
-        category:     data.category ?? "عام",
-        published_at: new Date().toISOString().slice(0, 16),
+        newsId:         data.newsId,
+        title:          data.title,
+        excerpt:        data.excerpt,
+        content:        data.content,
+        image_url:      data.image_url,
+        facebook_image: null,
+        geo:            data.geo ?? "general",
+        category:       data.category ?? "عام",
+        published_at:   new Date().toISOString().slice(0, 16),
         tone:         "accountability",
       });
       setUrlInput("");
@@ -316,7 +320,7 @@ export default function AdminNewsPage() {
             </div>
           )}
 
-          {/* Image */}
+          {/* Article cover image */}
           <div>
             <label className="block text-xs font-semibold mb-2" style={{ color: DIM }}>صورة المقال (16:9)</label>
             <CoverUpload
@@ -332,6 +336,32 @@ export default function AdminNewsPage() {
               onFocus={(e) => (e.target.style.borderColor = GOLD)}
               onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
             />
+          </div>
+
+          {/* Facebook image (1:1 square) */}
+          <div
+            className="p-3 rounded-xl"
+            style={{ background: "rgba(24,119,242,0.06)", border: "1px solid rgba(24,119,242,0.2)" }}
+          >
+            <label className="block text-xs font-semibold mb-1" style={{ color: "#4A90E2" }}>
+              📘 صورة فيسبوك (1:1 مربعة) — اختياري
+            </label>
+            <p className="text-xs mb-2" style={{ color: DIM }}>
+              إذا رفعت صورة هنا، سيُنشر على فيسبوك كصورة بدلاً من رابط — وصول أعلى. الرابط سيُضاف تلقائياً في أول تعليق.
+            </p>
+            <CoverUpload
+              currentUrl={preview.facebook_image ?? ""}
+              onUploaded={(url) => setPreview((p) => p && ({ ...p, facebook_image: url }))}
+            />
+            {preview.facebook_image && (
+              <button
+                onClick={() => setPreview((p) => p && ({ ...p, facebook_image: null }))}
+                className="text-xs mt-1"
+                style={{ color: DIM }}
+              >
+                ✕ إزالة صورة فيسبوك
+              </button>
+            )}
           </div>
 
           <div>
