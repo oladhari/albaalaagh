@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (unauthed) return unauthed;
 
   const body = await req.json();
-  const { title, excerpt, content, image_url, category, geo, published_at } = body;
+  const { title, excerpt, content, image_url, facebook_image, category, geo, published_at } = body;
 
   if (!title || !content) {
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       title,
       excerpt:      excerpt || null,
       content,
-      image_url:    image_url || null,
+      image_url:      image_url || null,
+      facebook_image: facebook_image || null,
       url:          `https://www.albaalaagh.com/taqrir/${slug}`,
       source:       "البلاغ",
       status:       "approved",
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await shareToAll({ title, excerpt, slug: data.slug, type: "news" });
+  await shareToAll({ title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null });
 
   return NextResponse.json(data, { status: 201 });
 }

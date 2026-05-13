@@ -21,6 +21,7 @@ export default function NewNewsPage() {
     excerpt: "",
     content: "",
     image_url: "",
+    facebook_image: "",
     category: "عام",
     geo: "tunisia",
     published_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
@@ -192,6 +193,32 @@ export default function NewNewsPage() {
               {form.image_url && (
                 <img src={form.image_url} alt="معاينة" className="mt-2 rounded-lg w-full object-cover"
                   style={{ aspectRatio: "16/9" }} />
+              )}
+            </div>
+
+            <div className="p-3 rounded-xl" style={{ background: "rgba(24,119,242,0.06)", border: "1px solid rgba(24,119,242,0.2)" }}>
+              <label className="block text-xs font-semibold mb-1" style={{ color: "#4A90E2" }}>
+                📘 صورة فيسبوك (1:1 مربعة) — اختياري
+              </label>
+              <p className="text-xs mb-2" style={{ color: "#9A9070" }}>
+                إذا رفعت صورة هنا، سيُنشر على فيسبوك كصورة بدلاً من رابط. الرابط سيُضاف تلقائياً في أول تعليق.
+              </p>
+              <CoverUpload
+                currentUrl={form.facebook_image}
+                onUploaded={(url) => set("facebook_image", url)}
+                aspect={1}
+                outputWidth={1080}
+                outputHeight={1080}
+              />
+              {form.facebook_image && (
+                <button
+                  type="button"
+                  onClick={() => set("facebook_image", "")}
+                  className="text-xs mt-1"
+                  style={{ color: "#9A9070" }}
+                >
+                  ✕ إزالة صورة فيسبوك
+                </button>
               )}
             </div>
           </div>
