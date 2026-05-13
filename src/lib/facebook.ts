@@ -17,13 +17,15 @@ async function postPhotoWithComment(
   token: string,
   imageUrl: string,
   caption: string,
-  linkComment: string
+  articleUrl: string
 ): Promise<void> {
-  // 1. Post the photo
+  // Caption always includes the link — comment is best-effort bonus
+  const fullCaption = `${caption}\n\n🔗 ${articleUrl}`;
+
   const photoRes = await fetch(`https://graph.facebook.com/${pageId}/photos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url: imageUrl, caption, access_token: token }),
+    body: JSON.stringify({ url: imageUrl, caption: fullCaption, access_token: token }),
   });
   if (!photoRes.ok) {
     const err = await photoRes.json();
@@ -34,12 +36,16 @@ async function postPhotoWithComment(
   const postId = post_id ?? id;
   if (!postId) return;
 
-  // 2. Add link as first comment
-  await fetch(`https://graph.facebook.com/${postId}/comments`, {
+  // Try to pin the link as first comment (requires pages_manage_engagement permission)
+  const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: linkComment, access_token: token }),
+    body: JSON.stringify({ message: `🔗 اقرأ التقرير كاملاً:\n${articleUrl}`, access_token: token }),
   });
+  if (!commentRes.ok) {
+    const err = await commentRes.json();
+    console.warn(`Facebook comment failed for page ${pageId} (link already in caption):`, err);
+  }
 }
 
 export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
@@ -55,14 +61,12 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
-      "\n\n#البلاغ #سياسة #تونس",
+      "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
-
-    const linkComment = `🔗 اقرأ التقرير كاملاً:\n${url}`;
 
     await Promise.allSettled(
       PAGES.map((page) =>
-        postPhotoWithComment(page.id!, page.token!, opts.facebook_image!, caption, linkComment)
+        postPhotoWithComment(page.id!, page.token!, opts.facebook_image!, caption, url)
       )
     );
   } else {
