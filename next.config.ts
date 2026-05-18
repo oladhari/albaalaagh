@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
       // Old URLs (before the url field was corrected) pointed to /news/[slug].
       { source: "/news/:slug", destination: "/taqrir/:slug", permanent: true },
       // Known broken URLs found via Google Search Console — redirect to homepage
-      { source: "/قواعد-التعامل-مع-المخالف", destination: "/", permanent: true },
-      { source: "/قواعد-التعامل-مع-المخالف/", destination: "/", permanent: true },
+      { source: "/%D9%82%D9%88%D8%A7%D8%B9%D8%AF-%D8%A7%D9%84%D8%AA%D8%B9%D8%A7%D9%85%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D9%85%D8%AE%D8%A7%D9%84%D9%81", destination: "/", permanent: true },
+      { source: "/%D9%82%D9%88%D8%A7%D8%B9%D8%AF-%D8%A7%D9%84%D8%AA%D8%B9%D8%A7%D9%85%D9%84-%D9%85%D8%B9-%D8%A7%D9%84%D9%85%D8%AE%D8%A7%D9%84%D9%81/", destination: "/", permanent: true },
     ];
   },
 };
