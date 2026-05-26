@@ -40,6 +40,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: article.excerpt ?? article.title,
       images: [ogImage],
     },
+    alternates: {
+      canonical: `${base}/articles/${slug}`,
+    },
   };
 }
 
