@@ -37,8 +37,21 @@ export async function POST(req: NextRequest) {
   if (unauthed) return unauthed;
 
   const { url } = await req.json();
-  if (!url || !url.startsWith("http")) {
+  if (!url || typeof url !== "string") {
     return NextResponse.json({ error: "رابط غير صالح" }, { status: 400 });
+  }
+  // SSRF protection: only allow public HTTP(S) URLs, block private IPs
+  let parsedUrl: URL;
+  try { parsedUrl = new URL(url); } catch {
+    return NextResponse.json({ error: "رابط غير صالح" }, { status: 400 });
+  }
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    return NextResponse.json({ error: "بروتوكول غير مسموح به" }, { status: 400 });
+  }
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const blockedPatterns = [/^localhost$/, /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^::1$/, /^0\.0\.0\.0$/];
+  if (blockedPatterns.some((p) => p.test(hostname))) {
+    return NextResponse.json({ error: "رابط غير مسموح به" }, { status: 400 });
   }
 
   // 1. Fetch the page

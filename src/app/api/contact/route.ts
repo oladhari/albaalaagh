@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -12,13 +13,41 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#x27;");
 }
 
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_MAX       = 3;               // max 3 messages per IP per hour
+
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting by IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const since = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
+    const { count } = await supabaseAdmin
+      .from("contact_log")
+      .select("*", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("created_at", since)
+      .then((r) => ({ count: r.count ?? 0 }));
+    if (count >= RATE_MAX) {
+      return NextResponse.json({ error: "لقد تجاوزت الحد المسموح به من الرسائل. حاول لاحقاً." }, { status: 429 });
+    }
+
     const body = await req.json();
     const { name, email, role, subject, message, type } = body;
 
     if (!name || !email || !subject || !message) {
       return NextResponse.json({ error: "حقول مطلوبة مفقودة" }, { status: 400 });
+    }
+
+    // Input length limits
+    if (String(name).length > 100)    return NextResponse.json({ error: "الاسم طويل جداً" }, { status: 400 });
+    if (String(email).length > 200)   return NextResponse.json({ error: "البريد الإلكتروني طويل جداً" }, { status: 400 });
+    if (String(subject).length > 200) return NextResponse.json({ error: "الموضوع طويل جداً" }, { status: 400 });
+    if (String(message).length > 5000) return NextResponse.json({ error: "الرسالة طويلة جداً (الحد 5000 حرف)" }, { status: 400 });
+    if (role && String(role).length > 150) return NextResponse.json({ error: "الصفة طويلة جداً" }, { status: 400 });
+
+    // Basic email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+      return NextResponse.json({ error: "بريد إلكتروني غير صالح" }, { status: 400 });
     }
 
     const typeLabel = type === "guest" ? "طلب ضيافة" : "استفسار عام";
@@ -71,6 +100,9 @@ export async function POST(req: NextRequest) {
       console.error("Resend error:", error);
       return NextResponse.json({ error: "فشل إرسال الرسالة" }, { status: 500 });
     }
+
+    // Log for rate limiting
+    await supabaseAdmin.from("contact_log").insert({ ip });
 
     return NextResponse.json({ success: true });
   } catch (err) {

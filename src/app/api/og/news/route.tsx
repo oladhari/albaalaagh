@@ -3,7 +3,21 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
+const ALLOWED_IMG_HOSTS = new Set([
+  "albaalaagh.com", "www.albaalaagh.com",
+  "pub-d1e0fa7a4d9348038e0f0ed49d8d459b.r2.dev",
+  "img.youtube.com", "i.ytimg.com",
+]);
+
+function isSafeImageUrl(url: string): boolean {
+  try {
+    const { hostname, protocol } = new URL(url);
+    return (protocol === "https:" || protocol === "http:") && ALLOWED_IMG_HOSTS.has(hostname);
+  } catch { return false; }
+}
+
 async function toDataUrl(url: string): Promise<string | null> {
+  if (!isSafeImageUrl(url)) return null;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 6000);
@@ -14,6 +28,8 @@ async function toDataUrl(url: string): Promise<string | null> {
       clearTimeout(timer);
     }
     if (!res.ok) return null;
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.startsWith("image/")) return null;
     const buf = await res.arrayBuffer();
     const ct  = res.headers.get("content-type") ?? "image/jpeg";
     const bytes = new Uint8Array(buf);

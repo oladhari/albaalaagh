@@ -3,6 +3,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
+import { formatAndSanitize } from "@/lib/sanitize";
 
 export const revalidate = 60;
 
@@ -46,16 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-// If content has no HTML tags, wrap each paragraph in <p> tags
-function formatContent(content: string): string {
-  if (/<[a-z][\s\S]*>/i.test(content)) return content;
-  return content
-    .split(/\n\n+/)
-    .map((para) => para.trim())
-    .filter(Boolean)
-    .map((para) => `<p>${para.replace(/\n/g, "<br/>")}</p>`)
-    .join("\n");
-}
+const formatContent = formatAndSanitize;
 
 async function getArticle(slug: string) {
   const { data, error } = await supabase

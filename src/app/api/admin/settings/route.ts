@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+
   const key = req.nextUrl.searchParams.get("key");
   if (!key) return NextResponse.json({ error: "key required" }, { status: 400 });
 

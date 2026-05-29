@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
+import { formatAndSanitize } from "@/lib/sanitize";
 
 export const revalidate = 60;
 
@@ -57,15 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-function formatContent(content: string): string {
-  if (/<[a-z][\s\S]*>/i.test(content)) return content;
-  return content
-    .split(/\n\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
-    .join("\n");
-}
+const formatContent = formatAndSanitize;
 
 export default async function TaqrirPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
