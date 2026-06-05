@@ -63,6 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       excerpt: data.excerpt,
       slug: data.slug,
       writerName: (data.writer as any)?.name,
+      facebook_image: data.cover_image || null,
     };
     await shareToAll({ ...postOpts, type: "article" });
   }

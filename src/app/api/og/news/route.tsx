@@ -28,10 +28,9 @@ async function toDataUrl(url: string): Promise<string | null> {
       clearTimeout(timer);
     }
     if (!res.ok) return null;
-    const ct = res.headers.get("content-type") ?? "";
+    const ct = res.headers.get("content-type") ?? "image/jpeg";
     if (!ct.startsWith("image/")) return null;
     const buf = await res.arrayBuffer();
-    const ct  = res.headers.get("content-type") ?? "image/jpeg";
     const bytes = new Uint8Array(buf);
     let binary = "";
     const chunk = 8192;
