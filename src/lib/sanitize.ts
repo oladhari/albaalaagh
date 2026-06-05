@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtmlLib from "sanitize-html";
 
 const ALLOWED_TAGS = [
   "p", "br", "strong", "b", "em", "i", "u", "s",
@@ -7,14 +7,14 @@ const ALLOWED_TAGS = [
   "hr", "span", "div",
 ];
 
-const ALLOWED_ATTR = ["href", "src", "alt", "target", "rel", "class", "style"];
-
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    ALLOW_DATA_ATTR: false,
-    FORCE_BODY: false,
+  return sanitizeHtmlLib(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {
+      "*": ["class", "style"],
+      a: ["href", "target", "rel"],
+      img: ["src", "alt"],
+    },
   });
 }
 
