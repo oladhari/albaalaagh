@@ -10,7 +10,8 @@ export interface ShareOptions {
   slug: string;
   writerName?: string;
   type: "article" | "news";
-  facebook_image?: string | null;
+  facebook_image?: string | null; // Facebook only (news: 1:1 square; articles: cover)
+  image?: string | null;          // Telegram/X (news: image_url; articles: cover_image)
 }
 
 export async function shareToAll(opts: ShareOptions): Promise<void> {

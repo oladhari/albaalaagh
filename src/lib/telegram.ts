@@ -8,7 +8,7 @@ interface PostOptions {
   slug: string;
   writerName?: string;
   type: "article" | "news";
-  facebook_image?: string | null;
+  image?: string | null; // article cover / news image_url (not the 1:1 Facebook-only image)
 }
 
 function esc(str: string): string {
@@ -30,14 +30,14 @@ export async function postToTelegram(opts: PostOptions): Promise<void> {
     "\n#البلاغ",
   ].filter(Boolean).join("\n");
 
-  if (opts.facebook_image) {
+  if (opts.image) {
     // Photo post — image displayed prominently, link in caption
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id:    CHANNEL_ID,
-        photo:      opts.facebook_image,
+        photo:      opts.image,
         caption,
         parse_mode: "HTML",
       }),

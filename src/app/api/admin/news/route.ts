@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await shareToAll({ title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null });
+  await shareToAll({ title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null, image: image_url || null });
 
   return NextResponse.json(data, { status: 201 });
 }
