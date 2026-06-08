@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
           fontFamily: "Cairo",
         }}
       >
-        {/* Background image — full opacity, no gradient */}
+        {/* Background image */}
         {imgData && (
           <img
             src={imgData}
@@ -82,6 +82,34 @@ export async function GET(req: NextRequest) {
               objectFit: "cover",
             }}
           />
+        )}
+
+        {/* Gradient + watermark when image is present */}
+        {imgData && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 50%)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: 20,
+                right: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <div style={{ width: 3, height: 16, backgroundColor: "#C9A844", borderRadius: 2 }} />
+              <div style={{ color: "#C9A844", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>
+                albaalaagh.com
+              </div>
+            </div>
+          </>
         )}
 
         {/* No-image fallback: title text */}
@@ -116,28 +144,6 @@ export async function GET(req: NextRequest) {
               <div style={{ color: "#C9A844", fontSize: 20, fontWeight: 700, letterSpacing: 1 }}>
                 albaalaagh.com
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Small watermark when image is present */}
-        {imgData && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 16,
-              right: 20,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "rgba(0,0,0,0.45)",
-              borderRadius: 6,
-              padding: "4px 12px",
-            }}
-          >
-            <div style={{ width: 3, height: 14, backgroundColor: "#C9A844", borderRadius: 2 }} />
-            <div style={{ color: "#C9A844", fontSize: 16, fontWeight: 700 }}>
-              albaalaagh.com
             </div>
           </div>
         )}
