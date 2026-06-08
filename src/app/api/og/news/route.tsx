@@ -5,6 +5,7 @@ export const runtime = "edge";
 
 const ALLOWED_IMG_HOSTS = new Set([
   "albaalaagh.com", "www.albaalaagh.com",
+  "media.albaalaagh.com",
   "pub-d1e0fa7a4d9348038e0f0ed49d8d459b.r2.dev",
   "img.youtube.com", "i.ytimg.com",
 ]);
