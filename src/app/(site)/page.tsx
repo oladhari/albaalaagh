@@ -8,6 +8,7 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import SocialBar from "@/components/sections/SocialBar";
 import NewsTicker from "@/components/sections/NewsTicker";
 import LiveBanner from "@/components/sections/LiveBanner";
+import SiteVideosSection from "@/components/sections/SiteVideosSection";
 
 export const revalidate = 120;
 
@@ -32,6 +33,16 @@ async function getLatestArticles() {
   return data ?? [];
 }
 
+async function getSiteVideos() {
+  const { data } = await supabaseAdmin
+    .from("site_videos")
+    .select("id, title, description, video_url, thumbnail_url")
+    .eq("published", true)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
 async function getArticlesCount() {
   const { count } = await supabaseAdmin
     .from("articles")
@@ -47,7 +58,7 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [videos, playlists, news, articles, channelStats, articlesCount, liveStream] = await Promise.all([
+  const [videos, playlists, news, articles, channelStats, articlesCount, liveStream, siteVideos] = await Promise.all([
     fetchLiveStreams(20),
     fetchFeaturedPlaylists(),
     getLatestNews(),
@@ -55,6 +66,7 @@ export default async function HomePage() {
     fetchChannelStats(),
     getArticlesCount(),
     fetchActiveLiveStream(),
+    getSiteVideos(),
   ]);
 
   const restVideos = videos;
@@ -173,6 +185,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Site Videos ── */}
+      <SiteVideosSection videos={siteVideos} />
 
       {/* ── Latest Live Streams ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

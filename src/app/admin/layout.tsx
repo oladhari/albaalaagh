@@ -4,6 +4,7 @@ const NAV = [
   { href: "/admin",          label: "لوحة التحكم"   },
   { href: "/admin/news",     label: "قائمة الأخبار" },
   { href: "/admin/articles", label: "المقالات"       },
+  { href: "/admin/videos",   label: "الفيديوهات"     },
   { href: "/admin/writers",  label: "الكتّاب"        },
   { href: "/admin/guests",   label: "الضيوف"         },
   { href: "/admin/staff",    label: "الطاقم"         },
