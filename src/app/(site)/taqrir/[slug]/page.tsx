@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // never hits Cloudflare R2 directly (bot-protection blocks it). The generator
   // fetches the image server-side and renders a clean 1280×720 PNG.
   const ogImage = article.image_url
-    ? `${base}/api/og/news?v=2&title=${encodeURIComponent(article.title)}&img=${encodeURIComponent(article.image_url)}`
-    : `${base}/api/og/news?v=2&title=${encodeURIComponent(article.title)}`;
+    ? `${base}/api/og/news?v=3&title=${encodeURIComponent(article.title)}&img=${encodeURIComponent(article.image_url)}`
+    : `${base}/api/og/news?v=3&title=${encodeURIComponent(article.title)}`;
 
   return {
     title: `${article.title} | البلاغ`,
