@@ -8,6 +8,7 @@ interface PostOptions {
   slug: string;
   writerName?: string;
   type: "article" | "news";
+  facebook_image?: string | null;
 }
 
 function esc(str: string): string {
@@ -21,7 +22,7 @@ export async function postToTelegram(opts: PostOptions): Promise<void> {
     ? `${BASE_URL}/articles/${opts.slug}`
     : `${BASE_URL}/taqrir/${opts.slug}`;
 
-  const lines = [
+  const caption = [
     `📰 <b>${esc(opts.title)}</b>`,
     opts.writerName ? `✍️ ${esc(opts.writerName)}` : null,
     opts.excerpt    ? `\n${esc(opts.excerpt)}`       : null,
@@ -29,19 +30,39 @@ export async function postToTelegram(opts: PostOptions): Promise<void> {
     "\n#البلاغ",
   ].filter(Boolean).join("\n");
 
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id:              CHANNEL_ID,
-      text:                 lines,
-      parse_mode:           "HTML",
-      link_preview_options: { is_disabled: false, url },
-    }),
-  }).then(async (res) => {
-    if (!res.ok) {
-      const err = await res.json();
-      console.error("Telegram post failed:", err);
-    }
-  });
+  if (opts.facebook_image) {
+    // Photo post — image displayed prominently, link in caption
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id:    CHANNEL_ID,
+        photo:      opts.facebook_image,
+        caption,
+        parse_mode: "HTML",
+      }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Telegram photo post failed:", err);
+      }
+    });
+  } else {
+    // No image — text message with link preview
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id:              CHANNEL_ID,
+        text:                 caption,
+        parse_mode:           "HTML",
+        link_preview_options: { is_disabled: false, url },
+      }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Telegram post failed:", err);
+      }
+    });
+  }
 }
