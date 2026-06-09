@@ -121,8 +121,14 @@ body {
 
 /* Prose for article content */
 .article-prose {
-  line-height: 2;
-  font-size: 1.1rem;
+  line-height: 1.9;
+  font-size: 1rem;
+}
+@media (min-width: 640px) {
+  .article-prose {
+    font-size: 1.1rem;
+    line-height: 2;
+  }
 }
 .article-prose p { margin-bottom: 1.5rem; }
 .article-prose h2 {

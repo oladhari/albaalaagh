@@ -70,7 +70,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <h2 className="logo-3d text-3xl font-black mb-3">
+            <h2 className="logo-3d text-2xl sm:text-3xl font-black mb-3">
               البلاغ
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: "#9A9070" }}>

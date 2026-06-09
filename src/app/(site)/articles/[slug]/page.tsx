@@ -188,7 +188,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
         >
           <h3 className="text-sm font-bold mb-3" style={{ color: "#C9A844" }}>عن الكاتب</h3>
-          <div className="flex gap-4 items-start">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">
             {article.writer.image_url ? (
               <img
                 src={article.writer.image_url}

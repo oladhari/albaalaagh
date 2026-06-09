@@ -90,12 +90,10 @@ export default async function HomePage() {
           {/* Site summary hero */}
           <div className="lg:col-span-2">
             <div
-              className="rounded-2xl overflow-hidden relative flex flex-col justify-between"
+              className="rounded-2xl overflow-hidden relative flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[280px] sm:min-h-[340px]"
               style={{
                 background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
                 border: "1px solid #2E2A18",
-                minHeight: "340px",
-                padding: "40px",
               }}
             >
               {/* Decorative corner */}
@@ -111,12 +109,12 @@ export default async function HomePage() {
               {/* Logo + tagline */}
               <div className="relative">
                 <h1
-                  className="logo-3d text-5xl sm:text-6xl font-black mb-5"
+                  className="logo-3d text-4xl sm:text-5xl lg:text-6xl font-black mb-4 sm:mb-5"
                   style={{ paddingBottom: "0.15em", lineHeight: "1.2" }}
                 >
                   البلاغ
                 </h1>
-                <p className="text-base leading-relaxed mb-6" style={{ color: "#9A9070", maxWidth: "480px" }}>
+                <p className="text-sm sm:text-base leading-relaxed mb-5 sm:mb-6" style={{ color: "#9A9070", maxWidth: "480px" }}>
                   منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
                 </p>
 
@@ -158,14 +156,14 @@ export default async function HomePage() {
               </div>
 
               {/* Stats row */}
-              <div className="relative flex gap-8 mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
+              <div className="relative flex flex-wrap gap-6 sm:gap-8 mt-6 sm:mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
                 {[
                   { label: "فيديو على يوتيوب", value: channelStats.videoCount > 0 ? channelStats.videoCount + "+" : "..." },
                   { label: "مشترك يوتيوب",     value: channelStats.subscriberCount > 0 ? formatCount(channelStats.subscriberCount) : "..." },
                   { label: "مقال",              value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
-                    <p className="text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
+                    <p className="text-xl sm:text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
                     <p className="text-xs" style={{ color: "#9A9070" }}>{stat.label}</p>
                   </div>
                 ))}

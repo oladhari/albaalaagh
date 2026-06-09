@@ -29,7 +29,7 @@ export default function SocialBar() {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 min-w-[72px]"
+              className="flex flex-col items-center gap-2 px-3 sm:px-4 py-3 rounded-xl transition-all duration-200 min-w-[60px] sm:min-w-[72px]"
               style={{
                 background: "#1A1810",
                 border: "1px solid #2E2A18",

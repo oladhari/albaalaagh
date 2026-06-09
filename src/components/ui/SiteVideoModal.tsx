@@ -23,11 +23,11 @@ export default function SiteVideoModal({ title, video_url, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
       style={{ background: "rgba(0,0,0,0.92)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-4xl rounded-2xl overflow-hidden" style={{ background: "#111008", border: "1px solid #2E2A18" }}>
+      <div className="w-full max-w-[95vw] sm:max-w-4xl rounded-xl sm:rounded-2xl overflow-hidden" style={{ background: "#111008", border: "1px solid #2E2A18" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid #2E2A18" }}>
           <h2 className="font-black text-base line-clamp-1" style={{ color: "#F0EAD6" }}>{title}</h2>
