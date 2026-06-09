@@ -123,18 +123,34 @@ export default async function HomePage() {
                 {/* Section links */}
                 <div className="flex flex-wrap gap-3">
                   {[
-                    { href: "/interviews",    label: "📺 المقابلات" },
-                    { href: "/news",          label: "📰 الأخبار" },
-                    { href: "/articles",      label: "✍️ المقالات" },
-                    { href: "/qadaya-sharia", label: "☪️ قضايا شرعية" },
-                    { href: "/guests",        label: "👤 الضيوف" },
+                    {
+                      href: "/interviews", label: "المقابلات",
+                      icon: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm6.5 9a1 1 0 0 1 1 1 7.5 7.5 0 0 1-6.5 7.42V21h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.58A7.5 7.5 0 0 1 4.5 11a1 1 0 0 1 2 0 5.5 5.5 0 0 0 11 0 1 1 0 0 1 1-1z"/></svg>,
+                    },
+                    {
+                      href: "/news", label: "الأخبار",
+                      icon: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0"><path d="M20 3H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 16H5V5h14v14zM7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/></svg>,
+                    },
+                    {
+                      href: "/articles", label: "المقالات",
+                      icon: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>,
+                    },
+                    {
+                      href: "/qadaya-sharia", label: "قضايا شرعية",
+                      icon: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>,
+                    },
+                    {
+                      href: "/guests", label: "الضيوف",
+                      icon: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>,
+                    },
                   ].map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
                       style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
                     >
+                      {item.icon}
                       {item.label}
                     </Link>
                   ))}
