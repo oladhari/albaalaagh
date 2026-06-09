@@ -49,21 +49,22 @@ body {
 .logo-3d {
   background: linear-gradient(
     160deg,
-    #FFFAED 0%,
-    #F0E4A8 15%,
-    #E8D5A3 30%,
-    #C9A844 55%,
-    #A07828 75%,
-    #7A5A10 100%
+    #FFFDF0 0%,
+    #F5EAB8 15%,
+    #EDD98A 30%,
+    #D4B448 50%,
+    #C9A844 68%,
+    #B09030 85%,
+    #907828 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter:
-    drop-shadow(0 1px 0 #7A5210)
-    drop-shadow(0 2px 0 #6A4208)
-    drop-shadow(0 3px 0 #521E00)
-    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
+    drop-shadow(0 1px 0 #8A6E1C)
+    drop-shadow(0 2px 0 #785E16)
+    drop-shadow(0 3px 0 #5A4818)
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
 }
 
 /* Gold border glow */
