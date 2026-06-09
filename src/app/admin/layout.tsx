@@ -1,4 +1,6 @@
+"use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const NAV = [
   { href: "/admin",          label: "لوحة التحكم"   },
@@ -10,7 +12,13 @@ const NAV = [
   { href: "/admin/staff",    label: "الطاقم"         },
 ];
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+    router.push("/admin/login");
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: "#0D0C06", fontFamily: "Cairo, sans-serif" }}>
@@ -47,13 +55,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           ))}
         </nav>
 
-        <Link
-          href="/"
-          className="text-xs mt-4 px-3 py-2 rounded-lg"
-          style={{ color: "#9A9070", background: "#1A1810" }}
-        >
-          ← العودة للموقع
-        </Link>
+        <div className="flex flex-col gap-2 mt-4">
+          <Link
+            href="/"
+            className="text-xs px-3 py-2 rounded-lg"
+            style={{ color: "#9A9070", background: "#1A1810" }}
+          >
+            ← العودة للموقع
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="text-xs px-3 py-2 rounded-lg text-right"
+            style={{ color: "#FF6B6B", background: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.15)" }}
+          >
+            تسجيل الخروج
+          </button>
+        </div>
       </aside>
 
       {/* Main */}
