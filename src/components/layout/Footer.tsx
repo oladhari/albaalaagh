@@ -70,15 +70,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <h2
-              className="text-3xl font-black mb-3"
-              style={{
-                background: "linear-gradient(135deg, #E8D5A3, #C9A844, #9A7B28)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+            <h2 className="logo-3d text-3xl font-black mb-3">
               البلاغ
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: "#9A9070" }}>

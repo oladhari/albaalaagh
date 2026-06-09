@@ -111,15 +111,8 @@ export default async function HomePage() {
               {/* Logo + tagline */}
               <div className="relative">
                 <h1
-                  className="text-5xl sm:text-6xl font-black mb-5"
-                  style={{
-                    background: "linear-gradient(135deg, #E8D5A3, #C9A844)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    paddingBottom: "0.15em",
-                    lineHeight: "1.2",
-                  }}
+                  className="logo-3d text-5xl sm:text-6xl font-black mb-5"
+                  style={{ paddingBottom: "0.15em", lineHeight: "1.2" }}
                 >
                   البلاغ
                 </h1>

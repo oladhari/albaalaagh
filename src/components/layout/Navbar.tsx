@@ -34,15 +34,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span
-              className="text-2xl font-black tracking-tight"
-              style={{
-                background: "linear-gradient(135deg, #E8D5A3 0%, #C9A844 60%, #9A7B28 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+            <span className="logo-3d text-2xl font-black tracking-tight">
               البلاغ
             </span>
           </Link>
