@@ -93,6 +93,7 @@ export default function Footer() {
                 ["/about",          "من نحن"],
                 ["/contact",        "تواصل معنا"],
                 ["/privacy-policy", "سياسة الخصوصية"],
+                ["/terms-of-use",   "شروط الاستخدام"],
               ].map(([href, label]) => (
                 <li key={href}>
                   <Link
