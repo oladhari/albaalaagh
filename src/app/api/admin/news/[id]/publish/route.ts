@@ -58,7 +58,8 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null });
+  // Fire-and-forget — don't block the response waiting for social APIs
+  shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null }).catch(console.error);
 
   return NextResponse.json({ ok: true, slug, url });
 }

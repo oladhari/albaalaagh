@@ -19,13 +19,11 @@ async function postPhotoWithComment(
   caption: string,
   articleUrl: string
 ): Promise<void> {
-  // Caption always includes the link — comment is best-effort bonus
-  const fullCaption = `${caption}\n\n🔗 ${articleUrl}`;
-
+  // No link in caption — keeps post looking native to avoid algorithm suppression
   const photoRes = await fetch(`https://graph.facebook.com/${pageId}/photos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url: imageUrl, caption: fullCaption, access_token: token }),
+    body: JSON.stringify({ url: imageUrl, caption, access_token: token }),
   });
   if (!photoRes.ok) {
     const err = await photoRes.json();
@@ -36,7 +34,7 @@ async function postPhotoWithComment(
   const postId = post_id ?? id;
   if (!postId) return;
 
-  // Try to pin the link as first comment (requires pages_manage_engagement permission)
+  // Post link as first comment (pages_manage_engagement required)
   const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -44,7 +42,7 @@ async function postPhotoWithComment(
   });
   if (!commentRes.ok) {
     const err = await commentRes.json();
-    console.warn(`Facebook comment failed for page ${pageId} (link already in caption):`, err);
+    console.warn(`Facebook comment failed for page ${pageId}:`, err);
   }
 }
 
@@ -61,6 +59,7 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
+      opts.type === "news" ? "\nللمزيد، رابط التقرير كاملاً في أول تعليق 👇" : null,
       "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 

@@ -53,11 +53,12 @@ export async function PATCH(req: NextRequest) {
       writerName: article.writer_name ?? undefined,
       type: "article" as const,
     };
-    await Promise.allSettled([
+    // Fire-and-forget — don't block the response waiting for social APIs
+    Promise.allSettled([
       postArticleToFacebook(postOpts),
       postToTelegram(postOpts),
       postToX(postOpts),
-    ]);
+    ]).catch(console.error);
   }
 
   return NextResponse.json({ ok: true });

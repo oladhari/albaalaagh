@@ -130,7 +130,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const results = { fetched: 0, inserted: 0, skipped: 0, aiCalled: false, errors: [] as string[] };
+  const results = { fetched: 0, inserted: 0, skipped: 0, aiCalled: false, deleted: 0, errors: [] as string[] };
+
+  // Cleanup: delete pending news older than 48 hours — no value in reviewing stale news
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const { count: deletedCount } = await supabaseAdmin
+    .from("news")
+    .delete({ count: "exact" })
+    .eq("status", "pending")
+    .lt("created_at", cutoff);
+  results.deleted = deletedCount ?? 0;
 
   // Step 1: collect all new articles from RSS
   const toInsert: {

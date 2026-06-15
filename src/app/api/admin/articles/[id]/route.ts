@@ -66,7 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       facebook_image: data.cover_image || null,
       image: data.cover_image || null,
     };
-    await shareToAll({ ...postOpts, type: "article" });
+    // Fire-and-forget — don't block the response waiting for social APIs
+    shareToAll({ ...postOpts, type: "article" }).catch(console.error);
   }
 
   return NextResponse.json(data);
