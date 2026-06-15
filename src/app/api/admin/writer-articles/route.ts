@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { postArticleToFacebook } from "@/lib/facebook";
@@ -53,12 +53,12 @@ export async function PATCH(req: NextRequest) {
       writerName: article.writer_name ?? undefined,
       type: "article" as const,
     };
-    // Fire-and-forget — don't block the response waiting for social APIs
-    Promise.allSettled([
+    // Run after response is sent — after() keeps the function alive on Vercel until done
+    after(() => Promise.allSettled([
       postArticleToFacebook(postOpts),
       postToTelegram(postOpts),
       postToX(postOpts),
-    ]).catch(console.error);
+    ]).catch(console.error));
   }
 
   return NextResponse.json({ ok: true });

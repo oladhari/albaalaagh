@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
@@ -58,8 +58,8 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Fire-and-forget — don't block the response waiting for social APIs
-  shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null }).catch(console.error);
+  // Run after response is sent — after() keeps the function alive on Vercel until done
+  after(() => shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null }).catch(console.error));
 
   return NextResponse.json({ ok: true, slug, url });
 }
