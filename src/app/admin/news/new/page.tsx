@@ -17,6 +17,7 @@ export default function NewNewsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatingFbImage, setGeneratingFbImage] = useState(false);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -39,13 +40,31 @@ export default function NewNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: form.title, excerpt: form.excerpt }),
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "news" }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("image_url", data.url);
     } finally {
       setGeneratingImage(false);
+    }
+  };
+
+  const generateFacebookImage = async () => {
+    setGeneratingFbImage(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/images/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "facebook" }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
+      set("facebook_image", data.url);
+    } finally {
+      setGeneratingFbImage(false);
     }
   };
 
@@ -227,9 +246,20 @@ export default function NewNewsPage() {
             </div>
 
             <div className="p-3 rounded-xl" style={{ background: "rgba(24,119,242,0.06)", border: "1px solid rgba(24,119,242,0.2)" }}>
-              <label className="block text-xs font-semibold mb-1" style={{ color: "#4A90E2" }}>
-                📘 صورة فيسبوك (1:1 مربعة) — اختياري
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold" style={{ color: "#4A90E2" }}>
+                  📘 صورة فيسبوك (1:1 مربعة) — اختياري
+                </label>
+                <button
+                  type="button"
+                  onClick={generateFacebookImage}
+                  disabled={generatingFbImage || !form.title}
+                  className="px-3 py-1 rounded-full text-xs font-bold border transition-all disabled:opacity-50"
+                  style={{ borderColor: "#4A90E2", color: "#4A90E2", background: "rgba(74,144,226,0.08)" }}
+                >
+                  {generatingFbImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء بالذكاء الاصطناعي"}
+                </button>
+              </div>
               <p className="text-xs mb-2" style={{ color: "#9A9070" }}>
                 إذا رفعت صورة هنا، سيُنشر على فيسبوك كصورة بدلاً من رابط. الرابط سيُضاف تلقائياً في أول تعليق.
               </p>

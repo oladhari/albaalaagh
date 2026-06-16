@@ -1,5 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs/promises";
 import { uploadToR2 } from "@/lib/r2";
 
 let anthropic: Anthropic | null = null;
@@ -435,5 +438,155 @@ export async function generateNewsImage(title: string, excerpt: string): Promise
 
   const buffer = Buffer.from(b64, "base64");
   const key = `ai-images/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+  return uploadToR2(key, buffer, "image/png");
+}
+
+const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
+
+function buildFacebookPrompt(title: string, excerpt: string): string {
+  return `ALBAALAAGH NEWS IMAGE GENERATION PROMPT
+
+Create a professional news card for Albaalaagh using the ATTACHED ALBAALAAGH TEMPLATE as the base design.
+
+MANDATORY REQUIREMENTS:
+
+* Output size: 1080x1080 (1:1 square).
+* USE THE PROVIDED TEMPLATE EXACTLY.
+* Keep the Albaalaagh logo in the top-right corner exactly as it appears.
+* Keep the template colors, borders, decorations, and branding unchanged.
+* Do NOT redesign the template.
+* Do NOT create a new layout.
+* Do NOT remove or move the logo.
+* Do NOT add "عاجل" unless it explicitly appears in the news title.
+* Do NOT add extra text, summaries, bullet points, quotes, or article content.
+* Display ONLY the news title.
+* Title must be large, clean, readable on mobile devices, and preferably limited to 2–4 lines.
+* Keep text minimal and visually balanced.
+
+IMAGE SELECTION RULES:
+
+1. If a reference image is provided:
+
+   * Use the exact provided image.
+   * Do not modify facial features.
+   * Do not generate a different face.
+   * Do not age, beautify, stylize, or alter the person.
+   * Do not create another person that merely resembles them.
+
+2. If NO image is provided:
+
+   * Use neutral symbolic visuals related to the topic.
+   * Use flags, buildings, maps, courtrooms, microphones, documents, airplanes, ports, ships, wheat fields, factories, parliament buildings, diplomatic tables, etc.
+   * Never invent the face of a politician, minister, journalist, activist, judge, suspect, victim, or public figure.
+
+3. For people:
+
+   * Only use a person when a verified image is supplied.
+   * Never generate a face from the article text.
+   * Never guess how someone looks.
+   * If no image exists, use symbolic visuals instead.
+
+4. For crime, arrests, court cases, investigations:
+
+   * Prefer symbolic visuals:
+     court building,
+     scales of justice,
+     documents,
+     police tape,
+     microphone,
+     prison bars,
+     courthouse corridor.
+   * Avoid fictional suspect images.
+
+5. For political parties:
+
+   * Use the official party logo if supplied.
+   * Do not invent party logos.
+   * Do not create fictional party headquarters.
+
+6. For international diplomacy:
+
+   * Use official flags,
+     negotiation tables,
+     documents,
+     government buildings.
+   * Avoid fictional leaders unless their image is supplied.
+
+7. For accidents:
+
+   * Use real supplied photos if available.
+   * Otherwise use generic accident symbolism.
+   * Do not fabricate detailed accident scenes.
+
+8. For migration stories:
+
+   * Avoid close-up identifiable faces.
+   * Prefer symbolic imagery.
+
+9. For education stories:
+
+   * Use classrooms,
+     exam papers,
+     school buildings.
+   * Avoid showing identifiable students.
+
+10. For health stories:
+
+    * Use hospitals,
+      medical equipment,
+      healthcare symbols.
+    * Avoid fictional patients.
+
+VISUAL STYLE:
+
+* Professional newsroom style.
+* Clean composition.
+* Serious and credible.
+* No clickbait.
+* No sensationalism.
+* No exaggerated explosions, fires, blood, destruction, or dramatic effects unless clearly visible in supplied source images.
+* No cinematic movie-poster style.
+* No propaganda style.
+* No AI-looking faces.
+
+INPUTS:
+
+TITLE:
+${title}
+
+DESCRIPTION:
+${excerpt || "—"}
+
+REFERENCE IMAGE(S):
+none
+
+TEMPLATE:
+attached image — use exactly as the base design
+
+Generate a final Albaalaagh news card that strictly follows these rules.`;
+}
+
+export async function generateFacebookImage(title: string, excerpt: string): Promise<string> {
+  const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
+  const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
+
+  const result = await getOpenAI().images.edit({
+    model: "gpt-image-2",
+    image: templateFile,
+    prompt: buildFacebookPrompt(title, excerpt),
+    size: "1024x1024",
+    quality: "medium",
+    n: 1,
+  });
+
+  const b64 = result.data?.[0]?.b64_json;
+  if (!b64) throw new Error("No image returned from OpenAI");
+
+  const buffer = await sharp(Buffer.from(b64, "base64"))
+    .resize(1080, 1080)
+    .png()
+    .toBuffer();
+
+  const key = `ai-images/fb-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
   return uploadToR2(key, buffer, "image/png");
 }
