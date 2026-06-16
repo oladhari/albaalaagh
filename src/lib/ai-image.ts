@@ -444,110 +444,97 @@ export async function generateNewsImage(title: string, excerpt: string): Promise
 const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
 
 function buildFacebookPrompt(title: string, excerpt: string): string {
-  return `ALBAALAAGH NEWS IMAGE GENERATION PROMPT
+  return `ALBAALAAGH NEWS CARD
 
-Create a professional news card for Albaalaagh using the ATTACHED ALBAALAAGH TEMPLATE as the base design.
+Create a professional Albaalaagh square news card (1080x1080).
 
-MANDATORY REQUIREMENTS:
+USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY.
 
-* Output size: 1080x1080 (1:1 square).
-* USE THE PROVIDED TEMPLATE EXACTLY.
-* Keep the Albaalaagh logo in the top-right corner exactly as it appears.
-* Keep the template colors, borders, decorations, and branding unchanged.
-* Do NOT redesign the template.
-* Do NOT create a new layout.
-* Do NOT remove or move the logo.
-* Do NOT add "عاجل" unless it explicitly appears in the news title.
-* Do NOT add extra text, summaries, bullet points, quotes, or article content.
-* Display ONLY the news title.
-* Title must be large, clean, readable on mobile devices, and preferably limited to 2–4 lines.
-* Keep text minimal and visually balanced.
+DO NOT:
 
-IMAGE SELECTION RULES:
+* redesign the template
+* move the logo
+* change the borders
+* add "عاجل"
+* add article summaries
+* add paragraphs
+* add bullet points
+* add quotes
 
-1. If a reference image is provided:
+TEXT RULES:
 
-   * Use the exact provided image.
-   * Do not modify facial features.
-   * Do not generate a different face.
-   * Do not age, beautify, stylize, or alter the person.
-   * Do not create another person that merely resembles them.
+* Show ONLY the news title.
+* Keep title compact.
+* Maximum 2-4 lines.
+* Let the image carry the story.
+* Do not fill the canvas with text.
+* Mobile readability is the priority.
 
-2. If NO image is provided:
+VISUAL RULES:
 
-   * Use neutral symbolic visuals related to the topic.
-   * Use flags, buildings, maps, courtrooms, microphones, documents, airplanes, ports, ships, wheat fields, factories, parliament buildings, diplomatic tables, etc.
-   * Never invent the face of a politician, minister, journalist, activist, judge, suspect, victim, or public figure.
+The image is the primary storytelling element.
 
-3. For people:
+When a verified image is provided:
 
-   * Only use a person when a verified image is supplied.
-   * Never generate a face from the article text.
-   * Never guess how someone looks.
-   * If no image exists, use symbolic visuals instead.
+* Use the exact supplied image.
+* Preserve facial features.
+* No face modification.
+* No face generation.
+* No beautification.
+* No replacement.
 
-4. For crime, arrests, court cases, investigations:
+When no verified image is provided:
 
-   * Prefer symbolic visuals:
-     court building,
-     scales of justice,
-     documents,
-     police tape,
-     microphone,
-     prison bars,
-     courthouse corridor.
-   * Avoid fictional suspect images.
+* Create a realistic journalistic visual related to the story.
+* Use symbolic imagery.
+* Use real-world objects, locations, flags, maps, institutions, documents, factories, ports, airports, parliament buildings, wheat fields, hospitals, schools, courtrooms, diplomatic meetings, ships, etc.
 
-5. For political parties:
+NEVER:
 
-   * Use the official party logo if supplied.
-   * Do not invent party logos.
-   * Do not create fictional party headquarters.
+* invent a politician's face
+* invent a minister's face
+* invent a journalist's face
+* invent a suspect's face
+* invent a victim's face
+* invent a public figure's face
 
-6. For international diplomacy:
+NEWS STYLE:
 
-   * Use official flags,
-     negotiation tables,
-     documents,
-     government buildings.
-   * Avoid fictional leaders unless their image is supplied.
+* modern newsroom graphic
+* realistic
+* professional
+* editorial
+* documentary style
+* clean composition
+* strong focal point
+* visually rich
+* image occupies most of the card
+* text occupies minimal space
 
-7. For accidents:
+For political stories:
 
-   * Use real supplied photos if available.
-   * Otherwise use generic accident symbolism.
-   * Do not fabricate detailed accident scenes.
+* use real supplied photos
+* otherwise use flags, official buildings, negotiations, documents, maps
 
-8. For migration stories:
+For accidents:
 
-   * Avoid close-up identifiable faces.
-   * Prefer symbolic imagery.
+* use supplied photos if available
+* otherwise use generic realistic accident symbolism
 
-9. For education stories:
+For court cases:
 
-   * Use classrooms,
-     exam papers,
-     school buildings.
-   * Avoid showing identifiable students.
+* courthouse, legal documents, scales of justice, prison bars
 
-10. For health stories:
+For economy:
 
-    * Use hospitals,
-      medical equipment,
-      healthcare symbols.
-    * Avoid fictional patients.
+* factories, ports, trade routes, energy infrastructure
 
-VISUAL STYLE:
+For international diplomacy:
 
-* Professional newsroom style.
-* Clean composition.
-* Serious and credible.
-* No clickbait.
-* No sensationalism.
-* No exaggerated explosions, fires, blood, destruction, or dramatic effects unless clearly visible in supplied source images.
-* No cinematic movie-poster style.
-* No propaganda style.
-* No AI-looking faces.
+* negotiation tables, flags, leaders ONLY if verified photos are supplied
+
+Goal:
+Create a professional Albaalaagh news card that looks like a real digital newsroom publication rather than a text poster.
 
 INPUTS:
 
@@ -561,9 +548,7 @@ REFERENCE IMAGE(S):
 none
 
 TEMPLATE:
-attached image — use exactly as the base design
-
-Generate a final Albaalaagh news card that strictly follows these rules.`;
+attached image — use exactly as the base design`;
 }
 
 export async function generateFacebookImage(title: string, excerpt: string): Promise<string> {
