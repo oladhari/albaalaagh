@@ -2,8 +2,18 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { uploadToR2 } from "@/lib/r2";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let anthropic: Anthropic | null = null;
+let openai: OpenAI | null = null;
+
+function getAnthropic(): Anthropic {
+  if (!anthropic) anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return anthropic;
+}
+
+function getOpenAI(): OpenAI {
+  if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return openai;
+}
 
 const SYSTEM_PROMPT = `You are the official image prompt generator for Albaalaagh (قناة البلاغ).
 
@@ -395,7 +405,7 @@ mobile readability,
 1280×720 landscape format.`;
 
 async function buildImagePrompt(title: string, excerpt: string): Promise<string> {
-  const msg = await anthropic.messages.create({
+  const msg = await getAnthropic().messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 800,
     system: SYSTEM_PROMPT,
@@ -412,7 +422,7 @@ async function buildImagePrompt(title: string, excerpt: string): Promise<string>
 export async function generateNewsImage(title: string, excerpt: string): Promise<string> {
   const imagePrompt = await buildImagePrompt(title, excerpt);
 
-  const result = await openai.images.generate({
+  const result = await getOpenAI().images.generate({
     model: "gpt-image-2",
     prompt: imagePrompt,
     size: "1280x720",
