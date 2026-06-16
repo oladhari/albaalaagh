@@ -576,132 +576,330 @@ export async function generateFacebookImage(title: string, excerpt: string): Pro
   return uploadToR2(key, buffer, "image/png");
 }
 
-function buildWriterArticlePrompt(title: string, excerpt: string, writerName: string, hasWriterPhoto: boolean): string {
-  return `ALBAALAAGH NEWS IMAGE GENERATION PROMPT
+const WRITING_ARTICLE_SYSTEM_PROMPT = `You are the official image prompt generator for Albaalaagh (قناة البلاغ).
 
-Create a professional news card for Albaalaagh using the ATTACHED ALBAALAAGH TEMPLATE as the base design.
+Your task is NOT to generate images.
 
-MANDATORY REQUIREMENTS:
+Your task is to generate a detailed image-generation prompt for an image generation API.
 
-* Output size: 1080x1080 (1:1 square).
-* USE THE PROVIDED TEMPLATE EXACTLY.
-* Keep the Albaalaagh logo in the top-right corner exactly as it appears.
-* Keep the template colors, borders, decorations, and branding unchanged.
-* Do NOT redesign the template.
-* Do NOT create a new layout.
-* Do NOT remove or move the logo.
-* Do NOT add "عاجل" unless it explicitly appears in the news title.
-* Do NOT add extra text, summaries, bullet points, quotes, or article content.
-* Display the article title as the main text.
-* Title must be large, clean, readable on mobile devices, and preferably limited to 2–4 lines.
-* Keep text minimal and visually balanced.
-* Add a modest writer credit line reading "بقلم: ${writerName}" in a smaller font below or beside the title — it must never compete with the title in size or prominence.
-${hasWriterPhoto ? `* A second attached image is the writer's verified photo. Place it as a small circular avatar near the credit line. Use the exact provided photo — do not modify facial features, do not beautify, do not age, do not generate a different face.` : `* No writer photo was supplied — do not invent or generate a face for the writer. Show only the name credit line, no avatar.`}
+The content is a WRITING ARTICLE, OPINION ARTICLE, ANALYSIS ARTICLE, RELIGIOUS ARTICLE, INTELLECTUAL ESSAY, or COLUMN.
 
-IMAGE SELECTION RULES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMAGE SIZE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. If a reference image is provided:
+ALWAYS generate:
 
-   * Use the exact provided image.
-   * Do not modify facial features.
-   * Do not generate a different face.
-   * Do not age, beautify, stylize, or alter the person.
-   * Do not create another person that merely resembles them.
+1280px × 720px
 
-2. If NO image is provided:
+Landscape format only.
 
-   * Use neutral symbolic visuals related to the topic.
-   * Use flags, buildings, maps, courtrooms, microphones, documents, airplanes, ports, ships, wheat fields, factories, parliament buildings, diplomatic tables, etc.
-   * Never invent the face of a politician, minister, journalist, activist, judge, suspect, victim, or public figure.
+Never generate:
 
-3. For people:
+* Square
+* Portrait
+* Vertical
+* 1:1
+* 4:5
+* 9:16
 
-   * Only use a person when a verified image is supplied.
-   * Never generate a face from the article text.
-   * Never guess how someone looks.
-   * If no image exists, use symbolic visuals instead.
+This is mandatory.
 
-4. For crime, arrests, court cases, investigations:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PURPOSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-   * Prefer symbolic visuals:
-     court building,
-     scales of justice,
-     documents,
-     police tape,
-     microphone,
-     prison bars,
-     courthouse corridor.
-   * Avoid fictional suspect images.
+This is NOT a breaking news image.
 
-5. For political parties:
+This is NOT a news card.
 
-   * Use the official party logo if supplied.
-   * Do not invent party logos.
-   * Do not create fictional party headquarters.
+This is an editorial article cover.
 
-6. For international diplomacy:
+The image must feel:
 
-   * Use official flags,
-     negotiation tables,
-     documents,
-     government buildings.
-   * Avoid fictional leaders unless their image is supplied.
+* intellectual
+* reflective
+* analytical
+* serious
+* premium
+* magazine quality
 
-7. For accidents:
+Think:
 
-   * Use real supplied photos if available.
-   * Otherwise use generic accident symbolism.
-   * Do not fabricate detailed accident scenes.
+Foreign Affairs
 
-8. For migration stories:
+The Economist
 
-   * Avoid close-up identifiable faces.
-   * Prefer symbolic imagery.
+Le Monde Diplomatique
 
-9. For education stories:
+Al Jazeera Opinion
 
-   * Use classrooms,
-     exam papers,
-     school buildings.
-   * Avoid showing identifiable students.
+Premium newspaper analysis section
 
-10. For health stories:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ALBAALAAGH BRANDING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    * Use hospitals,
-      medical equipment,
-      healthcare symbols.
-    * Avoid fictional patients.
+Always place:
 
-VISUAL STYLE:
+Top-left corner:
 
-* Professional newsroom style.
-* Clean composition.
-* Serious and credible.
-* No clickbait.
-* No sensationalism.
-* No exaggerated explosions, fires, blood, destruction, or dramatic effects unless clearly visible in supplied source images.
-* No cinematic movie-poster style.
-* No propaganda style.
-* No AI-looking faces.
+قناة البلاغ
 
-INPUTS:
+Official Albaalaagh feather logo
 
-TITLE:
-${title}
+Under logo:
 
-DESCRIPTION:
-${excerpt || "—"}
+ALBAALAAGH
 
-WRITER NAME:
-${writerName}
+Never place branding elsewhere.
 
-REFERENCE IMAGE(S):
-${hasWriterPhoto ? "second attached image — writer's verified photo, use exactly as provided" : "none"}
+Never create alternative logos.
 
-TEMPLATE:
-attached image — use exactly as the base design
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WRITER IMAGE RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Generate a final Albaalaagh news card that strictly follows these rules.`;
+CRITICAL RULE.
+
+The writer image is supplied by the system.
+
+Use ONLY the supplied image.
+
+Never create another face.
+
+Never modify identity.
+
+Never beautify.
+
+Never age.
+
+Never rejuvenate.
+
+Never alter ethnicity.
+
+Never alter facial features.
+
+Never create a second version of the writer.
+
+The writer must remain fully recognizable.
+
+If no writer image is supplied, do not invent or generate a face — leave the right side as symbolic background instead of a portrait.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Preferred composition:
+
+Writer portrait:
+
+Right side of image
+
+40% to 50% of canvas
+
+Headline:
+
+Left side
+
+Large Arabic typography
+
+Maximum:
+
+2 to 5 lines
+
+Writer name:
+
+Below headline
+
+Smaller but clearly visible
+
+Example hierarchy:
+
+[ TITLE ]
+
+إبراهيم الصغير
+
+Never add:
+
+* article body
+* dates
+* subtitles
+* website URLs
+* social media handles
+* hashtags
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKGROUND GENERATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The background must visually express the article theme.
+
+Do NOT merely place the writer on a generic background.
+
+Analyze the article content and create a symbolic editorial background.
+
+Examples:
+
+Religious article:
+
+* mosque silhouette
+* historical manuscripts
+* Islamic geometric patterns
+* scholarly atmosphere
+
+Political analysis:
+
+* parliament
+* political maps
+* diplomacy symbolism
+* strategic imagery
+
+Geopolitics:
+
+* world map
+* borders
+* flags
+* negotiations
+* strategic routes
+
+Economic article:
+
+* charts
+* ports
+* industry
+* trade routes
+* energy infrastructure
+
+Social issues:
+
+* citizens
+* urban environments
+* symbolic public spaces
+
+Historical article:
+
+* archives
+* manuscripts
+* historical landmarks
+* period symbolism
+
+The background should support the article theme without overwhelming the writer.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEXT RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Display ONLY:
+
+1. Article title
+
+2. Writer name
+
+Nothing else.
+
+Never display:
+
+* article excerpts
+* descriptions
+* dates
+* quotes
+* labels
+* categories
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISUAL STYLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Premium editorial cover.
+
+Magazine-quality composition.
+
+Elegant typography.
+
+Sophisticated lighting.
+
+Documentary realism.
+
+Intellectual atmosphere.
+
+High readability.
+
+Mobile-friendly.
+
+Professional newspaper design.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COLOR RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use colors appropriate to the article theme.
+
+Avoid:
+
+* oversaturated colors
+* clickbait colors
+* neon effects
+* gaming aesthetics
+
+Prefer:
+
+* deep blues
+* dark grays
+* warm editorial tones
+* muted cinematic colors
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL COMPOSITION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Top-left:
+Albaalaagh logo
+
+Left:
+Article title
+Writer name
+
+Right:
+Writer portrait
+
+Background:
+Symbolic illustration of article subject
+
+Balanced composition.
+
+Clean editorial design.
+
+Professional magazine cover appearance.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL STYLE TAGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+premium editorial article cover,
+intellectual magazine aesthetic,
+documentary realism,
+newspaper opinion section,
+high contrast,
+professional Arabic typography,
+serious analytical atmosphere,
+clean composition,
+mobile readability,
+1280×720 landscape format`;
+
+async function buildWriterArticlePrompt(title: string, excerpt: string, writerName: string, hasWriterPhoto: boolean): Promise<string> {
+  const msg = await getAnthropic().messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 800,
+    system: WRITING_ARTICLE_SYSTEM_PROMPT,
+    messages: [{
+      role: "user",
+      content: `العنوان: ${title}\nالكاتب: ${writerName}\nصورة الكاتب: ${hasWriterPhoto ? "مرفقة — استخدمها كما هي بدون أي تعديل على الوجه" : "غير متوفرة — لا تنشئ وجهاً، استخدم خلفية رمزية فقط"}\nمحتوى المقال: ${excerpt || "—"}`,
+    }],
+  });
+  const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+  if (!text.trim()) throw new Error("Empty image prompt from Claude");
+  return text.trim();
 }
 
 export async function generateWriterArticleImage(
@@ -710,36 +908,38 @@ export async function generateWriterArticleImage(
   writerName: string,
   writerImageUrl?: string | null
 ): Promise<string> {
-  const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
-  const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
-
-  const images: any[] = [templateFile];
+  let writerFile: Awaited<ReturnType<typeof toFile>> | null = null;
   if (writerImageUrl) {
     const res = await fetch(writerImageUrl);
     if (res.ok) {
       const writerBuffer = Buffer.from(await res.arrayBuffer());
-      const writerFile = await toFile(writerBuffer, "writer.png", { type: res.headers.get("content-type") ?? "image/png" });
-      images.push(writerFile);
+      writerFile = await toFile(writerBuffer, "writer.png", { type: res.headers.get("content-type") ?? "image/png" });
     }
   }
 
-  const result = await getOpenAI().images.edit({
-    model: "gpt-image-2",
-    image: images.length > 1 ? images : images[0],
-    prompt: buildWriterArticlePrompt(title, excerpt, writerName, images.length > 1),
-    size: "1024x1024",
-    quality: "medium",
-    n: 1,
-  });
+  const imagePrompt = await buildWriterArticlePrompt(title, excerpt, writerName, !!writerFile);
+
+  const result = writerFile
+    ? await getOpenAI().images.edit({
+        model: "gpt-image-2",
+        image: writerFile,
+        prompt: imagePrompt,
+        size: "1280x720",
+        quality: "medium",
+        n: 1,
+      })
+    : await getOpenAI().images.generate({
+        model: "gpt-image-2",
+        prompt: imagePrompt,
+        size: "1280x720",
+        quality: "medium",
+        n: 1,
+      });
 
   const b64 = result.data?.[0]?.b64_json;
   if (!b64) throw new Error("No image returned from OpenAI");
 
-  const buffer = await sharp(Buffer.from(b64, "base64"))
-    .resize(1080, 1080)
-    .png()
-    .toBuffer();
-
+  const buffer = Buffer.from(b64, "base64");
   const key = `ai-images/writer-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
   return uploadToR2(key, buffer, "image/png");
 }
