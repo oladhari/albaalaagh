@@ -53,6 +53,7 @@ export default function AdminNewsPage() {
   const [loading, setLoading]     = useState(true);
   const [working, setWorking]     = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [preview, setPreview]     = useState<Preview | null>(null);
   const [publishing, setPublishing]   = useState(false);
   const [published, setPublished]     = useState<Record<string, string>>({});
@@ -110,6 +111,24 @@ export default function AdminNewsPage() {
       });
     } finally {
       setGenerating(null);
+    }
+  };
+
+  const generateImage = async () => {
+    if (!preview) return;
+    setGeneratingImage(true);
+    try {
+      const res = await fetch("/api/admin/images/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: preview.title, excerpt: preview.excerpt }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? "خطأ في إنشاء الصورة"); return; }
+      setPreview((p) => p && ({ ...p, image_url: data.url }));
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -322,7 +341,18 @@ export default function AdminNewsPage() {
 
           {/* Article cover image */}
           <div>
-            <label className="block text-xs font-semibold mb-2" style={{ color: DIM }}>صورة المقال (16:9)</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-semibold" style={{ color: DIM }}>صورة المقال (16:9)</label>
+              <button
+                type="button"
+                onClick={generateImage}
+                disabled={generatingImage || !preview.title}
+                className="px-3 py-1 rounded-full text-xs font-bold border transition-all disabled:opacity-50"
+                style={{ borderColor: GOLD, color: GOLD, background: "rgba(201,168,68,0.08)" }}
+              >
+                {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء صورة بالذكاء الاصطناعي"}
+              </button>
+            </div>
             <CoverUpload
               currentUrl={preview.image_url ?? ""}
               onUploaded={(url) => setPreview((p) => p && ({ ...p, image_url: url }))}

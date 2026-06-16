@@ -16,6 +16,7 @@ export default function NewNewsPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -29,6 +30,24 @@ export default function NewNewsPage() {
 
   const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const generateImage = async () => {
+    setGeneratingImage(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/images/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
+      set("image_url", data.url);
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.title || !form.content) {
@@ -180,7 +199,18 @@ export default function NewNewsPage() {
             </div>
 
             <div>
-              <label style={labelStyle}>صورة الغلاف (16:9)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label style={{ ...labelStyle, marginBottom: 0 }}>صورة الغلاف (16:9)</label>
+                <button
+                  type="button"
+                  onClick={generateImage}
+                  disabled={generatingImage || !form.title}
+                  className="px-3 py-1 rounded-full text-xs font-bold border transition-all disabled:opacity-50"
+                  style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.08)" }}
+                >
+                  {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء صورة بالذكاء الاصطناعي"}
+                </button>
+              </div>
               <CoverUpload currentUrl={form.image_url} onUploaded={(url) => set("image_url", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
