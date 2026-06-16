@@ -11,7 +11,8 @@ export default function EditArticlePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [writers, setWriters] = useState<{ id: string; name: string }[]>([]);
+  const [writers, setWriters] = useState<{ id: string; name: string; image_url?: string | null }[]>([]);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>("draft");
   const [form, setForm] = useState({
     title: "",
@@ -49,6 +50,32 @@ export default function EditArticlePage() {
 
   const set = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const generateImage = async () => {
+    const writer = writers.find((w) => w.id === form.writer_id);
+    if (!writer) { setError("اختر كاتباً أولاً"); return; }
+    setGeneratingImage(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/images/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: form.title,
+          excerpt: form.excerpt,
+          target: "writer",
+          writerName: writer.name,
+          writerImageUrl: writer.image_url ?? null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
+      set("cover_image", data.url);
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
 
   const handleSave = async (publish: boolean) => {
     if (!form.title || !form.content) {
@@ -251,7 +278,18 @@ export default function EditArticlePage() {
             </div>
 
             <div>
-              <label style={labelStyle}>صورة الغلاف</label>
+              <div className="flex items-center justify-between mb-1">
+                <label style={{ ...labelStyle, marginBottom: 0 }}>صورة الغلاف</label>
+                <button
+                  type="button"
+                  onClick={generateImage}
+                  disabled={generatingImage || !form.title || !form.writer_id}
+                  className="px-3 py-1 rounded-full text-xs font-bold border transition-all disabled:opacity-50"
+                  style={{ borderColor: "#C9A844", color: "#C9A844", background: "rgba(201,168,68,0.08)" }}
+                >
+                  {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء بالذكاء الاصطناعي"}
+                </button>
+              </div>
               <CoverUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}

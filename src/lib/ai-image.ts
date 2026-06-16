@@ -590,3 +590,171 @@ export async function generateFacebookImage(title: string, excerpt: string): Pro
   const key = `ai-images/fb-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
   return uploadToR2(key, buffer, "image/png");
 }
+
+function buildWriterArticlePrompt(title: string, excerpt: string, writerName: string, hasWriterPhoto: boolean): string {
+  return `ALBAALAAGH NEWS IMAGE GENERATION PROMPT
+
+Create a professional news card for Albaalaagh using the ATTACHED ALBAALAAGH TEMPLATE as the base design.
+
+MANDATORY REQUIREMENTS:
+
+* Output size: 1080x1080 (1:1 square).
+* USE THE PROVIDED TEMPLATE EXACTLY.
+* Keep the Albaalaagh logo in the top-right corner exactly as it appears.
+* Keep the template colors, borders, decorations, and branding unchanged.
+* Do NOT redesign the template.
+* Do NOT create a new layout.
+* Do NOT remove or move the logo.
+* Do NOT add "عاجل" unless it explicitly appears in the news title.
+* Do NOT add extra text, summaries, bullet points, quotes, or article content.
+* Display the article title as the main text.
+* Title must be large, clean, readable on mobile devices, and preferably limited to 2–4 lines.
+* Keep text minimal and visually balanced.
+* Add a modest writer credit line reading "بقلم: ${writerName}" in a smaller font below or beside the title — it must never compete with the title in size or prominence.
+${hasWriterPhoto ? `* A second attached image is the writer's verified photo. Place it as a small circular avatar near the credit line. Use the exact provided photo — do not modify facial features, do not beautify, do not age, do not generate a different face.` : `* No writer photo was supplied — do not invent or generate a face for the writer. Show only the name credit line, no avatar.`}
+
+IMAGE SELECTION RULES:
+
+1. If a reference image is provided:
+
+   * Use the exact provided image.
+   * Do not modify facial features.
+   * Do not generate a different face.
+   * Do not age, beautify, stylize, or alter the person.
+   * Do not create another person that merely resembles them.
+
+2. If NO image is provided:
+
+   * Use neutral symbolic visuals related to the topic.
+   * Use flags, buildings, maps, courtrooms, microphones, documents, airplanes, ports, ships, wheat fields, factories, parliament buildings, diplomatic tables, etc.
+   * Never invent the face of a politician, minister, journalist, activist, judge, suspect, victim, or public figure.
+
+3. For people:
+
+   * Only use a person when a verified image is supplied.
+   * Never generate a face from the article text.
+   * Never guess how someone looks.
+   * If no image exists, use symbolic visuals instead.
+
+4. For crime, arrests, court cases, investigations:
+
+   * Prefer symbolic visuals:
+     court building,
+     scales of justice,
+     documents,
+     police tape,
+     microphone,
+     prison bars,
+     courthouse corridor.
+   * Avoid fictional suspect images.
+
+5. For political parties:
+
+   * Use the official party logo if supplied.
+   * Do not invent party logos.
+   * Do not create fictional party headquarters.
+
+6. For international diplomacy:
+
+   * Use official flags,
+     negotiation tables,
+     documents,
+     government buildings.
+   * Avoid fictional leaders unless their image is supplied.
+
+7. For accidents:
+
+   * Use real supplied photos if available.
+   * Otherwise use generic accident symbolism.
+   * Do not fabricate detailed accident scenes.
+
+8. For migration stories:
+
+   * Avoid close-up identifiable faces.
+   * Prefer symbolic imagery.
+
+9. For education stories:
+
+   * Use classrooms,
+     exam papers,
+     school buildings.
+   * Avoid showing identifiable students.
+
+10. For health stories:
+
+    * Use hospitals,
+      medical equipment,
+      healthcare symbols.
+    * Avoid fictional patients.
+
+VISUAL STYLE:
+
+* Professional newsroom style.
+* Clean composition.
+* Serious and credible.
+* No clickbait.
+* No sensationalism.
+* No exaggerated explosions, fires, blood, destruction, or dramatic effects unless clearly visible in supplied source images.
+* No cinematic movie-poster style.
+* No propaganda style.
+* No AI-looking faces.
+
+INPUTS:
+
+TITLE:
+${title}
+
+DESCRIPTION:
+${excerpt || "—"}
+
+WRITER NAME:
+${writerName}
+
+REFERENCE IMAGE(S):
+${hasWriterPhoto ? "second attached image — writer's verified photo, use exactly as provided" : "none"}
+
+TEMPLATE:
+attached image — use exactly as the base design
+
+Generate a final Albaalaagh news card that strictly follows these rules.`;
+}
+
+export async function generateWriterArticleImage(
+  title: string,
+  excerpt: string,
+  writerName: string,
+  writerImageUrl?: string | null
+): Promise<string> {
+  const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
+  const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
+
+  const images: any[] = [templateFile];
+  if (writerImageUrl) {
+    const res = await fetch(writerImageUrl);
+    if (res.ok) {
+      const writerBuffer = Buffer.from(await res.arrayBuffer());
+      const writerFile = await toFile(writerBuffer, "writer.png", { type: res.headers.get("content-type") ?? "image/png" });
+      images.push(writerFile);
+    }
+  }
+
+  const result = await getOpenAI().images.edit({
+    model: "gpt-image-2",
+    image: images.length > 1 ? images : images[0],
+    prompt: buildWriterArticlePrompt(title, excerpt, writerName, images.length > 1),
+    size: "1024x1024",
+    quality: "medium",
+    n: 1,
+  });
+
+  const b64 = result.data?.[0]?.b64_json;
+  if (!b64) throw new Error("No image returned from OpenAI");
+
+  const buffer = await sharp(Buffer.from(b64, "base64"))
+    .resize(1080, 1080)
+    .png()
+    .toBuffer();
+
+  const key = `ai-images/writer-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+  return uploadToR2(key, buffer, "image/png");
+}
