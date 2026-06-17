@@ -75,11 +75,14 @@ function spawnYtDlp(
   return new Promise((resolve, reject) => {
     const proc = spawn(bin, args);
     let stdout = "";
+    let stderr = "";
     proc.stdout.on("data", (d: Buffer) => { const t = d.toString(); stdout += t; onStdout?.(t); });
-    proc.stderr.on("data", (d: Buffer) => { onStderr?.(d.toString()); });
+    proc.stderr.on("data", (d: Buffer) => { const t = d.toString(); stderr += t; onStderr?.(t); });
     proc.on("error", reject);
     proc.on("close", (code) =>
-      code === 0 ? resolve(stdout.trim()) : reject(new Error(`yt-dlp exited ${code}`)),
+      code === 0
+        ? resolve(stdout.trim())
+        : reject(new Error(`yt-dlp exited ${code}: ${stderr.slice(-400)}`)),
     );
   });
 }
