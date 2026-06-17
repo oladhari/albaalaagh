@@ -2,13 +2,12 @@ import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { spawn } from "node:child_process";
 import {
-  createReadStream, statSync, mkdtempSync, rmSync,
+  readFileSync, statSync, mkdtempSync, rmSync,
   existsSync, writeFileSync, chmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-// Writes YOUTUBE_COOKIES env var to a temp file for yt-dlp --cookies
 function cookiesArg(): string[] {
   const cookies = process.env.YOUTUBE_COOKIES;
   if (!cookies) return [];
@@ -24,8 +23,6 @@ const FB_API     = "https://graph.facebook.com/v19.0";
 
 type EventType = "status" | "done" | "error";
 type Emit = (type: EventType, msg: string) => void;
-
-// ── yt-dlp binary resolution (auto-download to /tmp on Vercel) ────────────────
 
 let _ytDlpBin: string | null = null;
 
@@ -71,8 +68,6 @@ async function resolveYtDlp(): Promise<string> {
   _ytDlpBin = bin;
   return bin;
 }
-
-// ── yt-dlp helpers ────────────────────────────────────────────────────────────
 
 function spawnYtDlp(
   bin: string,
@@ -165,8 +160,6 @@ async function downloadVideo(
   throw new Error("لم يُعثر على الملف بعد التحميل");
 }
 
-// ── Facebook helpers ──────────────────────────────────────────────────────────
-
 async function fbPost(endpoint: string, body: Record<string, string>): Promise<Response> {
   return fetch(`${FB_API}/${endpoint}`, {
     method: "POST",
@@ -175,22 +168,17 @@ async function fbPost(endpoint: string, body: Record<string, string>): Promise<R
   });
 }
 
-// ── Main pipeline ─────────────────────────────────────────────────────────────
-
 async function run(ytUrl: string, emit: Emit): Promise<void> {
   if (!PAGE_ID || !PAGE_TOKEN)
     throw new Error("بيانات صفحة فيسبوك غير مضبوطة (FB_PAGE2_ID / FB_PAGE2_TOKEN)");
 
-  // 0 — resolve yt-dlp (may download on first cold start)
   emit("status", "جاري التحقق من أدوات التحميل...");
   const bin = await resolveYtDlp();
 
-  // 1 — metadata
   emit("status", "جاري استخراج معلومات الفيديو...");
   const { title, description } = await fetchYtMeta(ytUrl);
   emit("status", `العنوان: ${title}`);
 
-  // 2 — download
   emit("status", "جاري تحميل الفيديو...");
   const tmpDir  = mkdtempSync(join(tmpdir(), "ytfb-"));
   const outPath = join(tmpDir, "video.mp4");
@@ -200,51 +188,28 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
     const fileSize  = statSync(videoPath).size;
     emit("status", `تم التحميل (${(fileSize / 1048576).toFixed(1)} MB)`);
 
-    // 3 — FB Reel: start
-    emit("status", "جاري تهيئة رفع الريل على فيسبوك...");
-    const startRes = await fbPost(`${PAGE_ID}/video_reels`, {
-      upload_phase: "start",
-      access_token: PAGE_TOKEN,
-    });
-    if (!startRes.ok) throw new Error(`فيسبوك (start): ${(await startRes.text()).slice(0, 300)}`);
-    const { video_id, upload_url } = await startRes.json() as { video_id: string; upload_url: string };
-
-    // 4 — FB Reel: PUT file
     emit("status", "جاري رفع الفيديو إلى فيسبوك...");
-    const putRes = await fetch(upload_url, {
-      method: "PUT",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      body: createReadStream(videoPath) as any,
-      headers: {
-        Authorization: `OAuth ${PAGE_TOKEN}`,
-        offset:        "0",
-        file_size:     String(fileSize),
-      },
-      // @ts-expect-error — duplex not in TS types but required for streaming body
-      duplex: "half",
-    });
-    if (!putRes.ok) throw new Error(`فيسبوك (upload): ${(await putRes.text()).slice(0, 300)}`);
-    emit("status", "تم رفع الملف بنجاح");
+    const fileBuffer = readFileSync(videoPath);
+    const form = new FormData();
+    form.append("access_token", PAGE_TOKEN);
+    form.append("title", title.slice(0, 500));
+    form.append("description", description);
+    form.append("source", new Blob([fileBuffer], { type: "video/mp4" }), "video.mp4");
 
-    // 5 — FB Reel: finish
-    emit("status", "جاري نشر الريل...");
-    const finishRes = await fbPost(`${PAGE_ID}/video_reels`, {
-      upload_phase: "finish",
-      video_id,
-      access_token: PAGE_TOKEN,
-      title:        title.slice(0, 500),
-      description,
-      video_state:  "PUBLISHED",
+    const uploadRes = await fetch(`https://graph-video.facebook.com/v19.0/${PAGE_ID}/videos`, {
+      method: "POST",
+      body: form,
     });
-    if (!finishRes.ok) throw new Error(`فيسبوك (finish): ${(await finishRes.text()).slice(0, 300)}`);
-    const finishData = await finishRes.json() as { success?: boolean; post_id?: string };
-    const postId = finishData.post_id;
-    emit("status", `تم النشر${postId ? ` — post_id: ${postId}` : ""}`);
+    if (!uploadRes.ok) {
+      const t = (await uploadRes.text()).slice(0, 300);
+      throw new Error(`فيسبوك HTTP ${uploadRes.status}: ${t || "(no body)"}`);
+    }
+    const { id: videoId } = await uploadRes.json() as { id: string };
+    emit("status", "تم رفع الفيديو ونشره بنجاح");
 
-    // 6 — comment
-    if (postId) {
+    if (videoId) {
       emit("status", "جاري إضافة التعليق...");
-      const commentRes = await fbPost(`${postId}/comments`, {
+      const commentRes = await fbPost(`${videoId}/comments`, {
         access_token: PAGE_TOKEN,
         message: `شاهد المزيد من المحتوى على قناتنا: ${ytUrl}\nوتابعونا على موقعنا: https://www.albaalaagh.com`,
       });
@@ -253,8 +218,6 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
       } else {
         emit("status", `تحذير: فشل إضافة التعليق — ${(await commentRes.text()).slice(0, 200)}`);
       }
-    } else {
-      emit("status", "تحذير: لم يُعاد post_id — تخطّي التعليق");
     }
 
     emit("done", "تمت المشاركة على فيسبوك بنجاح!");
@@ -262,8 +225,6 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
     try { rmSync(tmpDir, { recursive: true, force: true }); } catch {}
   }
 }
-
-// ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   const unauthed = await requireAdmin();

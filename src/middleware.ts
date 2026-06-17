@@ -39,9 +39,8 @@ export async function middleware(req: NextRequest) {
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
   const isAdminLogin = req.nextUrl.pathname === "/admin/login";
   const isAdminAuthed = req.cookies.get("admin_authed")?.value === "1";
-  const isDev = process.env.NODE_ENV === "development";
 
-  if (isAdminRoute && !isAdminLogin && !isAdminAuthed && !isDev) {
+  if (isAdminRoute && !isAdminLogin && !isAdminAuthed) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 

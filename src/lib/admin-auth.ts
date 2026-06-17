@@ -4,9 +4,8 @@ import { NextResponse } from "next/server";
 export async function requireAdmin(): Promise<NextResponse | null> {
   const cookieStore = await cookies();
   const authed = cookieStore.get("admin_authed")?.value === "1";
-  const isDev = process.env.NODE_ENV === "development";
 
-  if (!authed && !isDev) {
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;
