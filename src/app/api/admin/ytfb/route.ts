@@ -137,8 +137,7 @@ async function downloadVideo(
     bin,
     [
       "--format",
-      "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]",
-      "--merge-output-format", "mp4",
+      "best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=1080]/best",
       "--no-warnings",
       "--newline",
       ...cookiesArg(),
@@ -159,8 +158,8 @@ async function downloadVideo(
     },
   );
 
-  for (const p of [outPath, outPath + ".mp4"]) {
-    try { statSync(p); return p; } catch {}
+  for (const ext of ["", ".mp4", ".webm", ".mkv"]) {
+    try { statSync(outPath + ext); return outPath + ext; } catch {}
   }
   throw new Error("لم يُعثر على الملف بعد التحميل");
 }
