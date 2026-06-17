@@ -8,6 +8,14 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+// Writes YOUTUBE_COOKIES env var to a temp file for yt-dlp --cookies
+function cookiesArg(): string[] {
+  const cookies = process.env.YOUTUBE_COOKIES;
+  if (!cookies) return [];
+  writeFileSync("/tmp/yt-cookies.txt", cookies);
+  return ["--cookies", "/tmp/yt-cookies.txt"];
+}
+
 export const maxDuration = 300;
 
 const PAGE_ID    = process.env.FB_PAGE2_ID!;
@@ -87,18 +95,35 @@ function spawnYtDlp(
   });
 }
 
+function extractVideoId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+  );
+  return m ? m[1] : null;
+}
+
 async function fetchYtMeta(
-  bin: string,
   ytUrl: string,
 ): Promise<{ title: string; description: string }> {
-  const json = await spawnYtDlp(bin, [
-    "--dump-json", "--skip-download", "--no-playlist", ytUrl,
-  ]);
-  const meta = JSON.parse(json);
-  return {
-    title:       (meta.title as string) || "فيديو",
-    description: ((meta.description as string) || "").slice(0, 4500),
-  };
+  // Use YouTube Data API v3 — no bot-check, fast, already have the key
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  const videoId = extractVideoId(ytUrl);
+  if (apiKey && videoId) {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`,
+    );
+    if (res.ok) {
+      const data = await res.json() as { items?: { snippet: { title: string; description: string } }[] };
+      const snippet = data.items?.[0]?.snippet;
+      if (snippet) {
+        return {
+          title:       snippet.title || "فيديو",
+          description: (snippet.description || "").slice(0, 4500),
+        };
+      }
+    }
+  }
+  throw new Error("تعذّر جلب معلومات الفيديو من يوتيوب — تحقق من YOUTUBE_API_KEY");
 }
 
 async function downloadVideo(
@@ -116,6 +141,7 @@ async function downloadVideo(
       "--merge-output-format", "mp4",
       "--no-warnings",
       "--newline",
+      ...cookiesArg(),
       "-o", outPath,
       ytUrl,
     ],
@@ -161,7 +187,7 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
 
   // 1 — metadata
   emit("status", "جاري استخراج معلومات الفيديو...");
-  const { title, description } = await fetchYtMeta(bin, ytUrl);
+  const { title, description } = await fetchYtMeta(ytUrl);
   emit("status", `العنوان: ${title}`);
 
   // 2 — download
