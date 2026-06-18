@@ -133,7 +133,23 @@ export default function CoverUpload({ currentUrl, onUploaded, aspect = 16 / 9, o
 
       <div className="flex items-center gap-4 mb-3">
         {currentUrl ? (
-          <img src={currentUrl} alt="" className="w-32 h-[72px] rounded-lg object-cover shrink-0" style={{ border: "2px solid #C9A844" }} />
+          <div className="relative shrink-0 group">
+            <img
+              src={currentUrl}
+              alt=""
+              className="rounded-lg object-cover"
+              style={{ width: 128, height: Math.round(128 / ASPECT), border: "2px solid #C9A844" }}
+            />
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
+              style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+            >
+              فتح ↗
+            </a>
+          </div>
         ) : (
           <div
             className="rounded-lg flex items-center justify-center shrink-0"
