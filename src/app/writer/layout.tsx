@@ -10,12 +10,13 @@ export default async function WriterLayout({ children }: { children: React.React
 
   if (!user) redirect("/writer/login");
 
-  // Get the writer's profile
   const { data: writer } = await supabaseAdmin
     .from("writers")
-    .select("id, name")
+    .select("id, name, role")
     .eq("user_id", user.id)
     .single();
+
+  const isEditor = writer?.role === "editor";
 
   return (
     <div className="min-h-screen flex" style={{ background: "#0D0C06", fontFamily: "Cairo, sans-serif" }}>
@@ -36,7 +37,9 @@ export default async function WriterLayout({ children }: { children: React.React
           >
             البلاغ
           </span>
-          <span className="block text-xs" style={{ color: "#9A9070" }}>منصة الكتّاب</span>
+          <span className="block text-xs" style={{ color: "#9A9070" }}>
+            {isEditor ? "منصة المحررين" : "منصة الكتّاب"}
+          </span>
         </Link>
 
         {writer && (
@@ -51,40 +54,40 @@ export default async function WriterLayout({ children }: { children: React.React
               {writer.name[0]}
             </div>
             <p className="text-sm font-bold" style={{ color: "#F0EAD6" }}>{writer.name}</p>
-            <p className="text-xs" style={{ color: "#9A9070" }}>كاتب</p>
+            <p className="text-xs" style={{ color: "#9A9070" }}>{isEditor ? "محرر" : "كاتب"}</p>
           </div>
         )}
 
         <nav className="space-y-1 flex-1">
-          <Link
-            href="/writer"
-            className="block px-3 py-2.5 rounded-lg text-sm font-medium"
-            style={{ color: "#9A9070" }}
-          >
+          <Link href="/writer" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#9A9070" }}>
             لوحة التحكم
           </Link>
-          <Link
-            href="/writer/articles"
-            className="block px-3 py-2.5 rounded-lg text-sm font-medium"
-            style={{ color: "#9A9070" }}
-          >
+
+          {/* Articles — available to all */}
+          <p className="px-3 pt-3 pb-1 text-xs font-bold uppercase tracking-wider" style={{ color: "#4A4030" }}>المقالات</p>
+          <Link href="/writer/articles" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#9A9070" }}>
             مقالاتي
           </Link>
-          <Link
-            href="/writer/articles/new"
-            className="block px-3 py-2.5 rounded-lg text-sm font-medium"
-            style={{ color: "#C9A844" }}
-          >
+          <Link href="/writer/articles/new" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#C9A844" }}>
             + كتابة مقال
           </Link>
+
+          {/* News — editors only */}
+          {isEditor && (
+            <>
+              <p className="px-3 pt-3 pb-1 text-xs font-bold uppercase tracking-wider" style={{ color: "#4A4030" }}>الأخبار</p>
+              <Link href="/writer/news" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#9A9070" }}>
+                أخباري
+              </Link>
+              <Link href="/writer/news/new" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#C9A844" }}>
+                + إرسال خبر
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="space-y-2 mt-4">
-          <Link
-            href="/"
-            className="block text-xs px-3 py-2 rounded-lg"
-            style={{ color: "#9A9070", background: "#1A1810" }}
-          >
+          <Link href="/" className="block text-xs px-3 py-2 rounded-lg" style={{ color: "#9A9070", background: "#1A1810" }}>
             ← الموقع الرئيسي
           </Link>
           <LogoutButton />

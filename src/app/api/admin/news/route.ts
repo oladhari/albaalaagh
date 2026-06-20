@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from("news")
-    .select("*")
+    .select("*, submitted_by_writer:writers!submitted_by(name)")
     .eq("status", status)
     .order("published_at", { ascending: false })
     .limit(100);

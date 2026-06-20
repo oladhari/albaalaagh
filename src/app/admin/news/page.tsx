@@ -576,6 +576,11 @@ export default function AdminNewsPage() {
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(201,168,68,0.12)", color: GOLD }}>
                       {news.source}
                     </span>
+                    {(news as any).submitted_by_writer?.name && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(74,144,226,0.15)", color: "#4A90E2" }}>
+                        ✍️ {(news as any).submitted_by_writer.name}
+                      </span>
+                    )}
                     {news.category && (
                       <span className="text-xs" style={{ color: DIM }}>{news.category}</span>
                     )}
