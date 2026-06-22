@@ -1,8 +1,14 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { readFileSync } from "fs";
 
-const CLIENT_KEY    = process.env.TIKTOK_CLIENT_KEY!;
-const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET!;
+// Read at call time, not module init — avoids stale cache when env vars are added post-deploy
+function creds() {
+  const key    = process.env.TIKTOK_CLIENT_KEY;
+  const secret = process.env.TIKTOK_CLIENT_SECRET;
+  if (!key || !secret) throw new Error(`TikTok credentials missing (key=${key ? "ok" : "MISSING"}, secret=${secret ? "ok" : "MISSING"})`);
+  return { key, secret };
+}
+
 export const REDIRECT_URI = "https://albaalaagh.com/callback";
 
 // ── Token storage in site_settings ─────────────────────────────────────────
@@ -19,10 +25,11 @@ async function getSetting(key: string): Promise<string | null> {
 // ── OAuth helpers ────────────────────────────────────────────────────────────
 
 export function buildAuthUrl(state: string): string {
+  const { key } = creds();
   // Build manually — URLSearchParams encodes commas as %2C which TikTok v2 rejects
   return (
     `https://www.tiktok.com/v2/auth/authorize/` +
-    `?client_key=${CLIENT_KEY}` +
+    `?client_key=${key}` +
     `&scope=video.publish,user.info.basic` +
     `&response_type=code` +
     `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
@@ -31,9 +38,12 @@ export function buildAuthUrl(state: string): string {
 }
 
 export async function exchangeCode(code: string): Promise<void> {
+  const { key, secret } = creds();
+  console.log("[TikTok] exchange — client_key:", key, "redirect_uri:", REDIRECT_URI);
+
   const body = new URLSearchParams({
-    client_key:    CLIENT_KEY,
-    client_secret: CLIENT_SECRET,
+    client_key:    key,
+    client_secret: secret,
     code,
     grant_type:    "authorization_code",
     redirect_uri:  REDIRECT_URI,
@@ -45,6 +55,7 @@ export async function exchangeCode(code: string): Promise<void> {
     body,
   });
   const data = await res.json();
+  console.log("[TikTok] exchange response:", JSON.stringify(data));
   if (!res.ok || data.error) throw new Error(data.error_description ?? "TikTok token exchange failed");
 
   const expiresAt = Date.now() + data.expires_in * 1000;
@@ -57,12 +68,13 @@ export async function exchangeCode(code: string): Promise<void> {
 }
 
 async function refreshAccessToken(): Promise<string> {
+  const { key, secret } = creds();
   const refreshToken = await getSetting("tiktok_refresh_token");
   if (!refreshToken) throw new Error("No TikTok refresh token stored");
 
   const body = new URLSearchParams({
-    client_key:    CLIENT_KEY,
-    client_secret: CLIENT_SECRET,
+    client_key:    key,
+    client_secret: secret,
     grant_type:    "refresh_token",
     refresh_token: refreshToken,
   });
