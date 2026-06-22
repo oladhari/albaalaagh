@@ -139,7 +139,7 @@ async function downloadVideo(
     [
       "--format",
       "best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=1080]/best",
-      "--extractor-args", "youtube:player_client=android_vr",
+      "--extractor-args", "youtube:player_client=web,android_vr",
       "--no-warnings",
       "--newline",
       ...cookiesArg(),
