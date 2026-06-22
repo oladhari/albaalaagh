@@ -8,7 +8,15 @@ export default async function WriterLayout({ children }: { children: React.React
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/writer/login");
+  // Middleware already redirects unauthenticated non-login routes.
+  // For /writer/login itself, render children without sidebar to avoid redirect loop.
+  if (!user) {
+    return (
+      <div style={{ background: "#0D0C06", minHeight: "100vh", fontFamily: "Cairo, sans-serif" }}>
+        {children}
+      </div>
+    );
+  }
 
   const { data: writer } = await supabaseAdmin
     .from("writers")
@@ -63,7 +71,6 @@ export default async function WriterLayout({ children }: { children: React.React
             لوحة التحكم
           </Link>
 
-          {/* Articles — available to all */}
           <p className="px-3 pt-3 pb-1 text-xs font-bold uppercase tracking-wider" style={{ color: "#4A4030" }}>المقالات</p>
           <Link href="/writer/articles" className="block px-3 py-2.5 rounded-lg text-sm font-medium" style={{ color: "#9A9070" }}>
             مقالاتي
@@ -72,7 +79,6 @@ export default async function WriterLayout({ children }: { children: React.React
             + كتابة مقال
           </Link>
 
-          {/* News — editors only */}
           {isEditor && (
             <>
               <p className="px-3 pt-3 pb-1 text-xs font-bold uppercase tracking-wider" style={{ color: "#4A4030" }}>الأخبار</p>
@@ -94,7 +100,6 @@ export default async function WriterLayout({ children }: { children: React.React
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 overflow-auto p-8" style={{ color: "#F0EAD6" }}>
         {children}
       </main>
