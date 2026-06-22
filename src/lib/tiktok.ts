@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 
 const CLIENT_KEY    = process.env.TIKTOK_CLIENT_KEY!;
 const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET!;
-export const REDIRECT_URI = "https://www.albaalaagh.com/api/admin/tiktok/callback";
+export const REDIRECT_URI = "https://albaalaagh.com/callback";
 
 // ── Token storage in site_settings ─────────────────────────────────────────
 
