@@ -19,14 +19,15 @@ async function getSetting(key: string): Promise<string | null> {
 // ── OAuth helpers ────────────────────────────────────────────────────────────
 
 export function buildAuthUrl(state: string): string {
-  const params = new URLSearchParams({
-    client_key:    CLIENT_KEY,
-    scope:         "video.publish,user.info.basic",
-    response_type: "code",
-    redirect_uri:  REDIRECT_URI,
-    state,
-  });
-  return `https://www.tiktok.com/v2/auth/authorize/?${params}`;
+  // Build manually — URLSearchParams encodes commas as %2C which TikTok v2 rejects
+  return (
+    `https://www.tiktok.com/v2/auth/authorize/` +
+    `?client_key=${CLIENT_KEY}` +
+    `&scope=video.publish,user.info.basic` +
+    `&response_type=code` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&state=${state}`
+  );
 }
 
 export async function exchangeCode(code: string): Promise<void> {
