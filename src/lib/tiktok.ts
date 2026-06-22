@@ -49,13 +49,19 @@ export async function exchangeCode(code: string): Promise<void> {
     redirect_uri:  REDIRECT_URI,
   });
 
+  const basicAuth = Buffer.from(`${key}:${secret}`).toString("base64");
+
   const res  = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
     method:  "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type":  "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${basicAuth}`,
+    },
     body,
   });
-  const data = await res.json();
-  console.log("[TikTok] exchange response:", JSON.stringify(data));
+  const raw  = await res.text();
+  console.log("[TikTok] exchange status:", res.status, "body:", raw);
+  const data = JSON.parse(raw);
   if (!res.ok || data.error) throw new Error(data.error_description ?? "TikTok token exchange failed");
 
   const expiresAt = Date.now() + data.expires_in * 1000;
