@@ -49,14 +49,9 @@ export async function exchangeCode(code: string): Promise<void> {
     redirect_uri:  REDIRECT_URI,
   });
 
-  const basicAuth = Buffer.from(`${key}:${secret}`).toString("base64");
-
   const res  = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
     method:  "POST",
-    headers: {
-      "Content-Type":  "application/x-www-form-urlencoded",
-      "Authorization": `Basic ${basicAuth}`,
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
   const raw  = await res.text();
