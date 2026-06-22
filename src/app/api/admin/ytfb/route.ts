@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { postVideoToTikTok, isConnected as tiktokConnected } from "@/lib/tiktok";
 
 function cookiesArg(): string[] {
   const cookies = process.env.YOUTUBE_COOKIES;
@@ -205,7 +206,7 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
       throw new Error(`فيسبوك HTTP ${uploadRes.status}: ${t || "(no body)"}`);
     }
     const { id: videoId } = await uploadRes.json() as { id: string };
-    emit("status", "تم رفع الفيديو ونشره بنجاح");
+    emit("status", "تم رفع الفيديو على فيسبوك بنجاح");
 
     if (videoId) {
       emit("status", "جاري إضافة التعليق...");
@@ -214,13 +215,27 @@ async function run(ytUrl: string, emit: Emit): Promise<void> {
         message: `شاهد المزيد من المحتوى على قناتنا: ${ytUrl}\nوتابعونا على موقعنا: https://www.albaalaagh.com`,
       });
       if (commentRes.ok) {
-        emit("status", "تم إضافة التعليق");
+        emit("status", "تم إضافة التعليق على فيسبوك");
       } else {
         emit("status", `تحذير: فشل إضافة التعليق — ${(await commentRes.text()).slice(0, 200)}`);
       }
     }
 
-    emit("done", "تمت المشاركة على فيسبوك بنجاح!");
+    // ── TikTok ──────────────────────────────────────────────────────────────
+    const ttConnected = await tiktokConnected();
+    if (ttConnected) {
+      emit("status", "جاري رفع الفيديو إلى TikTok...");
+      try {
+        const publishId = await postVideoToTikTok({ videoPath, title });
+        emit("status", `تم إرسال الفيديو إلى TikTok (publish_id: ${publishId})`);
+      } catch (ttErr: any) {
+        emit("status", `تحذير TikTok: ${ttErr.message ?? ttErr}`);
+      }
+    } else {
+      emit("status", "TikTok غير مرتبط — تخطي (ربط الحساب من /admin/tiktok)");
+    }
+
+    emit("done", "تمت المشاركة على فيسبوك" + (ttConnected ? " و TikTok" : "") + " بنجاح!");
   } finally {
     try { rmSync(tmpDir, { recursive: true, force: true }); } catch {}
   }
