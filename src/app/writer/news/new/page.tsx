@@ -16,15 +16,5 @@ export default async function NewNewsPage() {
 
   if (!writer || writer.role !== "editor") redirect("/writer");
 
-  return (
-    <div>
-      <h1 className="text-2xl font-black mb-1" style={{ color: "#F0EAD6" }}>
-        إرسال خبر جديد
-      </h1>
-      <p className="text-sm mb-8" style={{ color: "#9A9070" }}>
-        سيُراجع الخبر من قِبل المحرر الرئيسي قبل النشر
-      </p>
-      <NewsSubmitForm />
-    </div>
-  );
+  return <NewsSubmitForm />;
 }

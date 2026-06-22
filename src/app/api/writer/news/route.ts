@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
   const editor = await getEditor();
   if (!editor) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { title, excerpt, image_url, category, geo } = await req.json();
+  const { title, excerpt, content, image_url, category, geo } = await req.json();
   if (!title || !excerpt)
-    return NextResponse.json({ error: "العنوان والملخص مطلوبان" }, { status: 400 });
+    return NextResponse.json({ error: "العنوان والمقدمة مطلوبان" }, { status: 400 });
 
   const slug =
     slugify(title, { locale: "ar", lower: true, strict: true }) +
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       slug,
       title,
       excerpt,
+      content:      content || null,
       image_url:    image_url || null,
       url:          `https://www.albaalaagh.com/taqrir/${slug}`,
       source:       "البلاغ",
