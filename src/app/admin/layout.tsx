@@ -11,6 +11,7 @@ const NAV = [
   { href: "/admin/guests",   label: "الضيوف"         },
   { href: "/admin/staff",    label: "الطاقم"         },
   { href: "/admin/ytfb",     label: "نشر على فيسبوك" },
+  { href: "/admin/tiktok",   label: "TikTok"          },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
