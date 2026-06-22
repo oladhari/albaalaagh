@@ -10,6 +10,11 @@ import { join } from "node:path";
 import { postVideoToTikTok, isConnected as tiktokConnected } from "@/lib/tiktok";
 
 function cookiesArg(): string[] {
+  // Local dev: point directly to the exported cookies file
+  const file = process.env.YOUTUBE_COOKIES_FILE;
+  if (file && existsSync(file)) return ["--cookies", file];
+
+  // Production: cookies content stored in env var
   const cookies = process.env.YOUTUBE_COOKIES;
   if (!cookies) return [];
   writeFileSync("/tmp/yt-cookies.txt", cookies);
