@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { fetchLiveStreams, fetchFeaturedPlaylists, fetchChannelStats, fetchActiveLiveStream } from "@/lib/youtube";
 import { supabaseAdmin } from "@/lib/supabase";
-import VideoCard from "@/components/ui/VideoCard";
 import ArticleCard from "@/components/ui/ArticleCard";
 import NewsCard from "@/components/ui/NewsCard";
 import SectionHeader from "@/components/ui/SectionHeader";
@@ -70,15 +68,13 @@ export default async function HomePage() {
     ? news.map((n: any) => n.title)
     : ["مرحباً بكم في البلاغ — منبر سياسي تونسي مستقل"];
 
-  const liveStream = null;
-
   return (
     <>
       {/* News Ticker */}
       <NewsTicker items={tickerItems} />
 
-      {/* Live Stream Banner — only visible when a live broadcast is active */}
-      <LiveBanner liveStream={liveStream} />
+      {/* Live Stream Banner — Twitch embed, always visible */}
+      <LiveBanner />
 
       {/* ── Hero ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
