@@ -58,22 +58,19 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [videos, playlists, news, articles, channelStats, articlesCount, liveStream, siteVideos] = await Promise.all([
-    fetchLiveStreams(20),
-    fetchFeaturedPlaylists(),
+  // YouTube channel suspended — skip YouTube API calls to avoid errors
+  const [news, articles, articlesCount, siteVideos] = await Promise.all([
     getLatestNews(),
     getLatestArticles(),
-    fetchChannelStats(),
     getArticlesCount(),
-    fetchActiveLiveStream(),
     getSiteVideos(),
   ]);
-
-  const restVideos = videos;
 
   const tickerItems = news.length > 0
     ? news.map((n: any) => n.title)
     : ["مرحباً بكم في البلاغ — منبر سياسي تونسي مستقل"];
+
+  const liveStream = null;
 
   return (
     <>
@@ -158,9 +155,7 @@ export default async function HomePage() {
               {/* Stats row */}
               <div className="relative flex flex-wrap gap-6 sm:gap-8 mt-6 sm:mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
                 {[
-                  { label: "فيديو على يوتيوب", value: channelStats.videoCount > 0 ? channelStats.videoCount + "+" : "..." },
-                  { label: "مشترك يوتيوب",     value: channelStats.subscriberCount > 0 ? formatCount(channelStats.subscriberCount) : "..." },
-                  { label: "مقال",              value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
+                  { label: "مقال", value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <p className="text-xl sm:text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
@@ -196,97 +191,7 @@ export default async function HomePage() {
       {/* ── Site Videos ── */}
       <SiteVideosSection videos={siteVideos} />
 
-      {/* ── Latest Live Streams ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SectionHeader
-          title="أحدث المقابلات"
-          subtitle="حوارات سياسية وفكرية معمقة"
-          linkHref="/interviews"
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {restVideos.slice(0, 6).map((video) => (
-            <VideoCard key={video.id} {...video} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Featured Playlists ── */}
-      {playlists.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <SectionHeader
-            title="أبرز برامجنا"
-            subtitle="برامج متخصصة تُغطي السياسة والفكر والذكاء الاصطناعي"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {playlists.map((playlist) => (
-              <a
-                key={playlist.id}
-                href={`https://www.youtube.com/playlist?list=${playlist.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group rounded-2xl overflow-hidden card-hover flex flex-col"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-              >
-                {/* Thumbnail from latest video */}
-                <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
-                  <img
-                    src={playlist.latestVideo?.thumbnail_url || playlist.thumbnail_url}
-                    alt={playlist.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: "linear-gradient(to top, rgba(17,16,8,0.85) 0%, transparent 60%)" }}
-                  />
-                  {/* Playlist icon */}
-                  <div
-                    className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-bold"
-                    style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current">
-                      <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/>
-                    </svg>
-                    قائمة تشغيل
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3
-                    className="font-black text-base mb-2 group-hover:text-[#C9A844] transition-colors"
-                    style={{ color: "#F0EAD6" }}
-                  >
-                    {playlist.title}
-                  </h3>
-                  {playlist.description && (
-                    <p
-                      className="text-xs leading-relaxed line-clamp-3 mb-3 flex-1"
-                      style={{ color: "#9A9070", lineHeight: "1.8" }}
-                    >
-                      {playlist.description}
-                    </p>
-                  )}
-                  {playlist.latestVideo && (
-                    <div
-                      className="mt-auto pt-3 flex items-start gap-2"
-                      style={{ borderTop: "1px solid #2E2A18" }}
-                    >
-                      <img
-                        src={playlist.latestVideo.thumbnail_url}
-                        alt=""
-                        className="w-14 h-9 rounded object-cover shrink-0"
-                      />
-                      <p className="text-xs line-clamp-2" style={{ color: "#9A9070" }}>
-                        آخر حلقة: {playlist.latestVideo.title}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Playlists section removed while YouTube channel is suspended */}
 
       {/* ── Divider ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
