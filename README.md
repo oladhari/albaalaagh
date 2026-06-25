@@ -9,7 +9,9 @@
 - **Next.js 16** (App Router) — يتطلب Node.js 20+
 - **Tailwind CSS v4** (إعداد CSS فقط، لا يوجد tailwind.config.js)
 - **Supabase** — قاعدة بيانات PostgreSQL + مصادقة Auth
-- **Resend** — إرسال البريد الإلكتروني من نموذج التواصل
+- **Cloudflare R2** — تخزين الفيديوهات والصور على `media.albaalaagh.com`
+- **Resend** — إرسال البريد الإلكتروني (نشرة + تواصل)
+- **Stripe** — نظام الدعم المالي (اشتراك / تبرع) عبر `/support`
 - **rss-parser** — جلب الأخبار من مصادر RSS
 - **Anthropic SDK (Claude Haiku)** — تصنيف الأخبار جغرافياً وموضوعياً (~$0.36/شهر)
 - **Cairo** — خط عربي من Google Fonts
@@ -35,42 +37,95 @@ nvm use 20.9.0
 NEXT_PUBLIC_SUPABASE_URL=         # من Supabase → Project Settings → API
 NEXT_PUBLIC_SUPABASE_ANON_KEY=    # المفتاح العام (publishable)
 SUPABASE_SERVICE_ROLE_KEY=        # مفتاح الخدمة (سري، لا تشاركه)
-YOUTUBE_API_KEY=                  # من Google Cloud Console → YouTube Data API v3
-RESEND_API_KEY=                   # من resend.com (لإرسال رسائل التواصل)
+RESEND_API_KEY=                   # من resend.com
 CRON_SECRET=                      # كلمة سرية لحماية endpoint الجدولة
 ADMIN_PASSWORD=                   # كلمة مرور لوحة الإدارة /admin/login
 NEXT_PUBLIC_SITE_URL=             # https://albaalaagh.com في الإنتاج
+STRIPE_SECRET_KEY=                # من Stripe Dashboard → API Keys
+STRIPE_WEBHOOK_SECRET=            # من Stripe Dashboard → Webhooks
+R2_ACCOUNT_ID=                    # من Cloudflare R2
+R2_ACCESS_KEY_ID=                 # Cloudflare R2 API Token
+R2_SECRET_ACCESS_KEY=             # Cloudflare R2 API Token
+R2_BUCKET_NAME=                   # اسم الـ bucket (albaalaagh)
+R2_PUBLIC_URL=                    # https://media.albaalaagh.com
 ```
 
 ### 3. قاعدة البيانات (Supabase)
 
 شغّل `supabase-schema.sql` كاملاً في **Supabase → SQL Editor**.
 
-ثم شغّل هذه الأوامر لتحديث الجداول الموجودة (إذا أنشأت الجداول مسبقاً):
+#### جداول إضافية (أضفها إذا لم تكن موجودة)
+
+```sql
+-- البرامج / القوائم
+CREATE TABLE IF NOT EXISTS playlists (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name          TEXT NOT NULL,
+  description   TEXT,
+  thumbnail_url TEXT,
+  display_order INTEGER DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- فيديوهات الموقع (من R2، ليس YouTube)
+CREATE TABLE IF NOT EXISTS site_videos (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title         TEXT NOT NULL,
+  description   TEXT,
+  video_url     TEXT NOT NULL,
+  thumbnail_url TEXT,
+  published     BOOLEAN NOT NULL DEFAULT true,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  playlist_id   UUID REFERENCES playlists(id),
+  published_at  TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- مشتركو النشرة البريدية المجانية
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email             TEXT UNIQUE NOT NULL,
+  name              TEXT,
+  status            TEXT DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed')),
+  unsubscribe_token TEXT DEFAULT gen_random_uuid()::text UNIQUE,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX ON newsletter_subscribers(email);
+CREATE INDEX ON newsletter_subscribers(unsubscribe_token);
+
+-- مشتركو الدعم المالي (Stripe)
+CREATE TABLE IF NOT EXISTS subscribers (
+  id                     UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email                  TEXT NOT NULL,
+  name                   TEXT,
+  stripe_customer_id     TEXT,
+  stripe_subscription_id TEXT,
+  plan                   TEXT,
+  amount                 INTEGER,
+  currency               TEXT,
+  status                 TEXT,
+  created_at             TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### تحديثات على جداول موجودة
 
 ```sql
 -- إضافة عمود status لجدول articles
 ALTER TABLE articles
   ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft'
     CHECK (status IN ('draft', 'pending', 'published'));
-
--- تصحيح المقالات المنشورة مسبقاً
 UPDATE articles SET status = 'published' WHERE published = true;
 
--- إضافة عمود user_id لجدول writers (ربط بحسابات المصادقة)
+-- إضافة عمود user_id لجدول writers
 ALTER TABLE writers
   ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
--- تحديث سياسة القراءة العامة للمقالات
-DROP POLICY IF EXISTS "public_read_articles" ON articles;
-CREATE POLICY "public_read_articles" ON articles
-  FOR SELECT USING (status = 'published');
-
--- إضافة عمود geo لتصنيف الأخبار جغرافياً (مطلوب)
+-- إضافة عمود geo للأخبار
 ALTER TABLE news ADD COLUMN IF NOT EXISTS geo TEXT DEFAULT 'general'
   CHECK (geo IN ('tunisia', 'arab', 'international', 'general'));
 
--- جدول مقالات الكتّاب (auto-fetch — اختياري)
+-- جدول مقالات الكتّاب
 CREATE TABLE IF NOT EXISTS writer_articles (
   id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title        TEXT NOT NULL,
@@ -85,7 +140,6 @@ CREATE TABLE IF NOT EXISTS writer_articles (
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_writer_articles_writer ON writer_articles(writer_name, published_at DESC);
-CREATE INDEX IF NOT EXISTS idx_writer_articles_status ON writer_articles(status, published_at DESC);
 ALTER TABLE writer_articles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_read_writer_articles" ON writer_articles
   FOR SELECT USING (status != 'rejected');
@@ -93,21 +147,41 @@ CREATE POLICY "public_read_writer_articles" ON writer_articles
 
 ---
 
+## مخطط قاعدة البيانات
+
+لعرض جميع الجداول والأعمدة محلياً (لا يُحفظ في git):
+
+```bash
+curl -s "https://vtsadbazsctspncausha.supabase.co/rest/v1/?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0c2FkYmF6c2N0c3BuY2F1c2hhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjA4NDYyMCwiZXhwIjoyMDkxNjYwNjIwfQ.k2WGO2r6lFwppPWI8Xy9V8mzti_m14b5lVAvlekv-TA" | node -e "
+const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+const defs = d.definitions;
+const lines = ['# Supabase Schema — albaalaagh\n'];
+for (const [tableName, def] of Object.entries(defs).sort()) {
+  lines.push('## ' + tableName);
+  const props = def.properties ?? {};
+  const required = def.required ?? [];
+  for (const [col, info] of Object.entries(props)) {
+    const type = info.format ?? info.type ?? '?';
+    const req = required.includes(col) ? ' NOT NULL' : '';
+    lines.push('  ' + col + ': ' + type + req);
+  }
+  lines.push('');
+}
+console.log(lines.join('\n'));
+" > schema.md && echo "schema.md updated"
+```
+
+الملف `schema.md` في `.gitignore` — راجعه قبل كتابة أي سكريبت يُدرج بيانات في قاعدة البيانات.
+
+---
+
 ## إنشاء حسابات الكتّاب
-
-كل كاتب يحصل على حساب للدخول إلى `/writer` وكتابة مقالاته.
-
-### الخطوات:
 
 **1. إنشاء حساب في Supabase Auth:**
 
 - Supabase Dashboard → Authentication → Users → **Invite user**
-- أدخل البريد الإلكتروني للكاتب
-- سيصله رابط لتعيين كلمة المرور
 
 **2. ربط الحساب بملف الكاتب:**
-
-بعد إنشاء الحساب، انسخ الـ User UID من قائمة المستخدمين، ثم شغّل:
 
 ```sql
 UPDATE writers
@@ -115,20 +189,7 @@ SET user_id = 'PASTE-USER-UID-HERE'
 WHERE name = 'اسم الكاتب الكامل';
 ```
 
-**3. دخول الكاتب:**
-
-الكاتب يدخل من: `https://albaalaagh.com/writer/login`
-
-### صلاحيات الكاتب:
-- كتابة مقالات وحفظها كمسودة
-- إرسال المقال للمراجعة (يظهر في لوحة الإدارة)
-- تعديل المسودات والمقالات المعلّقة
-- لا يستطيع نشر مقالاته مباشرة
-
-### صلاحيات الإدارة:
-- مراجعة المقالات المرسلة في `/admin/articles?tab=pending`
-- النشر بضغطة زر واحدة
-- إضافة مقالات مباشرة عبر `/admin/articles/new`
+**3. دخول الكاتب:** `https://albaalaagh.com/writer/login`
 
 ---
 
@@ -143,145 +204,121 @@ npm run dev
 
 ---
 
-## مشاركة فيديو يوتيوب على فيسبوك (محلي فقط)
+## ميزات الموقع الحالية
 
-الأداة موجودة في `/admin/ytfb` — تحمّل الفيديو من يوتيوب وتنشره على صفحة البلاغ في فيسبوك مع تعليق تلقائي.
+### الصفحات العامة
 
-### المتطلبات المحلية
+| الصفحة | الوصف |
+|--------|-------|
+| `/` | الرئيسية: بث مباشر (Twitch)، بطاقات البرامج، أخبار، مقالات |
+| `/interviews` | أرشيف الحلقات مع فلتر حسب البرنامج + مشغّل فيديو |
+| `/videos/[id]` | صفحة مشاركة فيديو فردي |
+| `/news` | أخبار مصنّفة (تونس / عربي / دولي) |
+| `/articles` | مقالات الموقع |
+| `/guests` | ضيوف القناة |
+| `/support` | صفحة الدعم المالي (Stripe) |
+| `/about` | عن القناة |
 
-- **yt-dlp** مثبّت على الجهاز:
-  ```bash
-  pip install yt-dlp
-  # أو
-  sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp && sudo chmod +x /usr/local/bin/yt-dlp
-  ```
-- متغيرات البيئة في `.env.local`:
-  ```env
-  FB_PAGE2_ID=       # معرّف الصفحة
-  FB_PAGE2_TOKEN=    # رمز الوصول للصفحة
-  YOUTUBE_API_KEY=   # لجلب العنوان والوصف من YouTube Data API v3
-  ```
+### لوحة الإدارة `/admin`
 
-### الاستخدام
+| القسم | الوصف |
+|-------|-------|
+| `/admin/videos` | إدارة الفيديوهات مع إسناد البرامج |
+| `/admin/playlists` | إدارة البرامج (إنشاء / تعديل / ترتيب) |
+| `/admin/newsletter` | تأليف وإرسال النشرة الأسبوعية |
+| `/admin/articles` | إدارة المقالات ومراجعة المُرسَلة |
+| `/admin/news` | اعتماد الأخبار ونشرها |
+| `/admin/guests` | إدارة بيانات الضيوف |
+| `/admin/writers` | إدارة حسابات الكتّاب |
+| `/admin/ytfb` | مشاركة فيديو من أي منصة على فيسبوك |
 
-1. شغّل المشروع محلياً: `npm run dev`
-2. اذهب إلى `http://localhost:3000/admin/ytfb`
-3. الصق رابط يوتيوب واضغط "مشاركة على فيسبوك"
-4. يظهر سجل مباشر بتقدم العملية
+### النشرة البريدية
 
-### ما تفعله الأداة
+- **اشتراك مجاني:** نموذج في أسفل كل صفحة `/api/newsletter/subscribe`
+- **إلغاء الاشتراك:** رابط شخصي في كل بريد `/api/newsletter/unsubscribe?token=xxx`
+- **الإرسال:** من `/admin/newsletter` — يُرسل للمشتركين المجانيين + الداعمين معاً مع إزالة التكرار
 
-1. تجلب عنوان الفيديو ووصفه من YouTube Data API v3
-2. تحمّل الفيديو (حتى 1080p MP4) عبر yt-dlp
-3. ترفع الفيديو إلى صفحة فيسبوك عبر `graph-video.facebook.com`
-4. تضيف تعليقاً تلقائياً تحت الفيديو:
-   ```
-   شاهد المزيد من المحتوى على قناتنا: {رابط يوتيوب}
-   وتابعونا على موقعنا: https://www.albaalaagh.com
-   ```
+### الدعم المالي (Stripe)
 
-### لماذا محلي فقط؟
+- صفحة `/support` مع خيارات تبرع
+- `/api/stripe/checkout` — جلسة دفع
+- `/api/webhooks/stripe` — تحديث حالة الاشتراك تلقائياً
 
-يوتيوب يمنع تحميل الفيديوهات من عناوين IP لمزودي الخدمات السحابية (Vercel/AWS). yt-dlp يعمل بشكل طبيعي من الشبكات المنزلية.
+---
+
+## استيراد الفيديوهات
+
+### استيراد أرشيف X (تويتر) — 2189 بث مباشر
+
+```bash
+# تشغيل السكريبت (يستأنف تلقائياً عند الإيقاف)
+nohup node scripts/import-twitter-broadcasts.mjs /path/to/twitter-archive > /tmp/twitter-broadcasts.log 2>&1 &
+
+# متابعة التقدم
+tail -f /tmp/twitter-broadcasts.log
+
+# عدد المنتهية
+cat /tmp/twitter-broadcasts-progress.json | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.length,'done')"
+```
+
+- يُحمّل بجودة 480p (replay-1200)
+- يكتشف البرنامج من عنوان التغريدة (قبل `|`)
+- يُسند `published_at` من تاريخ التغريدة الأصلية
+- يُعيد المحاولة بـ `--fragment-retries infinite` لتجاوز مشاكل الشبكة
+
+### استيراد تسجيلات فيسبوك (38 حلقة — مايو/جوان 2026)
+
+```bash
+# تشغيل السكريبت
+nohup node scripts/import-facebook-videos.mjs > /tmp/facebook-videos.log 2>&1 &
+
+# متابعة التقدم
+tail -f /tmp/facebook-videos.log
+```
+
+- يقرأ من `facebook-events-backup.json` (700 حدث محفوظ محلياً)
+- يتحقق من كل حدث عبر yt-dlp — الأحداث قبل مايو 2026 محذوفة من فيسبوك
+- يُحمّل بجودة 720p
+- يُسند البرنامج تلقائياً من العنوان
+
+### رفع أرشيف Odysee (661 فيديو)
+
+```bash
+node scripts/upload-odysee.mjs >> /tmp/odysee-upload.log 2>&1 &
+tail -5 /tmp/odysee-upload.log
+```
+
+### إثراء الفيديوهات من فيسبوك (صور + وصف)
+
+```bash
+# يقرأ من facebook-events-backup.json ويُحدّث الفيديوهات الناقصة
+node scripts/enrich-from-facebook.mjs
+```
+
+---
+
+## مشاركة فيديو على فيسبوك (محلي فقط)
+
+الأداة موجودة في `/admin/ytfb` — تحمّل الفيديو من أي رابط وتنشره على صفحة البلاغ في فيسبوك.
+
+**المتطلبات:**
+```env
+FB_PAGE2_ID=       # معرّف الصفحة
+FB_PAGE2_TOKEN=    # رمز الوصول للصفحة
+```
+
+> **لماذا محلي فقط؟** — yt-dlp لا يعمل من Vercel/AWS بسبب قيود YouTube.
 
 ---
 
 ## جلب الأخبار (Cron Job)
 
-جلب الأخبار من مصادر RSS يدوياً:
-
 ```bash
+# يدوياً
 curl -H "x-cron-secret: YOUR_CRON_SECRET" http://localhost:3000/api/cron/fetch-news
 ```
 
-في Vercel، أضف Cron Job في `vercel.json`:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/fetch-news",
-      "schedule": "0 */6 * * *"
-    }
-  ]
-}
-```
-
-وأضف header المصادقة في إعدادات Vercel أو استخدم `CRON_SECRET` في البيئة.
-
-### تصنيف الأخبار بالذكاء الاصطناعي
-
-كل مرة يُشغَّل الـ cron، يُرسَل طلب واحد فقط إلى Claude Haiku يحتوي على جميع العناوين الجديدة دفعةً واحدة. Haiku يصنّف كل خبر بـ:
-
-- **geo**: `tunisia` (تونس) | `arab` (الوطن العربي) | `international` (دولي) | `general`
-- **category**: سياسة | اقتصاد | قضاء | أمن | مجتمع | دولي | ثقافة | رياضة
-
-**التكلفة التقديرية:** ~$0.003 لكل استدعاء، أي **~$0.36/شهر** عند التشغيل 4 مرات يومياً.
-
-في حال فشل الاستدعاء، يعود النظام تلقائياً إلى تصنيف قاعدي بالكلمات المفتاحية.
-
-### تصحيح الأخبار الموجودة (تشغيل مرة واحدة)
-
-إذا كانت الأخبار القديمة في قاعدة البيانات بدون تصنيف جغرافي، شغّل هذا في Supabase SQL Editor:
-
-```sql
--- تصنيف الأخبار التونسية حسب المصدر
-UPDATE news SET geo = 'tunisia'
-  WHERE source IN ('تيوميديا', 'موزاييك FM', 'نواة')
-  AND (geo IS NULL OR geo = 'general');
-
--- تصنيف الأخبار العربية حسب المصدر
-UPDATE news SET geo = 'arab'
-  WHERE source IN ('عربي21', 'الجزيرة', 'العربي الجديد', 'القدس العربي')
-  AND (geo IS NULL OR geo = 'general');
-```
-
----
-
-## إدارة مقاطع الفيديو
-
-### استيراد بث مباشر بعد انتهائه (Kick / X / YouTube / Facebook)
-
-بعد انتهاء البث، انسخ رابط التسجيل وشغّل:
-
-```bash
-# من Kick
-node scripts/import-vod.mjs "https://kick.com/video/XXXXX"
-
-# من X (تويتر)
-node scripts/import-vod.mjs "https://x.com/i/broadcasts/XXXXX"
-
-# من أي منصة أخرى يدعمها yt-dlp
-node scripts/import-vod.mjs "PASTE_URL_HERE"
-```
-
-يقوم السكريبت تلقائياً بـ:
-1. جلب العنوان والتاريخ والصورة المصغّرة من المنصة
-2. تحميل الفيديو
-3. رفعه على Cloudflare R2 وحذفه من الجهاز
-4. حفظ البيانات في قاعدة البيانات (مع اكتشاف البرنامج / القائمة تلقائياً)
-5. طباعة رابط الفيديو على الموقع: `albaalaagh.com/videos/[id]`
-
-> **متطلب:** yt-dlp مثبّت على الجهاز (راجع قسم مشاركة يوتيوب أعلاه)
-
----
-
-### رفع أرشيف Odysee (661 فيديو)
-
-رفع جميع فيديوهات البلاغ من Odysee إلى R2 دفعةً واحدة:
-
-```bash
-# تشغيل السكريبت (يمكن إيقافه وإعادة التشغيل في أي وقت)
-node scripts/upload-odysee.mjs >> /tmp/odysee-upload.log 2>&1 &
-
-# متابعة التقدم
-tail -5 /tmp/odysee-upload.log
-
-# عدد الفيديوهات المرفوعة حتى الآن
-cat /tmp/odysee-upload-progress.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d), 'videos done')"
-```
-
-السكريبت **يستأنف من حيث توقف** في كل مرة — يمكنك إيقاف الجهاز ومتابعة لاحقاً دون فقدان التقدم.
+يُصنّف Claude Haiku كل خبر بـ `geo` و`category` تلقائياً. التكلفة ~$0.36/شهر.
 
 ---
 
@@ -290,8 +327,11 @@ cat /tmp/odysee-upload-progress.json | python3 -c "import json,sys; d=json.load(
 1. ارفع المشروع على GitHub
 2. في Vercel: **New Project** → استورد الـ repo
 3. أضف جميع متغيرات `.env.local` في **Environment Variables**
-4. في **Domains**: أضف `albaalaagh.com` واتبع تعليمات DNS
-5. في Supabase → Authentication → **URL Configuration**: أضف `https://albaalaagh.com` في Redirect URLs
+4. في **Domains**: أضف `albaalaagh.com`
+5. في Supabase → Authentication → **URL Configuration**: أضف `https://albaalaagh.com`
+6. في Stripe → Webhooks: أضف `https://albaalaagh.com/api/webhooks/stripe`
+
+> الـ push إلى `main` يُشغّل Deploy تلقائياً عبر Git integration.
 
 ---
 
@@ -300,17 +340,32 @@ cat /tmp/odysee-upload-progress.json | python3 -c "import json,sys; d=json.load(
 ```
 src/
 ├── app/
-│   ├── (site)/          # الصفحات العامة (الرئيسية، أخبار، مقالات...)
-│   ├── admin/           # لوحة إدارة الموقع
-│   ├── writer/          # منصة الكتّاب (تسجيل دخول + كتابة)
-│   └── api/             # API routes (cron, admin, writer, contact)
+│   ├── (site)/          # الصفحات العامة
+│   │   ├── interviews/  # أرشيف الحلقات مع فلتر البرامج
+│   │   ├── videos/[id]/ # صفحة فيديو فردي
+│   │   ├── support/     # صفحة الدعم المالي
+│   │   └── ...
+│   ├── admin/           # لوحة الإدارة
+│   ├── writer/          # منصة الكتّاب
+│   └── api/
+│       ├── admin/newsletter/  # بيانات + إرسال النشرة
+│       ├── newsletter/        # اشتراك + إلغاء اشتراك عام
+│       ├── stripe/            # checkout session
+│       └── webhooks/stripe/   # أحداث Stripe
 ├── components/
-│   ├── sections/        # NewsTicker, SocialBar, Navbar, Footer
-│   └── ui/              # VideoCard, ArticleCard, NewsCard, WriterArticleCard...
+│   ├── layout/          # Navbar, Footer, YoutubeBanner
+│   ├── sections/        # PlaylistsSection, SiteVideosSection, SocialBar...
+│   └── ui/              # SiteVideoCard, SiteVideoModal, NewsletterForm...
 ├── lib/
-│   ├── supabase.ts      # عملاء Supabase (public + admin + browser auth)
-│   ├── supabase-server.ts # عميل Supabase للـ Server Components
-│   ├── youtube.ts       # جلب فيديوهات YouTube
-│   └── utils.ts         # تنسيق التواريخ، timeAgo، truncate
-└── types/index.ts       # جميع الأنواع والثوابت
+│   ├── supabase.ts
+│   ├── stripe.ts
+│   └── utils.ts
+└── types/index.ts       # أنواع البيانات، SOCIAL_LINKS، فئات المحتوى
+scripts/
+├── import-twitter-broadcasts.mjs  # استيراد 2189 بث من أرشيف X
+├── import-facebook-videos.mjs     # استيراد تسجيلات فيسبوك
+├── enrich-from-facebook.mjs       # إثراء الفيديوهات بصور وأوصاف
+└── upload-odysee.mjs              # رفع أرشيف Odysee
+facebook-events-backup.json        # نسخة احتياطية من 700 حدث فيسبوك (محلي)
+schema.md                          # مخطط قاعدة البيانات (محلي، في .gitignore)
 ```
