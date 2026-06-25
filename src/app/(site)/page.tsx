@@ -43,12 +43,12 @@ async function getPlaylistsWithVideos() {
 
   if (!playlists || !videos) return [];
 
-  // Group videos by playlist_id
-  const byPlaylist = new Map<string, { thumbnail: string | null; count: number }>();
+  // Group videos by playlist_id — videos are already newest-first so first hit = latest
+  const byPlaylist = new Map<string, { thumbnail: string | null; count: number; latestDate: string | null }>();
   for (const v of videos) {
     if (!v.playlist_id) continue;
     if (!byPlaylist.has(v.playlist_id)) {
-      byPlaylist.set(v.playlist_id, { thumbnail: v.thumbnail_url, count: 0 });
+      byPlaylist.set(v.playlist_id, { thumbnail: v.thumbnail_url, count: 0, latestDate: v.published_at });
     }
     byPlaylist.get(v.playlist_id)!.count++;
   }
@@ -60,7 +60,13 @@ async function getPlaylistsWithVideos() {
       name: p.name,
       thumbnail: byPlaylist.get(p.id)!.thumbnail,
       count: byPlaylist.get(p.id)!.count,
-    }));
+      latestDate: byPlaylist.get(p.id)!.latestDate,
+    }))
+    .sort((a, b) => {
+      if (!a.latestDate) return 1;
+      if (!b.latestDate) return -1;
+      return b.latestDate.localeCompare(a.latestDate);
+    });
 }
 
 async function getArticlesCount() {
