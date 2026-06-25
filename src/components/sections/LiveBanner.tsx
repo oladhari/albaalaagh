@@ -1,22 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const TWITCH_CHANNEL = "albaalaagh";
+// Both www and non-www must be listed so the embed works regardless of how users arrive
+const PARENTS = "parent=albaalaagh.com&parent=www.albaalaagh.com";
 
 export default function LiveBanner() {
-  const [open, setOpen]         = useState(false);
-  const [parent, setParent]     = useState("albaalaagh.com");
-
-  // Twitch embed requires the exact domain as ?parent= — detect at runtime
-  useEffect(() => {
-    setParent(window.location.hostname);
-  }, []);
+  const [open, setOpen] = useState(false);
 
   const src =
     `https://player.twitch.tv/?channel=${TWITCH_CHANNEL}` +
-    `&parent=${parent}` +
-    `&autoplay=${open ? "true" : "false"}`;
+    `&${PARENTS}` +
+    `&autoplay=true`;
 
   return (
     <div style={{ background: "#0D0808", borderBottom: "2px solid rgba(220,50,50,0.35)" }}>
@@ -63,6 +59,7 @@ export default function LiveBanner() {
               src={src}
               title="البلاغ — بث مباشر"
               allowFullScreen
+              allow="autoplay; fullscreen"
               className="w-full h-full"
               style={{ border: "none" }}
             />
