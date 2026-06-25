@@ -1,7 +1,5 @@
-const PAGES = [
-  { id: process.env.FB_PAGE1_ID, token: process.env.FB_PAGE1_TOKEN },
-  { id: process.env.FB_PAGE2_ID, token: process.env.FB_PAGE2_TOKEN },
-].filter((p) => p.id && p.token);
+const PAGE_ID    = process.env.FB_PAGE_ID    ?? process.env.FB_PAGE2_ID;
+const PAGE_TOKEN = process.env.FB_PAGE_TOKEN ?? process.env.FB_PAGE2_TOKEN;
 
 interface PostOptions {
   title: string;
@@ -13,48 +11,44 @@ interface PostOptions {
 }
 
 async function postPhotoWithComment(
-  pageId: string,
-  token: string,
   imageUrl: string,
   caption: string,
   articleUrl: string
 ): Promise<void> {
-  // No link in caption — keeps post looking native to avoid algorithm suppression
-  const photoRes = await fetch(`https://graph.facebook.com/${pageId}/photos`, {
+  const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url: imageUrl, caption, access_token: token }),
+    body: JSON.stringify({ url: imageUrl, caption, access_token: PAGE_TOKEN }),
   });
   if (!photoRes.ok) {
     const err = await photoRes.json();
-    console.error(`Facebook photo post failed for page ${pageId}:`, err);
+    console.error("Facebook photo post failed:", err);
     return;
   }
   const { post_id, id } = await photoRes.json();
   const postId = post_id ?? id;
   if (!postId) return;
 
-  // Post link as first comment (pages_manage_engagement required)
+  // Link in first comment — avoids algorithm penalty for external links in caption
   const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: `🔗 اقرأ التقرير كاملاً:\n${articleUrl}`, access_token: token }),
+    body: JSON.stringify({ message: `🔗 اقرأ التقرير كاملاً:\n${articleUrl}`, access_token: PAGE_TOKEN }),
   });
   if (!commentRes.ok) {
     const err = await commentRes.json();
-    console.warn(`Facebook comment failed for page ${pageId}:`, err);
+    console.warn("Facebook comment failed:", err);
   }
 }
 
 export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
-  if (PAGES.length === 0) return;
+  if (!PAGE_ID || !PAGE_TOKEN) return;
 
   const url = opts.type === "news"
     ? `https://www.albaalaagh.com/taqrir/${opts.slug}`
     : `https://www.albaalaagh.com/articles/${opts.slug}`;
 
   if (opts.facebook_image) {
-    // Photo post — link goes in first comment for maximum reach
     const caption = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
@@ -63,13 +57,8 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
-    await Promise.allSettled(
-      PAGES.map((page) =>
-        postPhotoWithComment(page.id!, page.token!, opts.facebook_image!, caption, url)
-      )
-    );
+    await postPhotoWithComment(opts.facebook_image, caption, url);
   } else {
-    // Fallback: link post (no facebook image uploaded)
     const message = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
@@ -78,19 +67,14 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       "\n\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
-    await Promise.allSettled(
-      PAGES.map((page) =>
-        fetch(`https://graph.facebook.com/${page.id}/feed`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, link: url, access_token: page.token }),
-        }).then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json();
-            console.error(`Facebook post failed for page ${page.id}:`, err);
-          }
-        })
-      )
-    );
+    const res = await fetch(`https://graph.facebook.com/${PAGE_ID}/feed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, link: url, access_token: PAGE_TOKEN }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Facebook post failed:", err);
+    }
   }
 }
