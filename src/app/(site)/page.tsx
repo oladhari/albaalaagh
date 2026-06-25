@@ -38,6 +38,7 @@ async function getPlaylistsWithVideos() {
       .from("site_videos")
       .select("id, playlist_id, thumbnail_url, published_at")
       .eq("published", true)
+      .eq("video_type", "interview")
       .order("published_at", { ascending: false, nullsFirst: false }),
   ]);
 

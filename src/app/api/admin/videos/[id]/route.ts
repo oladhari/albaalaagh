@@ -17,6 +17,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.display_order !== undefined) updates.display_order = body.display_order;
   if (body.playlist_id  !== undefined) updates.playlist_id  = body.playlist_id  || null;
   if (body.published_at !== undefined) updates.published_at = body.published_at || null;
+  if (body.video_type   !== undefined) updates.video_type   = body.video_type;
+  if (body.hashtags     !== undefined) updates.hashtags     = body.hashtags || null;
 
   const { data, error } = await supabaseAdmin
     .from("site_videos")

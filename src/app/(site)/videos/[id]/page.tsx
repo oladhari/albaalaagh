@@ -8,7 +8,7 @@ export const revalidate = 3600;
 async function getVideo(id: string) {
   const { data } = await supabaseAdmin
     .from("site_videos")
-    .select("id, title, description, video_url, thumbnail_url, published_at")
+    .select("id, title, description, video_url, thumbnail_url, published_at, video_type, hashtags")
     .eq("id", id)
     .eq("published", true)
     .single();
@@ -69,15 +69,18 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
       </Link>
 
       <div
-        className="rounded-2xl overflow-hidden mb-6"
-        style={{ background: "#111008" }}
+        className="rounded-2xl overflow-hidden mb-6 mx-auto"
+        style={{
+          background: "#111008",
+          maxWidth: video.video_type === "short" ? 400 : "100%",
+        }}
       >
         <video
           src={video.video_url}
           controls
           className="w-full"
           poster={video.thumbnail_url ?? undefined}
-          style={{ display: "block", maxHeight: "70vh" }}
+          style={{ display: "block", maxHeight: video.video_type === "short" ? "80vh" : "70vh" }}
         />
       </div>
 
@@ -95,9 +98,13 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
       )}
 
       {video.description && (
-        <p className="text-sm leading-loose" style={{ color: "#9A9070" }}>
+        <p className="text-sm leading-loose mb-3" style={{ color: "#9A9070" }}>
           {video.description}
         </p>
+      )}
+
+      {video.hashtags && (
+        <p className="text-sm mb-4" style={{ color: "#C9A844" }}>{video.hashtags}</p>
       )}
 
       <ShareButtons title={video.title} url={url} />

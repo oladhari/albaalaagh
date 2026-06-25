@@ -20,14 +20,14 @@ export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
 
-  const { title, description, video_url, thumbnail_url, display_order, playlist_id, published_at } = await req.json();
+  const { title, description, video_url, thumbnail_url, display_order, playlist_id, published_at, video_type, hashtags } = await req.json();
   if (!title || !video_url) {
     return NextResponse.json({ error: "العنوان ورابط الفيديو مطلوبان" }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin
     .from("site_videos")
-    .insert({ title, description: description || null, video_url, thumbnail_url: thumbnail_url || null, display_order: display_order ?? 0, published: true, playlist_id: playlist_id || null, published_at: published_at || null })
+    .insert({ title, description: description || null, video_url, thumbnail_url: thumbnail_url || null, display_order: display_order ?? 0, published: true, playlist_id: playlist_id || null, published_at: published_at || null, video_type: video_type || "interview", hashtags: hashtags || null })
     .select()
     .single();
 
