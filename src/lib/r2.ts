@@ -2,7 +2,7 @@ import { AwsClient } from "aws4fetch";
 
 const ENDPOINT  = (process.env.R2_ENDPOINT  ?? "").replace(/\/$/, "");
 const BUCKET    = process.env.R2_BUCKET     ?? "albaalaagh";
-const PUBLIC_URL = (process.env.R2_PUBLIC_URL ?? "").replace(/\/$/, "");
+const PUBLIC_URL = (process.env.R2_PUBLIC_URL ?? "").trim().replace(/\/$/, "");
 
 const r2 = new AwsClient({
   accessKeyId:     (process.env.R2_ACCESS_KEY_ID ?? "").trim(),
