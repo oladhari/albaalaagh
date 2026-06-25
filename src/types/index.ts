@@ -74,7 +74,7 @@ export interface Article {
 }
 
 export const SOCIAL_LINKS = [
-  { name: "يوتيوب",    url: "https://www.youtube.com/@albaalaagh",        icon: "youtube"   },
+  { name: "يوتيوب",    url: "https://www.youtube.com/@chokrimajouli",     icon: "youtube"   },
   { name: "فيسبوك",   url: "https://www.facebook.com/albaalaagh",         icon: "facebook"  },
   { name: "إكس",      url: "https://x.com/albaalaagh",                    icon: "x"         },
   { name: "إنستغرام", url: "https://www.instagram.com/albaalaagh/",       icon: "instagram" },

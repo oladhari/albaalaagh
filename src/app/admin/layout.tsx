@@ -6,12 +6,14 @@ const NAV = [
   { href: "/admin",          label: "لوحة التحكم"   },
   { href: "/admin/news",     label: "قائمة الأخبار" },
   { href: "/admin/articles", label: "المقالات"       },
-  { href: "/admin/videos",   label: "الفيديوهات"     },
+  { href: "/admin/videos",    label: "الفيديوهات"     },
+  { href: "/admin/playlists", label: "البرامج"         },
   { href: "/admin/writers",  label: "الكتّاب"        },
   { href: "/admin/guests",   label: "الضيوف"         },
   { href: "/admin/staff",    label: "الطاقم"         },
   { href: "/admin/ytfb",     label: "نشر على فيسبوك" },
-  { href: "/admin/tiktok",   label: "TikTok"          },
+  { href: "/admin/tiktok",      label: "TikTok"          },
+  { href: "/admin/newsletter",  label: "النشرة البريدية" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

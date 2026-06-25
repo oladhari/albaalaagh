@@ -1,21 +1,41 @@
 "use client";
 
+import Link from "next/link";
+
 interface Props {
   id: string;
   title: string;
   description?: string | null;
   video_url: string;
   thumbnail_url?: string | null;
+  published_at?: string | null;
   onPlay: (video: { title: string; video_url: string; thumbnail_url?: string | null }) => void;
 }
 
-export default function SiteVideoCard({ title, description, video_url, thumbnail_url, onPlay }: Props) {
+export default function SiteVideoCard({ id, title, description, video_url, thumbnail_url, published_at, onPlay }: Props) {
   return (
-    <button
-      className="group text-right w-full rounded-2xl overflow-hidden flex flex-col card-hover"
+    <div
+      className="group text-right w-full rounded-2xl overflow-hidden flex flex-col card-hover relative"
       style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-      onClick={() => onPlay({ title, video_url, thumbnail_url })}
     >
+      {/* Share link — appears on hover */}
+      <Link
+        href={`/videos/${id}`}
+        title="مشاركة الفيديو"
+        className="absolute top-2 left-2 z-10 flex items-center justify-center w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ background: "rgba(17,16,8,0.75)", backdropFilter: "blur(4px)" }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C9A844" strokeWidth="2" width="15" height="15">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </Link>
+
+      {/* Clickable area for modal */}
+      <button
+        className="text-right w-full flex flex-col flex-1"
+        onClick={() => onPlay({ title, video_url, thumbnail_url })}
+      >
       <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
         {thumbnail_url ? (
           <img
@@ -62,7 +82,13 @@ export default function SiteVideoCard({ title, description, video_url, thumbnail
             {description}
           </p>
         )}
+        {published_at && (
+          <p className="text-xs mt-2" style={{ color: "#6B6448" }}>
+            {new Date(published_at).toLocaleDateString("ar-TN", { year: "numeric", month: "long", day: "numeric" })}
+          </p>
+        )}
       </div>
-    </button>
+      </button>
+    </div>
   );
 }

@@ -66,11 +66,9 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* YouTube subscribe button — desktop */}
+          {/* Support button — desktop */}
           <a
-            href="https://www.youtube.com/@albaalaagh"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/support"
             className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
             style={{
               background: "linear-gradient(135deg, #C9A844, #9A7B28)",
@@ -78,9 +76,9 @@ export default function Navbar() {
             }}
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
-              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.6 5.8a3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5V8.5l6.25 3.5-6.25 3.5z"/>
+              <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402C1 3.518 3.318 1 6.25 1c1.862 0 3.505.981 4.75 2.87C12.245 1.981 13.888 1 15.75 1 18.682 1 21 3.518 21 7.191c0 4.105-5.37 8.863-11 14.402z"/>
             </svg>
-            اشترك
+            ادعم البلاغ
           </a>
 
           {/* Mobile hamburger */}
@@ -119,16 +117,14 @@ export default function Navbar() {
             );
           })}
           <a
-            href="https://www.youtube.com/@albaalaagh"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/support"
             className="block text-center px-4 py-2 rounded-full text-sm font-bold mt-2"
             style={{
               background: "linear-gradient(135deg, #C9A844, #9A7B28)",
               color: "#111008",
             }}
           >
-            اشترك في يوتيوب
+            ادعم البلاغ
           </a>
         </div>
       )}

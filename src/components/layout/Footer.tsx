@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { SOCIAL_LINKS } from "@/types";
+import NewsletterForm from "@/components/ui/NewsletterForm";
 
 const SocialIcon = ({ icon, name }: { icon: string; name: string }) => {
   const iconMap: Record<string, ReactElement> = {
@@ -108,6 +109,17 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>
+              النشرة البريدية
+            </h3>
+            <p className="text-xs mb-3" style={{ color: "#6B6040" }}>
+              أحدث الحلقات والمقالات كل أسبوع
+            </p>
+            <NewsletterForm />
           </div>
 
           {/* Social */}

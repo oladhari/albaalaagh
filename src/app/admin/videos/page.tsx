@@ -9,12 +9,16 @@ interface SiteVideo {
   description: string | null;
   video_url: string;
   thumbnail_url: string | null;
+  playlist_id: string | null;
   published: boolean;
   display_order: number;
+  published_at: string | null;
   created_at: string;
 }
 
-const EMPTY_FORM = { title: "", description: "", video_url: "", thumbnail_url: "", display_order: "0" };
+interface Playlist { id: string; name: string; }
+
+const EMPTY_FORM = { title: "", description: "", video_url: "", thumbnail_url: "", display_order: "0", playlist_id: "", published_at: "" };
 
 const inputStyle = {
   background: "#111008", border: "1px solid #2E2A18", color: "#F0EAD6",
@@ -26,12 +30,13 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function AdminVideosPage() {
-  const [videos, setVideos] = useState<SiteVideo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [videos, setVideos]       = useState<SiteVideo[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [showForm, setShowForm]   = useState(false);
+  const [form, setForm]           = useState({ ...EMPTY_FORM });
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +44,12 @@ export default function AdminVideosPage() {
 
   async function loadVideos() {
     setLoading(true);
-    const res = await fetch("/api/admin/videos", { credentials: "include" });
-    if (res.ok) setVideos(await res.json());
+    const [vRes, pRes] = await Promise.all([
+      fetch("/api/admin/videos",    { credentials: "include" }),
+      fetch("/api/admin/playlists", { credentials: "include" }),
+    ]);
+    if (vRes.ok) setVideos(await vRes.json());
+    if (pRes.ok) setPlaylists(await pRes.json());
     setLoading(false);
   }
 
@@ -97,6 +106,8 @@ export default function AdminVideosPage() {
           video_url: form.video_url,
           thumbnail_url: form.thumbnail_url || null,
           display_order: parseInt(form.display_order) || 0,
+          playlist_id:  form.playlist_id || null,
+          published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
         }),
       });
       const data = await res.json();
@@ -176,6 +187,35 @@ export default function AdminVideosPage() {
                   onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                   onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                 />
+              </div>
+
+              <div>
+                <label style={labelStyle}>البرنامج / القائمة (اختياري)</label>
+                <select
+                  style={{ ...inputStyle, cursor: "pointer" }}
+                  value={form.playlist_id}
+                  onChange={(e) => set("playlist_id", e.target.value)}
+                  onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
+                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                >
+                  <option value="">— بدون برنامج —</option>
+                  {playlists.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>تاريخ البث / النشر (اختياري)</label>
+                <input
+                  type="date"
+                  style={inputStyle}
+                  value={form.published_at}
+                  onChange={(e) => set("published_at", e.target.value)}
+                  onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
+                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                />
+                <p className="text-xs mt-1" style={{ color: "#9A9070" }}>التاريخ الأصلي للحلقة أو البث المباشر</p>
               </div>
 
               <div>
@@ -309,7 +349,8 @@ export default function AdminVideosPage() {
                   <p className="text-xs mt-0.5 truncate" style={{ color: "#9A9070" }}>{v.description}</p>
                 )}
                 <p className="text-xs mt-1" style={{ color: "#9A9070" }}>
-                  ترتيب: {v.display_order} · {new Date(v.created_at).toLocaleDateString("ar-TN")}
+                  {v.playlist_id ? (playlists.find((p) => p.id === v.playlist_id)?.name ?? "") + " · " : ""}
+                  {v.published_at ? new Date(v.published_at).toLocaleDateString("ar-TN") : new Date(v.created_at).toLocaleDateString("ar-TN")}
                 </p>
               </div>
 

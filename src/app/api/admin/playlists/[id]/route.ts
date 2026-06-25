@@ -9,17 +9,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json();
 
   const updates: Record<string, unknown> = {};
-  if (body.title       !== undefined) updates.title        = body.title;
+  if (body.name        !== undefined) updates.name         = body.name;
   if (body.description !== undefined) updates.description  = body.description;
-  if (body.video_url   !== undefined) updates.video_url    = body.video_url;
   if (body.thumbnail_url !== undefined) updates.thumbnail_url = body.thumbnail_url || null;
-  if (body.published   !== undefined) updates.published    = body.published;
   if (body.display_order !== undefined) updates.display_order = body.display_order;
-  if (body.playlist_id  !== undefined) updates.playlist_id  = body.playlist_id  || null;
-  if (body.published_at !== undefined) updates.published_at = body.published_at || null;
 
   const { data, error } = await supabaseAdmin
-    .from("site_videos")
+    .from("playlists")
     .update(updates)
     .eq("id", id)
     .select()
@@ -34,7 +30,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (unauthed) return unauthed;
   const { id } = await params;
 
-  const { error } = await supabaseAdmin.from("site_videos").delete().eq("id", id);
+  // Videos with this playlist_id will become NULL automatically (ON DELETE SET NULL)
+  const { error } = await supabaseAdmin.from("playlists").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

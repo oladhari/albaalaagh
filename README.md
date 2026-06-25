@@ -238,6 +238,53 @@ UPDATE news SET geo = 'arab'
 
 ---
 
+## إدارة مقاطع الفيديو
+
+### استيراد بث مباشر بعد انتهائه (Kick / X / YouTube / Facebook)
+
+بعد انتهاء البث، انسخ رابط التسجيل وشغّل:
+
+```bash
+# من Kick
+node scripts/import-vod.mjs "https://kick.com/video/XXXXX"
+
+# من X (تويتر)
+node scripts/import-vod.mjs "https://x.com/i/broadcasts/XXXXX"
+
+# من أي منصة أخرى يدعمها yt-dlp
+node scripts/import-vod.mjs "PASTE_URL_HERE"
+```
+
+يقوم السكريبت تلقائياً بـ:
+1. جلب العنوان والتاريخ والصورة المصغّرة من المنصة
+2. تحميل الفيديو
+3. رفعه على Cloudflare R2 وحذفه من الجهاز
+4. حفظ البيانات في قاعدة البيانات (مع اكتشاف البرنامج / القائمة تلقائياً)
+5. طباعة رابط الفيديو على الموقع: `albaalaagh.com/videos/[id]`
+
+> **متطلب:** yt-dlp مثبّت على الجهاز (راجع قسم مشاركة يوتيوب أعلاه)
+
+---
+
+### رفع أرشيف Odysee (661 فيديو)
+
+رفع جميع فيديوهات البلاغ من Odysee إلى R2 دفعةً واحدة:
+
+```bash
+# تشغيل السكريبت (يمكن إيقافه وإعادة التشغيل في أي وقت)
+node scripts/upload-odysee.mjs >> /tmp/odysee-upload.log 2>&1 &
+
+# متابعة التقدم
+tail -5 /tmp/odysee-upload.log
+
+# عدد الفيديوهات المرفوعة حتى الآن
+cat /tmp/odysee-upload-progress.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d), 'videos done')"
+```
+
+السكريبت **يستأنف من حيث توقف** في كل مرة — يمكنك إيقاف الجهاز ومتابعة لاحقاً دون فقدان التقدم.
+
+---
+
 ## النشر على Vercel
 
 1. ارفع المشروع على GitHub
