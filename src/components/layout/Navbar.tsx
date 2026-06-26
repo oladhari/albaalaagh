@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 const NAV_LINKS = [
   { href: "/",            label: "الرئيسية"  },
   { href: "/interviews",    label: "المقابلات"    },
+  { href: "/shorts",        label: "مقاطع"        },
   { href: "/news",          label: "الأخبار"      },
   { href: "/articles",      label: "المقالات"     },
   { href: "/qadaya-sharia", label: "قضايا شرعية"  },

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SiteVideoCard from "@/components/ui/SiteVideoCard";
-import SiteVideoModal from "@/components/ui/SiteVideoModal";
 
 interface Playlist { id: string; name: string; }
 interface SiteVideo {
@@ -15,26 +14,34 @@ interface SiteVideo {
   published_at: string | null;
   playlist_id: string | null;
 }
-interface PlayingVideo { id: string; title: string; video_url: string; }
 
 interface Props {
   videos: SiteVideo[];
   playlists: Playlist[];
   activePlaylistId: string | null;
   totalCount: number;
+  page: number;
+  totalPages: number;
 }
 
-export default function InterviewsClient({ videos, playlists, activePlaylistId, totalCount }: Props) {
+export default function InterviewsClient({ videos, playlists, activePlaylistId, totalCount, page, totalPages }: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const [playing, setPlaying] = useState<PlayingVideo | null>(null);
 
-  const setPlaylist = useCallback((id: string | null) => {
+  const navigate = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (id) params.set("playlist", id);
-    else params.delete("playlist");
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === null) params.delete(k);
+      else params.set(k, v);
+    }
     router.push(`/interviews?${params.toString()}`);
   }, [router, searchParams]);
+
+  const setPlaylist = (id: string | null) =>
+    navigate({ playlist: id, page: null });
+
+  const goToPage = (p: number) =>
+    navigate({ page: p === 1 ? null : String(p) });
 
   const visiblePlaylists = playlists.filter(p => p.id !== "__none__");
 
@@ -85,22 +92,58 @@ export default function InterviewsClient({ videos, playlists, activePlaylistId, 
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {videos.map((v) => (
-            <SiteVideoCard
-              key={v.id}
-              {...v}
-              onPlay={(vid) => setPlaying({ id: v.id, title: vid.title, video_url: vid.video_url })}
-            />
+            <SiteVideoCard key={v.id} {...v} />
           ))}
         </div>
       )}
 
-      {playing && (
-        <SiteVideoModal
-          id={playing.id}
-          title={playing.title}
-          video_url={playing.video_url}
-          onClose={() => setPlaying(null)}
-        />
+      {/* Pagination — only shown when not filtering by playlist */}
+      {!activePlaylistId && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-10" dir="ltr">
+          <button
+            onClick={() => goToPage(page - 1)}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-30"
+            style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+            .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+              if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((p, idx) =>
+              p === "…" ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-sm" style={{ color: "#6B6040" }}>…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => goToPage(p as number)}
+                  className="w-9 h-9 rounded-full text-sm font-bold transition-all"
+                  style={{
+                    background: page === p ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "rgba(201,168,68,0.08)",
+                    color: page === p ? "#111008" : "#C9A844",
+                    border: "1px solid rgba(201,168,68,0.3)",
+                  }}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+          <button
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-30"
+            style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+          >
+            →
+          </button>
+        </div>
       )}
     </>
   );
