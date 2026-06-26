@@ -3,7 +3,7 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import ShareButtons from "@/components/ui/ShareButtons";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 async function getVideo(id: string) {
   const { data } = await supabaseAdmin
@@ -22,7 +22,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const base = "https://www.albaalaagh.com";
   const url = `${base}/videos/${id}`;
-  const ogImage = video.thumbnail_url ?? `${base}/og-image.jpg`;
+  const ogImage = video.thumbnail_url ?? `${base}/og-image.png`;
+  const isShort = video.video_type === "short";
 
   return {
     title: `${video.title} | البلاغ`,
@@ -34,16 +35,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "video.other",
-      images: [{ url: ogImage, width: 1280, height: 720 }],
+      images: [{ url: ogImage, width: isShort ? 720 : 1280, height: isShort ? 1280 : 720 }],
+      videos: [{ url: video.video_url, type: "video/mp4" }],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "player",
       title: video.title,
       description: video.description ?? video.title,
       images: [ogImage],
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
+      "og:video": video.video_url,
+      "og:video:type": "video/mp4",
+      "og:video:width": isShort ? "720" : "1280",
+      "og:video:height": isShort ? "1280" : "720",
     },
     alternates: {
       canonical: url,
