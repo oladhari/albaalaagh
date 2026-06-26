@@ -22,8 +22,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const base = "https://www.albaalaagh.com";
   const url = `${base}/videos/${id}`;
-  const ogImage = video.thumbnail_url ?? `${base}/og-image.png`;
   const isShort = video.video_type === "short";
+  const w = isShort ? 720 : 1280;
+  const h = isShort ? 1280 : 720;
+
+  // When no thumbnail: omit og:image so Facebook falls back to extracting
+  // a frame from og:video instead of showing the generic branded card.
+  const ogImages = video.thumbnail_url
+    ? [{ url: video.thumbnail_url, width: w, height: h }]
+    : [];
 
   return {
     title: `${video.title} | البلاغ`,
@@ -35,21 +42,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "video.other",
-      images: [{ url: ogImage, width: isShort ? 720 : 1280, height: isShort ? 1280 : 720 }],
-      videos: [{ url: video.video_url, type: "video/mp4" }],
+      images: ogImages,
+      videos: [{ url: video.video_url, type: "video/mp4", width: w, height: h }],
     },
     twitter: {
-      card: "player",
+      card: video.thumbnail_url ? "summary_large_image" : "player",
       title: video.title,
       description: video.description ?? video.title,
-      images: [ogImage],
+      ...(video.thumbnail_url ? { images: [video.thumbnail_url] } : {}),
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
       "og:video": video.video_url,
       "og:video:type": "video/mp4",
-      "og:video:width": isShort ? "720" : "1280",
-      "og:video:height": isShort ? "1280" : "720",
+      "og:video:width": String(w),
+      "og:video:height": String(h),
     },
     alternates: {
       canonical: url,
