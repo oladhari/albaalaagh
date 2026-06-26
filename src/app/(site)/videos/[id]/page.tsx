@@ -26,11 +26,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const w = isShort ? 720 : 1280;
   const h = isShort ? 1280 : 720;
 
-  // When no thumbnail: omit og:image so Facebook falls back to extracting
-  // a frame from og:video instead of showing the generic branded card.
-  const ogImages = video.thumbnail_url
-    ? [{ url: video.thumbnail_url, width: w, height: h }]
-    : [];
+  // When no thumbnail: fall back to branded og-image.png — Facebook cannot
+  // extract frames from R2 MP4 URLs so omitting og:image shows nothing.
+  const ogImage = video.thumbnail_url ?? `${base}/og-image.png`;
+  const ogImages = [{ url: ogImage, width: video.thumbnail_url ? w : 1200, height: video.thumbnail_url ? h : 630 }];
 
   return {
     title: `${video.title} | البلاغ`,
@@ -46,10 +45,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       videos: [{ url: video.video_url, type: "video/mp4", width: w, height: h }],
     },
     twitter: {
-      card: video.thumbnail_url ? "summary_large_image" : "player",
+      card: "summary_large_image",
       title: video.title,
       description: video.description ?? video.title,
-      ...(video.thumbnail_url ? { images: [video.thumbnail_url] } : {}),
+      images: [ogImage],
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
