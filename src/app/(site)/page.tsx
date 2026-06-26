@@ -78,6 +78,22 @@ async function getArticlesCount() {
   return count ?? 0;
 }
 
+async function getInterviewsCount() {
+  const { count } = await supabaseAdmin
+    .from("site_videos")
+    .select("id", { count: "exact", head: true })
+    .eq("published", true)
+    .eq("video_type", "interview");
+  return count ?? 0;
+}
+
+async function getPlaylistsCount() {
+  const { count } = await supabaseAdmin
+    .from("playlists")
+    .select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
 function formatCount(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
   if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
@@ -85,11 +101,12 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  // YouTube channel suspended — skip YouTube API calls to avoid errors
-  const [news, articles, articlesCount, playlistsWithVideos] = await Promise.all([
+  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos] = await Promise.all([
     getLatestNews(),
     getLatestArticles(),
     getArticlesCount(),
+    getInterviewsCount(),
+    getPlaylistsCount(),
     getPlaylistsWithVideos(),
   ]);
 
@@ -180,7 +197,9 @@ export default async function HomePage() {
               {/* Stats row */}
               <div className="relative flex flex-wrap gap-6 sm:gap-8 mt-6 sm:mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
                 {[
-                  { label: "مقال", value: articlesCount > 0 ? articlesCount + "+" : "قريباً" },
+                  { label: "حلقة",    value: interviewsCount > 0 ? formatCount(interviewsCount) + "+" : "قريباً" },
+                  { label: "برنامج",  value: playlistsCount  > 0 ? String(playlistsCount)               : "قريباً" },
+                  { label: "مقال",    value: articlesCount   > 0 ? articlesCount + "+"                  : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <p className="text-xl sm:text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
