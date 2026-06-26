@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
         "cancel_url":  `${siteUrl}/support`,
         "metadata[plan]": plan,
         "metadata[type]": "subscription",
+        "statement_descriptor_suffix": "ALBAALAAGH",
       });
 
       if (session.error) throw new Error(session.error.message);
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
         "success_url": `${siteUrl}/support/success?session_id={CHECKOUT_SESSION_ID}`,
         "cancel_url":  `${siteUrl}/support`,
         "metadata[type]": "one_time",
+        "payment_intent_data[statement_descriptor_suffix]": "ALBAALAAGH",
       });
 
       if (session.error) throw new Error(session.error.message);
