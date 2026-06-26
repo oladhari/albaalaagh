@@ -78,18 +78,9 @@ export default async function OgImage() {
           </div>
         </div>
 
-        {/* Stats — right-aligned */}
-        <div style={{ display: "flex", gap: 56, paddingTop: 32, borderTop: "1px solid #2E2A18", justifyContent: "flex-end" }}>
-          {[
-            { value: "+17",   label: "مقال" },
-            { value: "31.7K", label: "مشترك يوتيوب" },
-            { value: "+5876", label: "فيديو على يوتيوب" },
-          ].map((stat) => (
-            <div key={stat.label} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-              <div style={{ fontSize: 36, fontWeight: 700, color: "#C9A844" }}>{stat.value}</div>
-              <div style={{ fontSize: 18, color: "#9A9070", marginTop: 4, whiteSpace: "nowrap" }}>{rtl(stat.label)}</div>
-            </div>
-          ))}
+        {/* Domain watermark */}
+        <div style={{ display: "flex", paddingTop: 32, borderTop: "1px solid #2E2A18", justifyContent: "flex-end" }}>
+          <div style={{ fontSize: 22, color: "#4A4530", letterSpacing: 2 }}>albaalaagh.com</div>
         </div>
       </div>
     ),
