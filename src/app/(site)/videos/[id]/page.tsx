@@ -15,6 +15,23 @@ async function getVideo(id: string) {
   return data;
 }
 
+// Strip Unicode replacement characters (U+FFFD) left by corrupted emojis from Facebook/YouTube.
+// Returns a short clean snippet for OG/SEO use.
+function cleanDesc(raw: string): string {
+  return raw
+    .replace(/�/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function ogSnippet(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const clean = cleanDesc(raw);
+  const first = clean.split("\n\n")[0] ?? clean.split("\n")[0] ?? clean;
+  return first.replace(/\n/g, " ").slice(0, 250).trim();
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const video = await getVideo(id);
@@ -26,6 +43,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const w = isShort ? 720 : 1280;
   const h = isShort ? 1280 : 720;
 
+  const metaDesc = ogSnippet(video.description) || video.title;
+
   // When no thumbnail: fall back to branded og-image.png — Facebook cannot
   // extract frames from R2 MP4 URLs so omitting og:image shows nothing.
   const ogImage = video.thumbnail_url ?? `${base}/og-image.png`;
@@ -33,10 +52,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   return {
     title: `${video.title} | البلاغ`,
-    description: video.description ?? video.title,
+    description: metaDesc,
     openGraph: {
       title: video.title,
-      description: video.description ?? video.title,
+      description: metaDesc,
       url,
       siteName: "البلاغ",
       locale: "ar_TN",
@@ -47,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     twitter: {
       card: "summary_large_image",
       title: video.title,
-      description: video.description ?? video.title,
+      description: metaDesc,
       images: [ogImage],
     },
     other: {
@@ -109,11 +128,17 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         </p>
       )}
 
-      {video.description && (
-        <p className="text-sm leading-loose mb-3" style={{ color: "#9A9070" }}>
-          {video.description}
-        </p>
-      )}
+      {video.description && (() => {
+        const clean = cleanDesc(video.description);
+        return clean ? (
+          <div
+            className="text-sm leading-loose mb-3 whitespace-pre-wrap"
+            style={{ color: "#9A9070" }}
+          >
+            {clean}
+          </div>
+        ) : null;
+      })()}
 
       {video.hashtags && (
         <p className="text-sm mb-4" style={{ color: "#C9A844" }}>{video.hashtags}</p>
