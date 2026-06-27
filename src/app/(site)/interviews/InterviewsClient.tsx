@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SiteVideoCard from "@/components/ui/SiteVideoCard";
 
@@ -27,6 +27,7 @@ interface Props {
 export default function InterviewsClient({ videos, playlists, activePlaylistId, totalCount, page, totalPages }: Props) {
   const router       = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const navigate = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -34,7 +35,9 @@ export default function InterviewsClient({ videos, playlists, activePlaylistId, 
       if (v === null) params.delete(k);
       else params.set(k, v);
     }
-    router.push(`/interviews?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/interviews?${params.toString()}`);
+    });
   }, [router, searchParams]);
 
   const setPlaylist = (id: string | null) =>
@@ -90,7 +93,10 @@ export default function InterviewsClient({ videos, playlists, activePlaylistId, 
           <p className="text-sm" style={{ color: "#9A9070" }}>لا توجد حلقات بعد في هذا البرنامج</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 transition-opacity duration-200"
+          style={{ opacity: isPending ? 0.4 : 1, pointerEvents: isPending ? "none" : "auto" }}
+        >
           {videos.map((v) => (
             <SiteVideoCard key={v.id} {...v} />
           ))}
@@ -99,10 +105,10 @@ export default function InterviewsClient({ videos, playlists, activePlaylistId, 
 
       {/* Pagination — only shown when not filtering by playlist */}
       {!activePlaylistId && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-10" dir="ltr">
+        <div className="flex items-center justify-center gap-2 mt-10" dir="ltr" style={{ opacity: isPending ? 0.5 : 1 }}>
           <button
             onClick={() => goToPage(page - 1)}
-            disabled={page <= 1}
+            disabled={page <= 1 || isPending}
             className="px-4 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-30"
             style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
           >
@@ -137,7 +143,7 @@ export default function InterviewsClient({ videos, playlists, activePlaylistId, 
 
           <button
             onClick={() => goToPage(page + 1)}
-            disabled={page >= totalPages}
+            disabled={page >= totalPages || isPending}
             className="px-4 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-30"
             style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
           >
