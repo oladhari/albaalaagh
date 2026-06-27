@@ -55,6 +55,7 @@ export default function AdminVideosPage() {
   const [form, setForm]           = useState({ ...EMPTY_FORM });
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -111,29 +112,52 @@ export default function AdminVideosPage() {
     });
   }
 
+  function startEdit(v: SiteVideo) {
+    setEditingId(v.id);
+    setForm({
+      title:         v.title,
+      description:   v.description ?? "",
+      video_url:     v.video_url,
+      thumbnail_url: v.thumbnail_url ?? "",
+      display_order: String(v.display_order),
+      playlist_id:   v.playlist_id ?? "",
+      published_at:  v.published_at ? v.published_at.slice(0, 10) : "",
+      video_type:    v.video_type,
+      hashtags:      v.hashtags ?? "",
+    });
+    setError(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   async function handleSubmit() {
     if (!form.title || !form.video_url) { setError("العنوان ورابط الفيديو مطلوبان"); return; }
     setSaving(true); setError(null);
     try {
-      const res = await fetch("/api/admin/videos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title:        form.title,
-          description:  form.description || null,
-          video_url:    form.video_url,
-          thumbnail_url: form.thumbnail_url || null,
-          display_order: parseInt(form.display_order) || 0,
-          playlist_id:  form.video_type === "interview" ? (form.playlist_id || null) : null,
-          published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
-          video_type:   form.video_type,
-          hashtags:     form.hashtags || null,
-        }),
-      });
+      const payload = {
+        title:        form.title,
+        description:  form.description || null,
+        video_url:    form.video_url,
+        thumbnail_url: form.thumbnail_url || null,
+        display_order: parseInt(form.display_order) || 0,
+        playlist_id:  form.video_type === "interview" ? (form.playlist_id || null) : null,
+        published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
+        video_type:   form.video_type,
+        hashtags:     form.hashtags || null,
+      };
+      const res = await fetch(
+        editingId ? `/api/admin/videos/${editingId}` : "/api/admin/videos",
+        {
+          method: editingId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "حدث خطأ"); return; }
       setShowForm(false);
+      setEditingId(null);
       setForm({ ...EMPTY_FORM });
       loadVideos();
     } catch { setError("تعذّر الاتصال بالخادم"); }
@@ -166,7 +190,7 @@ export default function AdminVideosPage() {
           <p className="text-xs mt-1" style={{ color: "#9A9070" }}>حلقات، مقاطع قصيرة، وفيديوهات 720p</p>
         </div>
         <button
-          onClick={() => { setShowForm(true); setForm({ ...EMPTY_FORM }); setError(null); }}
+          onClick={() => { setShowForm(true); setEditingId(null); setForm({ ...EMPTY_FORM }); setError(null); }}
           className="px-5 py-2 rounded-full text-sm font-bold"
           style={{ background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" }}
         >
@@ -187,7 +211,7 @@ export default function AdminVideosPage() {
 
       {showForm && (
         <div className="mb-8 p-6 rounded-2xl" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
-          <h2 className="text-lg font-bold mb-5" style={{ color: "#F0EAD6" }}>فيديو جديد</h2>
+          <h2 className="text-lg font-bold mb-5" style={{ color: "#F0EAD6" }}>{editingId ? "تعديل الفيديو" : "فيديو جديد"}</h2>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg text-sm"
@@ -346,7 +370,7 @@ export default function AdminVideosPage() {
           </div>
 
           <div className="flex gap-3 mt-6">
-            <button onClick={() => { setShowForm(false); setError(null); }}
+            <button onClick={() => { setShowForm(false); setEditingId(null); setError(null); }}
               className="px-5 py-2 rounded-full text-sm font-bold border"
               style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
               إلغاء
@@ -357,7 +381,7 @@ export default function AdminVideosPage() {
                 background: (form.title && form.video_url) ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "#2E2A18",
                 color: (form.title && form.video_url) ? "#111008" : "#9A9070",
               }}>
-              {saving ? "جارٍ الحفظ..." : "حفظ الفيديو"}
+              {saving ? "جارٍ الحفظ..." : editingId ? "حفظ التعديلات" : "حفظ الفيديو"}
             </button>
           </div>
         </div>
@@ -400,6 +424,10 @@ export default function AdminVideosPage() {
                   <button onClick={() => togglePublished(v)} className="px-3 py-1.5 rounded-full text-xs font-bold"
                     style={{ background: v.published ? "rgba(80,200,100,0.15)" : "rgba(255,100,100,0.1)", color: v.published ? "#50C864" : "#FF6B6B", border: `1px solid ${v.published ? "rgba(80,200,100,0.3)" : "rgba(255,100,100,0.3)"}` }}>
                     {v.published ? "منشور" : "مخفي"}
+                  </button>
+                  <button onClick={() => startEdit(v)} className="px-3 py-1.5 rounded-full text-xs font-bold border"
+                    style={{ borderColor: "#C9A844", color: "#C9A844" }}>
+                    تعديل
                   </button>
                   <a href={`/videos/${v.id}`} target="_blank" rel="noopener noreferrer"
                     className="px-3 py-1.5 rounded-full text-xs font-bold border"
