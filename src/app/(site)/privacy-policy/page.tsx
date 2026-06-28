@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
         سياسة الخصوصية
       </h1>
       <p className="text-sm mb-10" style={{ color: "#9A9070" }}>
-        آخر تحديث: أبريل 2026
+        آخر تحديث: يونيو 2026
       </p>
 
       <div className="space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
@@ -169,6 +169,10 @@ export default function PrivacyPolicyPage() {
             لأي استفسار بشأن هذه السياسة، يمكنك التواصل معنا عبر{" "}
             <a href="/contact" style={{ color: "#C9A844", textDecoration: "underline" }}>
               صفحة الاتصال
+            </a>
+            {" "}أو مباشرةً عبر البريد الإلكتروني:{" "}
+            <a href="mailto:contact@albaalaagh.com" style={{ color: "#C9A844", textDecoration: "underline" }}>
+              contact@albaalaagh.com
             </a>
             .
           </p>
