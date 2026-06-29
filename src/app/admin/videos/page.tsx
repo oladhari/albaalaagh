@@ -58,6 +58,7 @@ export default function AdminVideosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
+  const [converting, setConverting] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -171,6 +172,19 @@ export default function AdminVideosPage() {
       credentials: "include",
       body: JSON.stringify({ published: !video.published }),
     });
+    loadVideos();
+  }
+
+  async function quickConvert(id: string, toType: "clip" | "short") {
+    setConverting(id + toType);
+    const payload: Record<string, unknown> = { video_type: toType, playlist_id: null };
+    await fetch(`/api/admin/videos/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    setConverting(null);
     loadVideos();
   }
 
@@ -420,7 +434,52 @@ export default function AdminVideosPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  {/* Quick-convert buttons */}
+                  {v.video_type === "interview" && (
+                    <>
+                      <button
+                        onClick={() => quickConvert(v.id, "clip")}
+                        disabled={converting === v.id + "clip"}
+                        className="px-2.5 py-1 rounded-full text-xs font-bold border"
+                        style={{ borderColor: "#60A5FA", color: "#60A5FA", opacity: converting === v.id + "clip" ? 0.5 : 1 }}
+                        title="تحويل إلى فيديو (مقطع)"
+                      >
+                        {converting === v.id + "clip" ? "..." : "← مقطع"}
+                      </button>
+                      <button
+                        onClick={() => quickConvert(v.id, "short")}
+                        disabled={converting === v.id + "short"}
+                        className="px-2.5 py-1 rounded-full text-xs font-bold border"
+                        style={{ borderColor: "#50C864", color: "#50C864", opacity: converting === v.id + "short" ? 0.5 : 1 }}
+                        title="تحويل إلى قصير (Short)"
+                      >
+                        {converting === v.id + "short" ? "..." : "← قصير"}
+                      </button>
+                    </>
+                  )}
+                  {v.video_type === "clip" && (
+                    <button
+                      onClick={() => quickConvert(v.id, "short")}
+                      disabled={converting === v.id + "short"}
+                      className="px-2.5 py-1 rounded-full text-xs font-bold border"
+                      style={{ borderColor: "#50C864", color: "#50C864", opacity: converting === v.id + "short" ? 0.5 : 1 }}
+                      title="تحويل إلى قصير (Short)"
+                    >
+                      {converting === v.id + "short" ? "..." : "← قصير"}
+                    </button>
+                  )}
+                  {v.video_type === "short" && (
+                    <button
+                      onClick={() => quickConvert(v.id, "clip")}
+                      disabled={converting === v.id + "clip"}
+                      className="px-2.5 py-1 rounded-full text-xs font-bold border"
+                      style={{ borderColor: "#60A5FA", color: "#60A5FA", opacity: converting === v.id + "clip" ? 0.5 : 1 }}
+                      title="تحويل إلى مقطع"
+                    >
+                      {converting === v.id + "clip" ? "..." : "← مقطع"}
+                    </button>
+                  )}
                   <button onClick={() => togglePublished(v)} className="px-3 py-1.5 rounded-full text-xs font-bold"
                     style={{ background: v.published ? "rgba(80,200,100,0.15)" : "rgba(255,100,100,0.1)", color: v.published ? "#50C864" : "#FF6B6B", border: `1px solid ${v.published ? "rgba(80,200,100,0.3)" : "rgba(255,100,100,0.3)"}` }}>
                     {v.published ? "منشور" : "مخفي"}
