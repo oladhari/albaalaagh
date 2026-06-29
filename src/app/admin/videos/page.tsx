@@ -63,15 +63,15 @@ export default function AdminVideosPage() {
 
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
-  async function loadVideos() {
-    setLoading(true);
+  async function loadVideos(silent = false) {
+    if (!silent) setLoading(true);
     const [vRes, pRes] = await Promise.all([
       fetch("/api/admin/videos",    { credentials: "include" }),
       fetch("/api/admin/playlists", { credentials: "include" }),
     ]);
     if (vRes.ok) setVideos(await vRes.json());
     if (pRes.ok) setPlaylists(await pRes.json());
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => { loadVideos(); }, []);
@@ -176,6 +176,7 @@ export default function AdminVideosPage() {
   }
 
   async function quickConvert(id: string, toType: "clip" | "short") {
+    const scrollY = window.scrollY;
     setConverting(id + toType);
     const payload: Record<string, unknown> = { video_type: toType, playlist_id: null };
     await fetch(`/api/admin/videos/${id}`, {
@@ -185,7 +186,8 @@ export default function AdminVideosPage() {
       body: JSON.stringify(payload),
     });
     setConverting(null);
-    loadVideos();
+    await loadVideos(true);
+    requestAnimationFrame(() => window.scrollTo({ top: scrollY }));
   }
 
   async function deleteVideo(id: string) {
