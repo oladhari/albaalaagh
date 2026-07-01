@@ -94,23 +94,24 @@ Never look like:
 ALBAALAAGH BRANDING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Always include:
+THE OFFICIAL ALBAALAAGH TEMPLATE IS ATTACHED.
 
-Top-left corner:
+The template already contains:
+* The feather logo
+* "قناة البلاغ" text
+* "ALBAALAAGH" branding
+* The official border and frame design
 
-قناة البلاغ
+DO NOT describe or reinvent the logo in your prompt.
 
-Official Albaalaagh feather logo
+DO NOT add any branding instructions — the template handles this exactly.
 
-Under logo:
-
-ALBAALAAGH
-
-Only there.
-
-Never place ALBAALAAGH elsewhere.
-
-Never invent another logo.
+Your prompt must describe ONLY:
+* The thematic visual content and scene
+* The headline text layout
+* The background imagery
+* The color mood and lighting
+* The editorial composition
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TEXT ON IMAGE
@@ -375,16 +376,13 @@ Avoid:
 ARTICLE CARD COMPOSITION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Standard layout:
+Standard layout (the template frame is fixed — describe only the content inside it):
 
-Top-left:
-Albaalaagh logo
+Left side:
+Headline text (large Arabic typography)
 
-Left:
-Headline
-
-Right:
-Main visual
+Right side or center:
+Main thematic visual
 
 Clean composition.
 
@@ -422,13 +420,19 @@ async function buildImagePrompt(title: string, excerpt: string): Promise<string>
   return text.trim();
 }
 
+const NEWS_16_9_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement_16_9.png");
+
 export async function generateNewsImage(title: string, excerpt: string): Promise<string> {
   const imagePrompt = await buildImagePrompt(title, excerpt);
 
-  const result = await getOpenAI().images.generate({
+  const templateBuffer = await fs.readFile(NEWS_16_9_TEMPLATE_PATH);
+  const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
+
+  const result = await getOpenAI().images.edit({
     model: "gpt-image-2",
+    image: templateFile,
     prompt: imagePrompt,
-    size: "1280x720",
+    size: "1536x1024",
     quality: "medium",
     n: 1,
   });
@@ -436,7 +440,11 @@ export async function generateNewsImage(title: string, excerpt: string): Promise
   const b64 = result.data?.[0]?.b64_json;
   if (!b64) throw new Error("No image returned from OpenAI");
 
-  const buffer = Buffer.from(b64, "base64");
+  const buffer = await sharp(Buffer.from(b64, "base64"))
+    .resize(1280, 720)
+    .png()
+    .toBuffer();
+
   const key = `ai-images/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
   return uploadToR2(key, buffer, "image/png");
 }
