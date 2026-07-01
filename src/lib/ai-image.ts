@@ -422,22 +422,62 @@ async function buildImagePrompt(title: string, excerpt: string): Promise<string>
 
 const NEWS_16_9_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement_16_9.png");
 
+function buildNews16_9Prompt(title: string, excerpt: string): string {
+  return `ALBAALAAGH NEWS CARD — 1280×720 LANDSCAPE
+
+USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY AS THE BASE IMAGE.
+
+DO NOT:
+* change, move, or modify the logo or branding in any corner
+* redesign the template borders or frame
+* invent a new logo or corner design
+* add "عاجل"
+* add article summaries or paragraphs
+* add bullet points or quotes
+
+TEXT RULES:
+* Show ONLY the news title — no other text.
+* Place title on the LEFT side of the image.
+* Large bold Arabic typography.
+* Maximum 3 to 5 lines.
+* Mobile readability is the priority.
+* Do not fill the canvas with text — let the image carry the story.
+
+VISUAL RULES:
+The visual scene occupies the RIGHT side of the image.
+
+When no verified person image is provided:
+* Create a realistic journalistic visual related to the story.
+* Use symbolic imagery: real-world locations, flags, maps, official buildings, courthouses, documents, factories, ports, airports, parliament, hospitals, schools, diplomatic meetings, ships, etc.
+
+NEVER:
+* invent a politician's face
+* invent a minister's face
+* invent a journalist's face
+* invent any public figure's face
+* show violence, blood, or graphic content
+
+NEWS STYLE:
+* modern editorial newsroom graphic
+* realistic documentary style
+* cinematic lighting
+* clean composition with strong focal point
+* professional newspaper design
+* high contrast
+* 1280×720 landscape format
+
+TITLE:
+${title}
+
+DESCRIPTION:
+${excerpt || "—"}
+
+TEMPLATE:
+attached image — preserve it exactly as the base, only fill the content area`;
+}
+
 export async function generateNewsImage(title: string, excerpt: string): Promise<string> {
-  const scenePrompt = await buildImagePrompt(title, excerpt);
-
-  // Wrap the scene prompt with explicit template preservation instructions.
-  // Without this, images.edit ignores the base image and generates freely.
-  const imagePrompt = `USE THE PROVIDED ALBAALAAGH TEMPLATE IMAGE EXACTLY AS THE BASE.
-
-STRICT RULES:
-- DO NOT change, move, or redesign the logo in the top-right corner.
-- DO NOT change the borders or frame of the template.
-- DO NOT invent a new logo or branding.
-- PRESERVE the template's corner design, colors, and layout exactly.
-- ONLY fill the content area of the template with the scene described below.
-
-CONTENT TO FILL INSIDE THE TEMPLATE:
-${scenePrompt}`;
+  const imagePrompt = buildNews16_9Prompt(title, excerpt);
 
   const templateBuffer = await fs.readFile(NEWS_16_9_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
@@ -446,7 +486,7 @@ ${scenePrompt}`;
     model: "gpt-image-2",
     image: templateFile,
     prompt: imagePrompt,
-    size: "1536x1024",
+    size: "1280x720",
     quality: "medium",
     n: 1,
   });
@@ -454,11 +494,7 @@ ${scenePrompt}`;
   const b64 = result.data?.[0]?.b64_json;
   if (!b64) throw new Error("No image returned from OpenAI");
 
-  const buffer = await sharp(Buffer.from(b64, "base64"))
-    .resize(1280, 720)
-    .png()
-    .toBuffer();
-
+  const buffer = Buffer.from(b64, "base64");
   const key = `ai-images/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
   return uploadToR2(key, buffer, "image/png");
 }
