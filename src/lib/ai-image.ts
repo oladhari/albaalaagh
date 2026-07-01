@@ -502,99 +502,61 @@ export async function generateNewsImage(title: string, excerpt: string): Promise
 const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
 
 function buildFacebookPrompt(title: string, excerpt: string): string {
-  return `ALBAALAAGH NEWS CARD
+  return `ALBAALAAGH NEWS CARD — 1080×1080 SQUARE
 
-Create a professional Albaalaagh square news card (1080x1080).
-
-USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY.
+USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY AS THE BASE IMAGE.
 
 DO NOT:
-
-* redesign the template
-* move the logo
-* change the borders
+* change, move, or modify the logo or branding in any corner
+* redesign the template borders or frame
+* invent a new logo or corner design
 * add "عاجل"
-* add article summaries
-* add paragraphs
-* add bullet points
-* add quotes
+* add article summaries or paragraphs
+* add bullet points or quotes
+
+⚠️ CRITICAL — NO FACES:
+No verified photo of any person is attached to this request.
+DO NOT generate, invent, or show any person's face.
+DO NOT attempt to depict any named individual.
+Even if a person is named in the title, DO NOT show their face.
+Use symbolic and thematic visuals only — no human faces at all.
 
 TEXT RULES:
-
-* Show ONLY the news title.
-* Keep title compact.
-* Maximum 2-4 lines.
-* Let the image carry the story.
-* Do not fill the canvas with text.
+* Show ONLY the news title — no other text.
+* Keep title compact: maximum 2 to 4 lines.
+* Large bold Arabic typography.
+* Do not fill the canvas with text — let the image carry the story.
 * Mobile readability is the priority.
 
 VISUAL RULES:
+The visual scene is the primary storytelling element.
+Use realistic journalistic imagery related to the story — no faces.
 
-The image is the primary storytelling element.
-
-When a verified image is provided:
-
-* Use the exact supplied image.
-* Preserve facial features.
-* No face modification.
-* No face generation.
-* No beautification.
-* No replacement.
-
-When no verified image is provided:
-
-* Create a realistic journalistic visual related to the story.
-* Use symbolic imagery.
-* Use real-world objects, locations, flags, maps, institutions, documents, factories, ports, airports, parliament buildings, wheat fields, hospitals, schools, courtrooms, diplomatic meetings, ships, etc.
-
-NEVER:
-
-* invent a politician's face
-* invent a minister's face
-* invent a journalist's face
-* invent a suspect's face
-* invent a victim's face
-* invent a public figure's face
-
-NEWS STYLE:
-
-* modern newsroom graphic
-* realistic
-* professional
-* editorial
-* documentary style
-* clean composition
-* strong focal point
-* visually rich
-* image occupies most of the card
-* text occupies minimal space
+For court / legal stories:
+* courthouse exterior, courtroom interior, scales of justice, legal documents, gavel, prison bars
 
 For political stories:
+* parliament building, presidential palace, official documents, flags, maps, negotiations
 
-* use real supplied photos
-* otherwise use flags, official buildings, negotiations, documents, maps
+For economic stories:
+* factories, ports, trade routes, energy infrastructure, charts
+
+For security stories:
+* police vehicles, checkpoints, security operations, confiscated items
 
 For accidents:
-
-* use supplied photos if available
-* otherwise use generic realistic accident symbolism
-
-For court cases:
-
-* courthouse, legal documents, scales of justice, prison bars
-
-For economy:
-
-* factories, ports, trade routes, energy infrastructure
+* accident scene, ambulance, damaged vehicle, road safety symbolism
 
 For international diplomacy:
+* negotiation tables, flags, strategic maps, official buildings
 
-* negotiation tables, flags, leaders ONLY if verified photos are supplied
-
-Goal:
-Create a professional Albaalaagh news card that looks like a real digital newsroom publication rather than a text poster.
-
-INPUTS:
+NEWS STYLE:
+* modern editorial newsroom graphic
+* realistic documentary style
+* cinematic lighting
+* clean composition with strong focal point
+* professional newspaper design
+* high contrast
 
 TITLE:
 ${title}
@@ -602,11 +564,8 @@ ${title}
 DESCRIPTION:
 ${excerpt || "—"}
 
-REFERENCE IMAGE(S):
-none
-
 TEMPLATE:
-attached image — use exactly as the base design`;
+attached image — preserve it exactly as the base, only fill the content area`;
 }
 
 export async function generateFacebookImage(title: string, excerpt: string): Promise<string> {
