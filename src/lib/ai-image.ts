@@ -423,7 +423,21 @@ async function buildImagePrompt(title: string, excerpt: string): Promise<string>
 const NEWS_16_9_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement_16_9.png");
 
 export async function generateNewsImage(title: string, excerpt: string): Promise<string> {
-  const imagePrompt = await buildImagePrompt(title, excerpt);
+  const scenePrompt = await buildImagePrompt(title, excerpt);
+
+  // Wrap the scene prompt with explicit template preservation instructions.
+  // Without this, images.edit ignores the base image and generates freely.
+  const imagePrompt = `USE THE PROVIDED ALBAALAAGH TEMPLATE IMAGE EXACTLY AS THE BASE.
+
+STRICT RULES:
+- DO NOT change, move, or redesign the logo in the top-right corner.
+- DO NOT change the borders or frame of the template.
+- DO NOT invent a new logo or branding.
+- PRESERVE the template's corner design, colors, and layout exactly.
+- ONLY fill the content area of the template with the scene described below.
+
+CONTENT TO FILL INSIDE THE TEMPLATE:
+${scenePrompt}`;
 
   const templateBuffer = await fs.readFile(NEWS_16_9_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
