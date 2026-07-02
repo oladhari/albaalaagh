@@ -1,6 +1,20 @@
 import Link from "next/link";
 import SectionHeader from "@/components/ui/SectionHeader";
 
+const FEATURED_ORDER = [
+  "منبر الأحد",
+  "سياسة في العمق",
+  "الشريعة و السياسة",
+  "على الطاولة",
+  "اليوم التالي",
+  "حصاد الأسبوع",
+  "هات الحل",
+  "حدث و خبر مع رمزي",
+  "الشأن المغربي",
+  "فلسطين قضية العالم بأسره",
+  "حصاد 25",
+];
+
 interface Playlist {
   id: string;
   name: string;
@@ -15,6 +29,9 @@ interface Props {
 export default function PlaylistsSection({ playlists }: Props) {
   if (playlists.length === 0) return null;
 
+  const byName = new Map(playlists.map(p => [p.name, p]));
+  const featured = FEATURED_ORDER.map(name => byName.get(name)).filter(Boolean) as Playlist[];
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <SectionHeader
@@ -24,7 +41,7 @@ export default function PlaylistsSection({ playlists }: Props) {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {playlists.map((pl) => (
+        {featured.map((pl) => (
           <Link
             key={pl.id}
             href={`/interviews?playlist=${pl.id}`}
