@@ -15,7 +15,7 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https: media.albaalaagh.com",
       "connect-src 'self' https://api.stripe.com https://vtsadbazsctspncausha.supabase.co https://*.r2.cloudflarestorage.com",
-      "frame-src https://js.stripe.com https://hooks.stripe.com https://player.twitch.tv https://embed.twitch.tv",
+      "frame-src https://js.stripe.com https://hooks.stripe.com https://player.twitch.tv https://embed.twitch.tv https://www.youtube.com https://www.youtube-nocookie.com",
       "media-src 'self' https://media.albaalaagh.com blob:",
     ].join("; "),
   },
