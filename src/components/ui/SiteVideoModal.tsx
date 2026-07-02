@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 
+function getYouTubeId(url: string): string | null {
+  return url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
+}
+
 interface Props {
   id: string;
   title: string;
@@ -56,17 +60,27 @@ export default function SiteVideoModal({ id, title, video_url, onClose }: Props)
 
         {/* Video */}
         <div className="w-full" style={{ aspectRatio: "16/9", background: "#000" }}>
-          <video
-            ref={videoRef}
-            src={video_url}
-            controls
-            autoPlay
-            className="w-full h-full"
-            style={{ display: "block" }}
-            controlsList="nodownload"
-          >
-            متصفحك لا يدعم تشغيل الفيديو.
-          </video>
+          {getYouTubeId(video_url) ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${getYouTubeId(video_url)}?autoplay=1&rel=0`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+              style={{ display: "block", border: "none" }}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={video_url}
+              controls
+              autoPlay
+              className="w-full h-full"
+              style={{ display: "block" }}
+              controlsList="nodownload"
+            >
+              متصفحك لا يدعم تشغيل الفيديو.
+            </video>
+          )}
         </div>
       </div>
     </div>

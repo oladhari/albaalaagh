@@ -44,9 +44,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const h = isShort ? 1280 : 720;
 
   const metaDesc = ogSnippet(video.description) || video.title;
+  const ytId = video.video_url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
 
-  // When no thumbnail: fall back to branded og-image.png — Facebook cannot
-  // extract frames from R2 MP4 URLs so omitting og:image shows nothing.
   const ogImage = video.thumbnail_url ?? `${base}/og-image.png`;
   const ogImages = [{ url: ogImage, width: video.thumbnail_url ? w : 1200, height: video.thumbnail_url ? h : 630 }];
 
@@ -61,7 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       locale: "ar_TN",
       type: "video.other",
       images: ogImages,
-      videos: [{ url: video.video_url, type: "video/mp4", width: w, height: h }],
+      ...(ytId ? { videos: [{ url: `https://www.youtube.com/embed/${ytId}`, type: "text/html", width: w, height: h }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
@@ -71,10 +70,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
-      "og:video": video.video_url,
-      "og:video:type": "video/mp4",
-      "og:video:width": String(w),
-      "og:video:height": String(h),
+      ...(ytId ? {
+        "og:video": `https://www.youtube.com/embed/${ytId}`,
+        "og:video:type": "text/html",
+        "og:video:width": String(w),
+        "og:video:height": String(h),
+      } : {}),
     },
     alternates: {
       canonical: url,
@@ -106,13 +107,27 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
           maxWidth: video.video_type === "short" ? 400 : "100%",
         }}
       >
-        <video
-          src={video.video_url}
-          controls
-          className="w-full"
-          poster={video.thumbnail_url ?? undefined}
-          style={{ display: "block", maxHeight: video.video_type === "short" ? "80vh" : "70vh" }}
-        />
+        {(() => {
+          const ytId = video.video_url.match(/[?&]v=([^&]+)/)?.[1];
+          return ytId ? (
+            <div style={{ position: "relative", paddingBottom: video.video_type === "short" ? "177.78%" : "56.25%", height: 0 }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none", display: "block" }}
+              />
+            </div>
+          ) : (
+            <video
+              src={video.video_url}
+              controls
+              className="w-full"
+              poster={video.thumbnail_url ?? undefined}
+              style={{ display: "block", maxHeight: video.video_type === "short" ? "80vh" : "70vh" }}
+            />
+          );
+        })()}
       </div>
 
       <h1
