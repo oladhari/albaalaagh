@@ -39,20 +39,19 @@ export default function YoutubeBanner() {
       <div style={{ maxWidth: "860px", margin: "0 auto", paddingLeft: "32px" }}>
         {/* Title */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-          <span style={{ fontSize: "20px" }}>📢</span>
+          <span style={{ fontSize: "20px" }}>🎉</span>
           <span style={{ color: "#4ade80", fontWeight: "800", fontSize: "15px" }}>
-            تحديث هام حول مستقبل البلاغ الرقمية
+            عودة قناة البلاغ على يوتيوب
           </span>
         </div>
 
         {/* Summary */}
         <p style={{ color: "#D4C5A9", fontSize: "13.5px", lineHeight: "1.9", margin: "0 0 8px" }}>
-          بعد رفض الطعن على قرار إغلاق قناة البلاغ على يوتيوب، قررنا أن يصبح موقع{" "}
-          <strong style={{ color: "#F0EAD6" }}>albaalaagh.com</strong> المنصة الرئيسية للمشروع.
-          سنرفع تدريجياً جميع الحلقات والبثوث المباشرة والسلاسل الكاملة على الموقع — أكثر من{" "}
-          <strong style={{ color: "#4ade80" }}>2700 فيديو</strong>.
-          {" "}سنواصل البث عبر:{" "}
+          بعد مراجعة من شركة يوتيوب، استعدنا قناة{" "}
+          <strong style={{ color: "#F0EAD6" }}>البلاغ</strong> رسمياً.
+          سنواصل البث على يوتيوب إلى جانب منصاتنا الأخرى:{" "}
           {[
+            { label: "يوتيوب", href: "https://www.youtube.com/@albaalaagh" },
             { label: "فيسبوك", href: "https://www.facebook.com/albaalaagh" },
             { label: "X", href: "https://x.com/albaalaagh" },
             { label: "Twitch", href: "https://www.twitch.tv/albaalaagh" },
@@ -76,25 +75,14 @@ export default function YoutubeBanner() {
         {expanded && (
           <div style={{ color: "#C4B89A", fontSize: "13px", lineHeight: "1.9", marginBottom: "10px" }}>
             <p style={{ margin: "0 0 6px" }}>
-              وبعد كل بث مباشر سيُنشر على الموقع مباشرة. كما نعمل على حل مستقل للبث عبر الموقع حتى لا نبقى مرتبطين بأي منصة خارجية.
-            </p>
-            <p style={{ margin: "0 0 6px" }}>
-              خلال المرحلة الانتقالية، ستُبثّ بعض البرامج عبر{" "}
-              <a
-                href="https://www.youtube.com/@chokrimajouli"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#4ade80", textDecoration: "underline" }}
-              >
-                قناة الدكتور شكري مجولي على يوتيوب
-              </a>.
+              نشكر كل من دعمنا خلال فترة الإغلاق. موقع <strong style={{ color: "#F0EAD6" }}>albaalaagh.com</strong> يبقى المنصة الرئيسية للأرشيف الكامل — أكثر من <strong style={{ color: "#4ade80" }}>2700 فيديو</strong> متاحة مباشرة دون الحاجة لأي منصة خارجية.
             </p>
             <p style={{ margin: "0 0 6px" }}>
               <strong style={{ color: "#F0EAD6" }}>البرامج القادمة:</strong>{" "}
               المسافة صفر (الخميس) · الشريعة والسياسة (الجمعة) · على الطاولة (السبت) · منبر الأحد (الأحد) · اليوم التالي (الأربعاء)
             </p>
             <p style={{ margin: "0", color: "#9A9070", fontSize: "12.5px" }}>
-              إغلاق قناة يوتيوب لن يكون نهاية البلاغ — سنواصل العمل بإذن الله.
+              البلاغ مستمر بإذن الله.
             </p>
           </div>
         )}
