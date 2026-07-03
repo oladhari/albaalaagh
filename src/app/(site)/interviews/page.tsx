@@ -24,7 +24,6 @@ async function getData(playlistId: string | null, page: number) {
       .from("site_videos")
       .select("id, title, description, video_url, thumbnail_url, published_at, playlist_id", { count: "exact" })
       .eq("published", true)
-      .eq("video_type", "interview")
       .eq("playlist_id", playlistId)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
