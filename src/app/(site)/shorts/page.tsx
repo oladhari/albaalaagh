@@ -15,15 +15,15 @@ async function getVideos() {
     .from("site_videos")
     .select("id, title, description, thumbnail_url, published_at, video_type, hashtags")
     .eq("published", true)
-    .in("video_type", ["short", "clip"])
+    .is("playlist_id", null)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(300);
 
   const all = data ?? [];
   return {
     shorts: all.filter(v => v.video_type === "short"),
-    clips:  all.filter(v => v.video_type === "clip"),
+    videos: all.filter(v => v.video_type !== "short"),
   };
 }
 
@@ -38,7 +38,7 @@ export default async function ShortsPage() {
       />
 
       <Suspense>
-        <ShortsClient shorts={shorts} clips={clips} />
+        <ShortsClient shorts={shorts} videos={videos} />
       </Suspense>
     </div>
   );
