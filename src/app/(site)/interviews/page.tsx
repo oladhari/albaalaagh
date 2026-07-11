@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { supabaseAdmin } from "@/lib/supabase";
+import { SHORTS_PLAYLIST_IDS } from "@/lib/shorts-playlists";
 import SectionHeader from "@/components/ui/SectionHeader";
 import InterviewsClient from "./InterviewsClient";
 
@@ -13,10 +14,13 @@ export const metadata = {
 const PAGE_SIZE = 24;
 
 async function getData(playlistId: string | null, page: number) {
-  const { data: playlists } = await supabaseAdmin
+  const { data: allPlaylists } = await supabaseAdmin
     .from("playlists")
     .select("id, name")
     .order("display_order", { ascending: true });
+
+  // Hide shorts playlists from the interviews sidebar
+  const playlists = (allPlaylists ?? []).filter(p => !SHORTS_PLAYLIST_IDS.includes(p.id));
 
   if (playlistId) {
     // When filtering by playlist, load all episodes in that playlist (usually < 24)
@@ -28,24 +32,31 @@ async function getData(playlistId: string | null, page: number) {
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
 
-    return { playlists: playlists ?? [], videos: videos ?? [], totalCount: count ?? 0, page: 1, totalPages: 1 };
+    return { playlists, videos: videos ?? [], totalCount: count ?? 0, page: 1, totalPages: 1 };
   }
 
   const from = (page - 1) * PAGE_SIZE;
   const to   = from + PAGE_SIZE - 1;
 
-  const { data: videos, count } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("site_videos")
     .select("id, title, description, video_url, thumbnail_url, published_at, playlist_id", { count: "exact" })
     .eq("published", true)
-    .not("playlist_id", "is", null)
+    .not("playlist_id", "is", null);
+
+  // Exclude clips/shorts playlists
+  for (const id of SHORTS_PLAYLIST_IDS) {
+    query = query.neq("playlist_id", id);
+  }
+
+  const { data: videos, count } = await query
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(from, to);
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  return { playlists: playlists ?? [], videos: videos ?? [], totalCount: count ?? 0, page, totalPages };
+  return { playlists, videos: videos ?? [], totalCount: count ?? 0, page, totalPages };
 }
 
 export default async function InterviewsPage({
