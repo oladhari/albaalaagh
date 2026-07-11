@@ -28,7 +28,7 @@ async function getVideos() {
 }
 
 export default async function ShortsPage() {
-  const { shorts, clips } = await getVideos();
+  const { shorts, videos } = await getVideos();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
