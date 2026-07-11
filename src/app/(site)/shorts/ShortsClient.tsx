@@ -3,19 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 
-interface ShortVideo {
+interface Video {
   id: string;
   title: string;
   description: string | null;
   thumbnail_url: string | null;
   published_at: string | null;
-  video_type: "short" | "clip";
+  video_type: string;
   hashtags: string | null;
 }
 
 interface Props {
-  shorts: ShortVideo[];
-  clips: ShortVideo[];
+  shorts: Video[];
+  videos: Video[];
 }
 
 function PlayIcon() {
@@ -27,7 +27,7 @@ function PlayIcon() {
   );
 }
 
-function ShortCard({ video }: { video: ShortVideo }) {
+function ShortCard({ video }: { video: Video }) {
   return (
     <Link href={`/videos/${video.id}`} className="group block">
       <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "9/16", background: "#1A1810" }}>
@@ -59,7 +59,7 @@ function ShortCard({ video }: { video: ShortVideo }) {
   );
 }
 
-function ClipCard({ video }: { video: ShortVideo }) {
+function VideoCard({ video }: { video: Video }) {
   return (
     <Link href={`/videos/${video.id}`} className="group block">
       <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: "16/9", background: "#1A1810" }}>
@@ -80,11 +80,6 @@ function ClipCard({ video }: { video: ShortVideo }) {
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <PlayIcon />
         </div>
-        <div className="absolute bottom-0 right-0 left-0 p-3">
-          {video.hashtags && (
-            <p className="text-xs mb-1 truncate" style={{ color: "#C9A844" }}>{video.hashtags}</p>
-          )}
-        </div>
       </div>
       <div className="mt-2 px-1">
         <p className="text-sm font-bold leading-snug line-clamp-2" style={{ color: "#F0EAD6" }}>{video.title}</p>
@@ -101,46 +96,56 @@ function ClipCard({ video }: { video: ShortVideo }) {
   );
 }
 
-export default function ShortsClient({ shorts, clips }: Props) {
-  const [tab, setTab] = useState<"short" | "clip">("short");
+export default function ShortsClient({ shorts, videos }: Props) {
+  const hasShorts = shorts.length > 0;
+  const hasVideos = videos.length > 0;
 
-  const activeList = tab === "short" ? shorts : clips;
+  const tabs = [
+    ...(hasShorts ? [{ key: "short" as const, label: "مقاطع قصيرة", count: shorts.length }] : []),
+    ...(hasVideos ? [{ key: "video" as const, label: "فيديوهات",    count: videos.length }] : []),
+  ];
+
+  const [tab, setTab] = useState<"short" | "video">(tabs[0]?.key ?? "video");
+
+  if (!hasShorts && !hasVideos) {
+    return (
+      <div className="text-center py-20" style={{ color: "#9A9070" }}>
+        لا توجد فيديوهات بعد في هذا القسم
+      </div>
+    );
+  }
+
+  const activeList = tab === "short" ? shorts : videos;
 
   return (
     <>
-      {/* Tabs */}
-      <div className="flex gap-3 mb-8">
-        {([
-          { key: "short", label: "مقاطع قصيرة", count: shorts.length },
-          { key: "clip",  label: "فيديوهات",    count: clips.length  },
-        ] as const).map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-            style={{
-              background: tab === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
-              color:      tab === t.key ? "#111008" : "#9A9070",
-              border:     tab === t.key ? "none" : "1px solid #2E2A18",
-            }}
-          >
-            {t.label}
-            <span className="mr-2 text-xs opacity-70">({t.count})</span>
-          </button>
-        ))}
-      </div>
-
-      {activeList.length === 0 ? (
-        <div className="text-center py-20" style={{ color: "#9A9070" }}>
-          لا توجد فيديوهات بعد في هذا القسم
+      {tabs.length > 1 && (
+        <div className="flex gap-3 mb-8">
+          {tabs.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+              style={{
+                background: tab === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
+                color:      tab === t.key ? "#111008" : "#9A9070",
+                border:     tab === t.key ? "none" : "1px solid #2E2A18",
+              }}
+            >
+              {t.label}
+              <span className="mr-2 text-xs opacity-70">({t.count})</span>
+            </button>
+          ))}
         </div>
-      ) : tab === "short" ? (
+      )}
+
+      {tab === "short" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {activeList.map(v => <ShortCard key={v.id} video={v} />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {activeList.map(v => <ClipCard key={v.id} video={v} />)}
+          {activeList.map(v => <VideoCard key={v.id} video={v} />)}
         </div>
       )}
     </>
