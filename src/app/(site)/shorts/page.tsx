@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { supabaseAdmin } from "@/lib/supabase";
+import { SHORTS_PLAYLIST_IDS } from "@/lib/shorts-playlists";
 import SectionHeader from "@/components/ui/SectionHeader";
 import ShortsClient from "./ShortsClient";
 
@@ -11,14 +12,20 @@ export const metadata = {
 };
 
 async function getVideos() {
+  // Show videos with no playlist OR videos from designated shorts playlists
+  const orFilter = [
+    "playlist_id.is.null",
+    ...SHORTS_PLAYLIST_IDS.map(id => `playlist_id.eq.${id}`),
+  ].join(",");
+
   const { data } = await supabaseAdmin
     .from("site_videos")
     .select("id, title, description, thumbnail_url, published_at, video_type, hashtags")
     .eq("published", true)
-    .is("playlist_id", null)
+    .or(orFilter)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(300);
+    .limit(500);
 
   const all = data ?? [];
   return {
