@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import SectionHeader from "@/components/ui/SectionHeader";
 import NewsGrid from "./NewsGrid";
+import { GEO_META } from "./geo-meta";
 
 export const metadata = {
   title: "أخبار البلاغ | البلاغ",
@@ -12,13 +13,6 @@ export const revalidate = 120;
 
 const PAGE_SIZE = 24;
 const CUTOFF_DAYS = 4;
-
-export const GEO_META: Record<string, { label: string; flag: string }> = {
-  tunisia:       { label: "أخبار تونس",          flag: "🇹🇳" },
-  arab:          { label: "أخبار العالم العربي",  flag: "🌍" },
-  international: { label: "أخبار دولية",          flag: "🌐" },
-  general:       { label: "أخبار أخرى",           flag: "📰" },
-};
 
 async function getDefaultData() {
   const cutoff = new Date(Date.now() - CUTOFF_DAYS * 86_400_000).toISOString();

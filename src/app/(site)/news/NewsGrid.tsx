@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import NewsCard from "@/components/ui/NewsCard";
-import { GEO_META } from "./page";
+import { GEO_META } from "./geo-meta";
 
 const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "ثقافة", "رياضة", "بيئة", "صحة", "تعليم", "عام"];
 
