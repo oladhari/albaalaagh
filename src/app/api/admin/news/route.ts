@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
-import slugify from "slugify";
 import { shareToAll } from "@/lib/share";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
   }
 
-  const slug = slugify(title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
+  const slug = Date.now().toString(36);
 
   const { data, error } = await supabaseAdmin
     .from("news")
