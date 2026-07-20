@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createServerSupabase } from "@/lib/supabase-server";
-import slugify from "slugify";
 
 async function getEditor() {
   const supabase = await createServerSupabase();
@@ -37,9 +36,7 @@ export async function POST(req: NextRequest) {
   if (!title || !excerpt)
     return NextResponse.json({ error: "العنوان والمقدمة مطلوبان" }, { status: 400 });
 
-  const slug =
-    slugify(title, { locale: "ar", lower: true, strict: true }) +
-    "-" + Date.now().toString(36);
+  const slug = Date.now().toString(36);
 
   const { data, error } = await supabaseAdmin
     .from("news")

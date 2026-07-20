@@ -3,8 +3,6 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
 import { uploadToR2 } from "@/lib/r2";
-import slugify from "slugify";
-
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
 async function copyImageToBucket(sourceUrl: string): Promise<string | null> {
@@ -35,7 +33,7 @@ export async function POST(
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
   }
 
-  const slug = slugify(title, { locale: "ar", lower: true, strict: true }) + "-" + Date.now().toString(36);
+  const slug = Date.now().toString(36);
   const url  = `${BASE}/taqrir/${slug}`;
 
   // Copy RSS image to our bucket so we own it permanently

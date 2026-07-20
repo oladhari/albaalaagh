@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import slugify from "slugify";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
 
@@ -14,8 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
   }
 
-  const slug = slugify(title, { locale: "ar", lower: true, strict: true }) +
-    "-" + Date.now().toString(36);
+  const slug = Date.now().toString(36);
 
   const resolvedPublishedAt = published
     ? (published_at ? new Date(published_at).toISOString() : new Date().toISOString())

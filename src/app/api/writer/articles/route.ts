@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createServerSupabase } from "@/lib/supabase-server";
-import slugify from "slugify";
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabase();
@@ -20,8 +19,7 @@ export async function POST(req: NextRequest) {
     .from("writers").select("id").eq("id", writer_id).eq("user_id", user.id).single();
   if (!writer) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const slug = slugify(title, { locale: "ar", lower: true, strict: true }) +
-    "-" + Date.now().toString(36);
+  const slug = Date.now().toString(36);
 
   const status = submit ? "pending" : "draft";
 
