@@ -74,12 +74,17 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
     description: article.excerpt ?? article.title,
     datePublished: article.published_at,
     dateModified: article.published_at,
-    author: { "@type": "Organization", name: "تحرير البلاغ", url: base },
+    author: {
+      "@type": "Organization",
+      name: "تحرير البلاغ",
+      url: base,
+      logo: { "@type": "ImageObject", url: `${base}/albaalaagh-logo.png` },
+    },
     publisher: {
       "@type": "Organization",
       name: "البلاغ",
       url: base,
-      logo: { "@type": "ImageObject", url: `${base}/icon.ico` },
+      logo: { "@type": "ImageObject", url: `${base}/albaalaagh-logo.png` },
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/taqrir/${slug}` },
     ...(article.image_url ? { image: article.image_url } : {}),
@@ -133,12 +138,12 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
         className="flex items-center gap-4 p-4 rounded-xl mb-6"
         style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
       >
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-          style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
-        >
-          ب
-        </div>
+        <img
+          src="/albaalaagh-logo.png"
+          alt="البلاغ"
+          className="w-10 h-10 rounded-full object-cover shrink-0"
+          style={{ background: "rgba(201,168,68,0.15)" }}
+        />
         <div>
           <p className="text-sm font-semibold" style={{ color: "#F0EAD6" }}>تحرير البلاغ</p>
           <p className="text-xs" style={{ color: "#9A9070" }}>الفريق التحريري</p>
