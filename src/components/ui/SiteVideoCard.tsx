@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatArabicDate } from "@/lib/utils";
 
 interface Props {
   id: string;
@@ -58,7 +59,7 @@ const innerContent = (title: string, description: string | null | undefined, thu
       )}
       {published_at && (
         <p className="text-xs mt-2" style={{ color: "#6B6448" }}>
-          {new Date(published_at).toLocaleDateString("ar-TN", { year: "numeric", month: "long", day: "numeric" })}
+          {formatArabicDate(published_at)}
         </p>
       )}
     </div>
