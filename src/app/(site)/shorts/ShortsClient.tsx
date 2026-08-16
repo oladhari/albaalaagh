@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { formatArabicDate } from "@/lib/utils";
 
 interface Video {
   id: string;
@@ -88,7 +89,7 @@ function VideoCard({ video }: { video: Video }) {
         )}
         {video.published_at && (
           <p className="text-xs mt-1" style={{ color: "#6B6448" }}>
-            {new Date(video.published_at).toLocaleDateString("ar-TN", { year: "numeric", month: "short", day: "numeric" })}
+            {formatArabicDate(video.published_at)}
           </p>
         )}
       </div>

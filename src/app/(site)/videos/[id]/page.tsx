@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import ShareButtons from "@/components/ui/ShareButtons";
+import { formatArabicDate } from "@/lib/utils";
 
 export const revalidate = 300;
 
@@ -139,7 +140,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 
       {video.published_at && (
         <p className="text-xs mb-3" style={{ color: "#6B6448" }}>
-          {new Date(video.published_at).toLocaleDateString("ar-TN", { year: "numeric", month: "long", day: "numeric" })}
+          {formatArabicDate(video.published_at)}
         </p>
       )}
 
