@@ -13,7 +13,13 @@ export const metadata = {
 
 const PAGE_SIZE = 24;
 
-async function getData(playlistId: string | null, page: number) {
+async function getData(
+  playlistId: string | null,
+  page: number,
+  q: string | null,
+  dateFrom: string | null,
+  dateTo: string | null
+) {
   const { data: allPlaylists } = await supabaseAdmin
     .from("playlists")
     .select("id, name")
@@ -23,12 +29,17 @@ async function getData(playlistId: string | null, page: number) {
   const playlists = (allPlaylists ?? []).filter(p => !SHORTS_PLAYLIST_IDS.includes(p.id));
 
   if (playlistId) {
-    // When filtering by playlist, load all episodes in that playlist (usually < 24)
-    const { data: videos, count } = await supabaseAdmin
+    // When filtering by playlist, load all matching episodes in that playlist (usually < 24)
+    let plQuery = supabaseAdmin
       .from("site_videos")
       .select("id, title, description, video_url, thumbnail_url, published_at, playlist_id", { count: "exact" })
       .eq("published", true)
-      .eq("playlist_id", playlistId)
+      .eq("playlist_id", playlistId);
+    if (q) plQuery = plQuery.ilike("title", `%${q}%`);
+    if (dateFrom) plQuery = plQuery.gte("published_at", dateFrom);
+    if (dateTo) plQuery = plQuery.lte("published_at", `${dateTo}T23:59:59`);
+
+    const { data: videos, count } = await plQuery
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
 
@@ -43,6 +54,9 @@ async function getData(playlistId: string | null, page: number) {
     .select("id, title, description, video_url, thumbnail_url, published_at, playlist_id", { count: "exact" })
     .eq("published", true)
     .not("playlist_id", "is", null);
+  if (q) query = query.ilike("title", `%${q}%`);
+  if (dateFrom) query = query.gte("published_at", dateFrom);
+  if (dateTo) query = query.lte("published_at", `${dateTo}T23:59:59`);
 
   // Exclude clips/shorts playlists
   for (const id of SHORTS_PLAYLIST_IDS) {
@@ -62,12 +76,15 @@ async function getData(playlistId: string | null, page: number) {
 export default async function InterviewsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ playlist?: string; page?: string }>;
+  searchParams: Promise<{ playlist?: string; page?: string; q?: string; from?: string; to?: string }>;
 }) {
   const params     = await searchParams;
   const playlistId = params.playlist ?? null;
   const page       = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
-  const { playlists, videos, totalCount, totalPages } = await getData(playlistId, page);
+  const q          = params.q?.trim() || null;
+  const dateFrom   = params.from || null;
+  const dateTo     = params.to || null;
+  const { playlists, videos, totalCount, totalPages } = await getData(playlistId, page, q, dateFrom, dateTo);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
@@ -84,6 +101,9 @@ export default async function InterviewsPage({
           totalCount={totalCount}
           page={page}
           totalPages={totalPages}
+          q={q}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
         />
       </Suspense>
     </div>
