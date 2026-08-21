@@ -815,6 +815,16 @@ Display ONLY:
 
 Nothing else.
 
+CRITICAL — VERBATIM TITLE RULE:
+
+The article title supplied to you (labeled "العنوان") is the EXACT text that must appear on the image.
+
+Reproduce it character-for-character. Do not paraphrase it. Do not summarize it. Do not shorten it. Do not invent a new, punchier, or more dramatic headline based on the article content. Do not pull a different heading from inside the article body/content instead of the supplied title.
+
+The article content (labeled "محتوى المقال") is background context ONLY — use it to decide the imagery and mood. NEVER use it as a source for the headline text.
+
+If the title is long, you may wrap it across up to 5 lines, but every word must remain unchanged and in order.
+
 Never display:
 
 * article excerpts
@@ -823,6 +833,7 @@ Never display:
 * quotes
 * labels
 * categories
+* a rewritten/alternative headline
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 VISUAL STYLE
@@ -911,7 +922,7 @@ async function buildWriterArticlePrompt(title: string, excerpt: string, writerNa
     system: WRITING_ARTICLE_SYSTEM_PROMPT,
     messages: [{
       role: "user",
-      content: `العنوان: ${title}\nالكاتب: ${writerName}\nصورة الكاتب: ${hasWriterPhoto ? "مرفقة — استخدمها كما هي بدون أي تعديل على الوجه" : "غير متوفرة — لا تنشئ وجهاً، استخدم خلفية رمزية فقط"}\nمحتوى المقال: ${excerpt || "—"}`,
+      content: `العنوان (استخدم هذا النص حرفياً على الصورة، بدون أي تغيير أو تلخيص أو إعادة صياغة): ${title}\nالكاتب: ${writerName}\nصورة الكاتب: ${hasWriterPhoto ? "مرفقة — استخدمها كما هي بدون أي تعديل على الوجه" : "غير متوفرة — لا تنشئ وجهاً، استخدم خلفية رمزية فقط"}\nمحتوى المقال (للسياق والخلفية البصرية فقط — لا تستخرج منه أي عنوان بديل): ${excerpt || "—"}`,
     }],
   });
   const text = msg.content[0].type === "text" ? msg.content[0].text : "";
