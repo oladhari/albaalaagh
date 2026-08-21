@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import type { YTLiveStream } from "@/lib/youtube";
 
-const TWITCH_CHANNEL = "albaalaagh";
-// Both www and non-www must be listed so the embed works regardless of how users arrive
-const PARENTS = "parent=albaalaagh.com&parent=www.albaalaagh.com";
+interface Props {
+  liveStream: YTLiveStream | null;
+}
 
-export default function LiveBanner() {
-  const [open, setOpen] = useState(false);
+export default function LiveBanner({ liveStream }: Props) {
+  const [open, setOpen] = useState(true);
 
-  const src =
-    `https://player.twitch.tv/?channel=${TWITCH_CHANNEL}` +
-    `&${PARENTS}` +
-    `&autoplay=true`;
+  if (!liveStream) return null;
+
+  const src = `https://www.youtube.com/embed/${liveStream.youtube_id}?autoplay=1`;
 
   return (
     <div style={{ background: "#0D0808", borderBottom: "2px solid rgba(220,50,50,0.35)" }}>
@@ -35,11 +35,11 @@ export default function LiveBanner() {
           </span>
 
           <span className="text-xs font-black tracking-widest shrink-0" style={{ color: "#FF4444" }}>
-            🔴 بث مباشر — Twitch
+            🔴 بث مباشر
           </span>
 
-          <span className="text-sm flex-1 text-right" style={{ color: "#9A9070" }}>
-            albaalaagh.com/live
+          <span className="text-sm flex-1 text-right truncate" style={{ color: "#9A9070" }}>
+            {liveStream.title}
           </span>
 
           <span

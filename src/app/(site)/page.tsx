@@ -7,6 +7,7 @@ import SocialBar from "@/components/sections/SocialBar";
 import NewsTicker from "@/components/sections/NewsTicker";
 import LiveBanner from "@/components/sections/LiveBanner";
 import PlaylistsSection from "@/components/sections/PlaylistsSection";
+import { fetchActiveLiveStream } from "@/lib/youtube";
 
 export const revalidate = 120;
 
@@ -101,13 +102,14 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos] = await Promise.all([
+  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream] = await Promise.all([
     getLatestNews(),
     getLatestArticles(),
     getArticlesCount(),
     getInterviewsCount(),
     getPlaylistsCount(),
     getPlaylistsWithVideos(),
+    fetchActiveLiveStream(),
   ]);
 
   const tickerItems = news.length > 0
@@ -119,8 +121,8 @@ export default async function HomePage() {
       {/* News Ticker */}
       <NewsTicker items={tickerItems} />
 
-      {/* Live Stream Banner — Twitch embed, always visible */}
-      <LiveBanner />
+      {/* Live Stream Banner — YouTube, only shown while actually live */}
+      <LiveBanner liveStream={liveStream} />
 
       {/* ── Hero ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
