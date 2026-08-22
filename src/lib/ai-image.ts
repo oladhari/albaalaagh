@@ -550,7 +550,6 @@ export async function generateNewsImage(title: string, excerpt: string, people: 
     size: "1280x720",
     quality: "medium",
     n: 1,
-    ...(personFiles.length ? { input_fidelity: "high" as const } : {}),
   });
 
   const b64 = result.data?.[0]?.b64_json;
@@ -644,7 +643,6 @@ export async function generateFacebookImage(title: string, excerpt: string, peop
     size: "1024x1024",
     quality: "medium",
     n: 1,
-    ...(personFiles.length ? { input_fidelity: "high" as const } : {}),
   });
 
   const b64 = result.data?.[0]?.b64_json;
