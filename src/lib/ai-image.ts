@@ -422,10 +422,68 @@ async function buildImagePrompt(title: string, excerpt: string): Promise<string>
 
 const NEWS_16_9_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement_16_9.png");
 
-function buildNews16_9Prompt(title: string, excerpt: string): string {
+// ── Reference people ──────────────────────────────────────────────────────────
+// When a news/article subject has a known real photo (from the guests DB or a
+// manually supplied one), we attach it as an extra input image and instruct the
+// model to preserve that exact identity instead of falling back to "no faces".
+
+export interface PersonPhoto {
+  name: string;
+  url: string;
+}
+
+async function fetchPersonFiles(people: PersonPhoto[]) {
+  const files: Awaited<ReturnType<typeof toFile>>[] = [];
+  for (const p of people) {
+    const res = await fetch(p.url);
+    if (!res.ok) continue;
+    const buf = Buffer.from(await res.arrayBuffer());
+    files.push(await toFile(buf, `person-${files.length}.png`, { type: res.headers.get("content-type") ?? "image/png" }));
+  }
+  return files;
+}
+
+function buildPersonPhotoInstructions(people: PersonPhoto[]): string {
+  if (!people.length) return "";
+  const names = people.map(p => p.name).join("، ");
+  return `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REAL PERSON REFERENCE PHOTO(S) ATTACHED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Real, verified photo(s) are attached for: ${names}.
+
+CRITICAL RULE — this overrides the "no faces" rule above for these specific people:
+* Use ONLY the attached reference photo(s) for these people's faces.
+* Do not modify, beautify, age, rejuvenate, or alter their facial features or ethnicity.
+* Do not invent an alternative face for them.
+* Preserve their identity exactly as shown in the attached photo(s).
+* Integrate them naturally into the editorial scene (realistic lighting/composition matching the rest of the image).
+* Do NOT invent faces for anyone else who is not covered by an attached reference photo — for any other person mentioned in the story, keep using symbolic imagery only.`;
+}
+
+// ── Flag accuracy ──────────────────────────────────────────────────────────────
+// Image models default to outdated/deposed-regime flags from training data.
+// Spell out the current flag explicitly for the cases most likely to come up
+// in this channel's coverage instead of trusting the model's implicit memory.
+
+const FLAG_ACCURACY_RULES = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FLAG ACCURACY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If a national flag appears in the image, it MUST be the CURRENT, internationally recognized flag — never an outdated or deposed-regime flag.
+
+Syria (since December 2024): green-white-black horizontal stripes, with THREE red five-pointed stars in a row on the middle white stripe. This is NOT the same as the old flag (red-white-black with TWO green stars and an eagle) — never generate the old flag.
+
+If you are not fully certain of a country's current official flag, do NOT render a detailed, identifiable flag pattern for it — use a generic abstract banner/pennant shape instead of a specific, potentially wrong stripe/star arrangement.`;
+
+function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1280×720 LANDSCAPE
 
-USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY AS THE BASE IMAGE.
+USE THE PROVIDED ALBAALAAGH TEMPLATE (the first attached image) EXACTLY AS THE BASE IMAGE.
 
 DO NOT:
 * change, move, or modify the logo or branding in any corner
@@ -456,6 +514,8 @@ NEVER:
 * invent a journalist's face
 * invent any public figure's face
 * show violence, blood, or graphic content
+${buildPersonPhotoInstructions(people)}
+${FLAG_ACCURACY_RULES}
 
 NEWS STYLE:
 * modern editorial newsroom graphic
@@ -473,22 +533,24 @@ DESCRIPTION:
 ${excerpt || "—"}
 
 TEMPLATE:
-attached image — preserve it exactly as the base, only fill the content area`;
+first attached image — preserve it exactly as the base, only fill the content area`;
 }
 
-export async function generateNewsImage(title: string, excerpt: string): Promise<string> {
-  const imagePrompt = buildNews16_9Prompt(title, excerpt);
+export async function generateNewsImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<string> {
+  const imagePrompt = buildNews16_9Prompt(title, excerpt, people);
 
   const templateBuffer = await fs.readFile(NEWS_16_9_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
+  const personFiles = await fetchPersonFiles(people);
 
   const result = await getOpenAI().images.edit({
     model: "gpt-image-2",
-    image: templateFile,
+    image: personFiles.length ? [templateFile, ...personFiles] : templateFile,
     prompt: imagePrompt,
     size: "1280x720",
     quality: "medium",
     n: 1,
+    ...(personFiles.length ? { input_fidelity: "high" as const } : {}),
   });
 
   const b64 = result.data?.[0]?.b64_json;
@@ -501,10 +563,10 @@ export async function generateNewsImage(title: string, excerpt: string): Promise
 
 const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
 
-function buildFacebookPrompt(title: string, excerpt: string): string {
+function buildFacebookPrompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1080×1080 SQUARE
 
-USE THE PROVIDED ALBAALAAGH TEMPLATE EXACTLY AS THE BASE IMAGE.
+USE THE PROVIDED ALBAALAAGH TEMPLATE (the first attached image) EXACTLY AS THE BASE IMAGE.
 
 DO NOT:
 * change, move, or modify the logo or branding in any corner
@@ -514,12 +576,14 @@ DO NOT:
 * add article summaries or paragraphs
 * add bullet points or quotes
 
-⚠️ CRITICAL — NO FACES:
-No verified photo of any person is attached to this request.
-DO NOT generate, invent, or show any person's face.
-DO NOT attempt to depict any named individual.
-Even if a person is named in the title, DO NOT show their face.
-Use symbolic and thematic visuals only — no human faces at all.
+⚠️ CRITICAL — NO FACES (unless a verified reference photo is attached below):
+No verified photo of any person is attached to this request, unless stated otherwise below.
+DO NOT generate or invent any person's face.
+DO NOT attempt to depict any named individual whose photo was not attached.
+Even if a person is named in the title, DO NOT show their face unless their reference photo is attached below.
+Use symbolic and thematic visuals only — no invented human faces.
+${buildPersonPhotoInstructions(people)}
+${FLAG_ACCURACY_RULES}
 
 TEXT RULES:
 * Show ONLY the news title — no other text.
@@ -568,17 +632,19 @@ TEMPLATE:
 attached image — preserve it exactly as the base, only fill the content area`;
 }
 
-export async function generateFacebookImage(title: string, excerpt: string): Promise<string> {
+export async function generateFacebookImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<string> {
   const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
+  const personFiles = await fetchPersonFiles(people);
 
   const result = await getOpenAI().images.edit({
     model: "gpt-image-2",
-    image: templateFile,
-    prompt: buildFacebookPrompt(title, excerpt),
+    image: personFiles.length ? [templateFile, ...personFiles] : templateFile,
+    prompt: buildFacebookPrompt(title, excerpt, people),
     size: "1024x1024",
     quality: "medium",
     n: 1,
+    ...(personFiles.length ? { input_fidelity: "high" as const } : {}),
   });
 
   const b64 = result.data?.[0]?.b64_json;
