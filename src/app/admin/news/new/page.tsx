@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { NEWS_CATEGORIES } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
+import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
 
 const GEO_OPTIONS = [
   { value: "tunisia",       label: "تونس" },
@@ -18,6 +19,7 @@ export default function NewNewsPage() {
   const [error, setError] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingFbImage, setGeneratingFbImage] = useState(false);
+  const [personPhotos, setPersonPhotos] = useState<PersonPhoto[]>([]);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -40,7 +42,7 @@ export default function NewNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "news" }),
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "news", personPhotos }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
@@ -58,7 +60,7 @@ export default function NewNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "facebook" }),
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, target: "facebook", personPhotos }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
@@ -216,6 +218,8 @@ export default function NewNewsPage() {
                 onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
               />
             </div>
+
+            <PersonPhotoPicker people={personPhotos} onChange={setPersonPhotos} />
 
             <div>
               <div className="flex items-center justify-between mb-1">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/utils";
 import type { NewsArticle } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
+import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
 
 type Filter = "pending" | "approved" | "rejected" | "priority";
 type Tone   = "accountability" | "neutral" | "positive";
@@ -56,6 +57,7 @@ export default function AdminNewsPage() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingFbImage, setGeneratingFbImage] = useState(false);
   const [preview, setPreview]     = useState<Preview | null>(null);
+  const [personPhotos, setPersonPhotos] = useState<PersonPhoto[]>([]);
   const [publishing, setPublishing]   = useState(false);
   const [published, setPublished]     = useState<Record<string, string>>({});
   const [deleting, setDeleting]       = useState<string | null>(null);
@@ -89,6 +91,7 @@ export default function AdminNewsPage() {
   const generate = async (news: NewsArticle, tone: Tone = "accountability") => {
     setGenerating(news.id);
     setPreview(null);
+    setPersonPhotos([]);
     try {
       const res  = await fetch(`/api/admin/news/${news.id}/generate`, {
         method: "POST",
@@ -123,7 +126,7 @@ export default function AdminNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: preview.title, excerpt: preview.excerpt, target: "news" }),
+        body: JSON.stringify({ title: preview.title, excerpt: preview.excerpt, target: "news", personPhotos }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في إنشاء الصورة"); return; }
@@ -141,7 +144,7 @@ export default function AdminNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: preview.title, excerpt: preview.excerpt, target: "facebook" }),
+        body: JSON.stringify({ title: preview.title, excerpt: preview.excerpt, target: "facebook", personPhotos }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في إنشاء الصورة"); return; }
@@ -157,6 +160,7 @@ export default function AdminNewsPage() {
   const openEdit = (news: any) => {
     const rawCat = news.category ?? "سياسة";
     const rawGeo = news.geo ?? "general";
+    setPersonPhotos([]);
     setPreview({
       newsId:         news.id,
       title:          news.title,
@@ -215,6 +219,7 @@ export default function AdminNewsPage() {
     if (!urlInput.trim()) return;
     setFetchingUrl(true);
     setPreview(null);
+    setPersonPhotos([]);
     try {
       const res  = await fetch("/api/admin/news/from-url", {
         method: "POST",
@@ -357,6 +362,8 @@ export default function AdminNewsPage() {
               ))}
             </div>
           )}
+
+          <PersonPhotoPicker people={personPhotos} onChange={setPersonPhotos} />
 
           {/* Article cover image */}
           <div>
