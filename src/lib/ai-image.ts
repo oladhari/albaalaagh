@@ -575,12 +575,15 @@ DO NOT:
 * add article summaries or paragraphs
 * add bullet points or quotes
 
-⚠️ CRITICAL — NO FACES (unless a verified reference photo is attached below):
-No verified photo of any person is attached to this request, unless stated otherwise below.
+${people.length ? `⚠️ CRITICAL — FACES:
+A verified reference photo IS attached below for: ${people.map(p => p.name).join("، ")}.
+Use that attached photo for this person's face — see the mandatory rules below.
+DO NOT invent a face for anyone else not covered by an attached photo — symbolic visuals only for them.` : `⚠️ CRITICAL — NO FACES:
+No verified photo of any person is attached to this request.
 DO NOT generate or invent any person's face.
 DO NOT attempt to depict any named individual whose photo was not attached.
-Even if a person is named in the title, DO NOT show their face unless their reference photo is attached below.
-Use symbolic and thematic visuals only — no invented human faces.
+Even if a person is named in the title, DO NOT show their face.
+Use symbolic and thematic visuals only — no invented human faces.`}
 ${buildPersonPhotoInstructions(people)}
 ${FLAG_ACCURACY_RULES}
 
