@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 type LogEntry = { type: "status" | "done" | "error"; msg: string };
 
 export default function YtFbPage() {
-  const [url, setUrl]       = useState("");
+  const [urls, setUrls]     = useState("");
   const [log, setLog]       = useState<LogEntry[]>([]);
   const [running, setRunning] = useState(false);
   const esRef   = useRef<EventSource | null>(null);
@@ -21,12 +21,12 @@ export default function YtFbPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim() || running) return;
+    if (!urls.trim() || running) return;
 
     setLog([]);
     setRunning(true);
 
-    const es = new EventSource(`/api/admin/ytfb?url=${encodeURIComponent(url.trim())}`);
+    const es = new EventSource(`/api/admin/ytfb?urls=${encodeURIComponent(urls.trim())}`);
     esRef.current = es;
 
     es.onmessage = (event: MessageEvent) => {
@@ -53,35 +53,37 @@ export default function YtFbPage() {
   return (
     <div dir="rtl">
       <h1 className="text-2xl font-black mb-2" style={{ color: "#F0EAD6" }}>
-        مشاركة يوتيوب على فيسبوك
+        مشاركة يوتيوب — فيسبوك (ريل + منشور) وTikTok وموقع البلاغ
       </h1>
       <p className="text-sm mb-8" style={{ color: "#9A9070" }}>
-        أدخل رابط يوتيوب لتحميل الفيديو ونشره كريل على صفحة البلاغ
+        أدخل رابط يوتيوب واحد أو عدة روابط (كل رابط في سطر) — سيُنشر كل فيديو
+        كريل ومنشور عادي على فيسبوك، وعلى TikTok، ويُضاف إلى صفحة /shorts في الموقع
       </p>
 
       {/* Input form */}
       <div className="p-6 rounded-xl mb-6" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
-        <form onSubmit={handleSubmit} className="flex gap-3">
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <textarea
+            value={urls}
+            onChange={(e) => setUrls(e.target.value)}
+            placeholder={"https://youtube.com/watch?v=...\nhttps://youtube.com/shorts/...\n..."}
             required
             disabled={running}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm"
+            rows={5}
+            className="w-full px-4 py-2.5 rounded-lg text-sm"
             style={{
               background: "#0D0C06",
               border: "1px solid #2E2A18",
               color: "#F0EAD6",
               outline: "none",
               direction: "ltr",
+              resize: "vertical",
             }}
           />
           <button
             type="submit"
-            disabled={running || !url.trim()}
-            className="px-6 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all"
+            disabled={running || !urls.trim()}
+            className="self-start px-6 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all"
             style={{
               background: running
                 ? "#2E2A18"
@@ -90,13 +92,14 @@ export default function YtFbPage() {
               cursor: running ? "not-allowed" : "pointer",
             }}
           >
-            {running ? "جارٍ النشر..." : "مشاركة على فيسبوك"}
+            {running ? "جارٍ النشر..." : "مشاركة"}
           </button>
         </form>
 
         {/* Info note */}
         <p className="mt-3 text-xs" style={{ color: "#9A9070" }}>
-          العملية قد تستغرق عدة دقائق حسب حجم الفيديو — سيظهر التقدم أدناه
+          العملية قد تستغرق عدة دقائق لكل فيديو — سيظهر التقدم أدناه. فشل فيديو
+          واحد لا يوقف البقية في القائمة.
         </p>
       </div>
 
