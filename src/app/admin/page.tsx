@@ -53,10 +53,10 @@ async function getRecentActivity() {
 }
 
 const QUICK_ACTIONS = [
-  { label: "إضافة مقال جديد", href: "/admin/articles/new", primary: true },
-  { label: "تقارير البلاغ",   href: "/admin/news",         primary: true },
-  { label: "إضافة كاتب",      href: "/admin/writers/new",  primary: false },
-  { label: "مراجعة الأخبار",  href: "/admin/news",         primary: false },
+  { label: "إضافة مقال جديد",   href: "/admin/articles/new", primary: true },
+  { label: "✍️ كتابة تقرير",    href: "/admin/news/new",     primary: true },
+  { label: "إضافة كاتب",        href: "/admin/writers/new",  primary: false },
+  { label: "مراجعة الأخبار",    href: "/admin/news",         primary: false },
 ];
 
 export default async function AdminDashboard() {
