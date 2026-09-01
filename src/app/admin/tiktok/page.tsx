@@ -1,4 +1,16 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import TikTokManualList from "@/components/admin/TikTokManualList";
+
+async function getRecentShorts() {
+  const { data } = await supabaseAdmin
+    .from("site_videos")
+    .select("id, title, description, video_url, published_at")
+    .eq("video_type", "short")
+    .eq("published", true)
+    .order("published_at", { ascending: false })
+    .limit(15);
+  return data ?? [];
+}
 
 async function getTikTokStatus() {
   const { data } = await supabaseAdmin
@@ -24,7 +36,7 @@ export default async function TikTokAdminPage({
   searchParams: Promise<{ connected?: string; error?: string }>;
 }) {
   const sp     = await searchParams;
-  const status = await getTikTokStatus();
+  const [status, shorts] = await Promise.all([getTikTokStatus(), getRecentShorts()]);
 
   return (
     <div className="max-w-lg">
@@ -84,6 +96,16 @@ export default async function TikTokAdminPage({
           </p>
         )}
       </div>
+
+      {!status.connected && (
+        <div className="mt-8">
+          <h2 className="text-xs font-bold mb-1" style={{ color: "#C9A844" }}>نشر يدوي — بانتظار ربط الحساب</h2>
+          <p className="text-xs mb-3" style={{ color: "#9A9070" }}>
+            انسخ العنوان (وهو نفسه ما سيُستخدم كنص الفيديو لاحقاً)، حمّل الفيديو، وارفعه من تطبيق TikTok يدوياً.
+          </p>
+          <TikTokManualList videos={shorts} />
+        </div>
+      )}
     </div>
   );
 }
