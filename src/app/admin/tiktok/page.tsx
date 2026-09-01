@@ -8,7 +8,7 @@ async function getRecentShorts() {
     .eq("video_type", "short")
     .eq("published", true)
     .order("published_at", { ascending: false })
-    .limit(15);
+    .limit(500);
   return data ?? [];
 }
 

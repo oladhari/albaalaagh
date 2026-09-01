@@ -55,6 +55,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 
 export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
   const [done, setDone] = useState<Set<number>>(new Set());
+  const [hideDone, setHideDone] = useState(false);
 
   useEffect(() => {
     setDone(loadDone());
@@ -81,14 +82,21 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
   }
 
   const remaining = videos.filter((v) => !done.has(v.id)).length;
+  const visible   = hideDone ? videos.filter((v) => !done.has(v.id)) : videos;
 
   return (
     <div>
-      <p className="text-xs mb-2" style={{ color: "#9A9070" }}>
-        متبقي {remaining} من {videos.length}
-      </p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs" style={{ color: "#9A9070" }}>
+          متبقي {remaining} من {videos.length}
+        </p>
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "#9A9070" }}>
+          <input type="checkbox" checked={hideDone} onChange={(e) => setHideDone(e.target.checked)} />
+          إخفاء المكتملة
+        </label>
+      </div>
       <div className="space-y-3">
-        {videos.map((v) => {
+        {visible.map((v) => {
           const isDone = done.has(v.id);
           return (
             <div
