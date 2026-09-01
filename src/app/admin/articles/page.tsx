@@ -96,9 +96,9 @@ export default async function AdminArticlesPage({
                 </div>
                 <p className="font-semibold text-sm" style={{ color: "#F0EAD6" }}>{article.title}</p>
                 <div className="flex items-center gap-3 mt-1">
-                  {article.writer && (
-                    <span className="text-xs" style={{ color: "#9A9070" }}>{article.writer.name}</span>
-                  )}
+                  <span className="text-xs" style={{ color: "#9A9070" }}>
+                    {article.writer ? article.writer.name : "البلاغ - فريق التحرير"}
+                  </span>
                   <span className="text-xs" style={{ color: "#9A9070" }}>
                     {formatArabicDate(article.published_at || article.created_at)}
                   </span>

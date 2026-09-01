@@ -54,11 +54,9 @@ export default function ArticleCard({ article }: { article: Article }) {
             />
           )}
           <div>
-            {article.writer && (
-              <p className="text-xs font-medium" style={{ color: "#E8D5A3" }}>
-                {article.writer.name}
-              </p>
-            )}
+            <p className="text-xs font-medium" style={{ color: "#E8D5A3" }}>
+              {article.writer ? article.writer.name : "البلاغ - فريق التحرير"}
+            </p>
             <p className="text-xs" style={{ color: "#9A9070" }}>
               {formatArabicDate(article.published_at)}
             </p>
