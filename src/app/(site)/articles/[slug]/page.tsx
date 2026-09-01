@@ -29,11 +29,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: "article",
       images: [{ url: ogImage, width: 1280, height: 720 }],
       publishedTime: article.published_at,
-      authors: article.writer?.name ? [article.writer.name] : ["البلاغ"],
+      authors: article.writer?.name ? [article.writer.name] : ["البلاغ - فريق التحرير"],
     },
     other: {
       "fb:app_id": process.env.NEXT_PUBLIC_FB_APP_ID ?? "",
-      "article:author": article.writer?.name ?? "البلاغ",
+      "article:author": article.writer?.name ?? "البلاغ - فريق التحرير",
     },
     twitter: {
       card: "summary_large_image",
@@ -76,7 +76,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     dateModified: article.published_at,
     author: article.writer
       ? { "@type": "Person", name: article.writer.name }
-      : { "@type": "Organization", name: "البلاغ" },
+      : { "@type": "Organization", name: "البلاغ - فريق التحرير" },
     publisher: {
       "@type": "Organization",
       name: "البلاغ",
@@ -132,21 +132,28 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             className="w-12 h-12 rounded-full object-cover shrink-0"
             style={{ border: "2px solid #C9A844" }}
           />
-        ) : (
+        ) : article.writer ? (
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
             style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
           >
-            {article.writer?.name?.[0] ?? "ب"}
+            {article.writer.name[0]}
           </div>
+        ) : (
+          <img
+            src="/albaalaagh-logo.png"
+            alt="البلاغ"
+            className="w-12 h-12 rounded-full object-cover shrink-0"
+            style={{ background: "rgba(201,168,68,0.15)" }}
+          />
         )}
         <div>
           <p className="font-bold text-sm" style={{ color: "#E8D5A3" }}>
             {article.writer?.name ?? "البلاغ"}
           </p>
-          {article.writer?.title && (
-            <p className="text-xs" style={{ color: "#9A9070" }}>{article.writer.title}</p>
-          )}
+          <p className="text-xs" style={{ color: "#9A9070" }}>
+            {article.writer?.title ?? "فريق التحرير"}
+          </p>
         </div>
         <div className="mr-auto text-xs" style={{ color: "#9A9070" }}>
           {formatArabicDate(article.published_at || article.created_at)}

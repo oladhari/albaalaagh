@@ -21,10 +21,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (unauthed) return unauthed;
   const { id } = await params;
   const body = await req.json();
-  const { status, published, title, excerpt, content, cover_image, category, published_at } = body;
+  const { status, published, title, excerpt, content, cover_image, category, published_at, writer_id } = body;
 
   const updates: Record<string, unknown> = {};
   if (status !== undefined) updates.status = status;
+  if (writer_id !== undefined) updates.writer_id = writer_id || null;
   if (published !== undefined) {
     updates.published = published;
     if (published) {

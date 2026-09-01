@@ -174,7 +174,7 @@ export default async function AdminDashboard() {
                     {a.title} ↗
                   </a>
                   <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
-                    {a.writer?.name} · {formatArabicDate(a.published_at)}
+                    {a.writer?.name ?? "البلاغ - فريق التحرير"} · {formatArabicDate(a.published_at)}
                   </p>
                 </div>
               ))}
