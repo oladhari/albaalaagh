@@ -149,6 +149,7 @@ async function attemptDownload(
       "--format",
       "best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=1080]/best",
       "--extractor-args", "youtube:player_client=web,android_vr",
+      "--remote-components", "ejs:github",
       "--no-warnings",
       "--newline",
       ...cookiesArg(),
