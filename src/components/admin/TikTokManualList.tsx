@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ShortVideo {
   id: number;
@@ -8,6 +8,23 @@ interface ShortVideo {
   description: string | null;
   video_url: string;
   published_at: string | null;
+}
+
+const STORAGE_KEY = "tiktok-manual-done";
+
+function loadDone(): Set<number> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDone(ids: Set<number>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+  } catch {}
 }
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -37,35 +54,81 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
+  const [done, setDone] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    setDone(loadDone());
+  }, []);
+
+  const markDone = (id: number) => {
+    const next = new Set(done);
+    next.add(id);
+    setDone(next);
+    saveDone(next);
+  };
+
+  const undo = (id: number) => {
+    const next = new Set(done);
+    next.delete(id);
+    setDone(next);
+    saveDone(next);
+  };
+
   if (videos.length === 0) {
     return (
       <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد مقاطع شورتس بعد</p>
     );
   }
 
+  const remaining = videos.filter((v) => !done.has(v.id)).length;
+
   return (
-    <div className="space-y-3">
-      {videos.map((v) => (
-        <div key={v.id} className="p-3 rounded-lg" style={{ background: "#111008", border: "1px solid #2E2A18" }}>
-          <p className="text-sm font-medium mb-2" style={{ color: "#F0EAD6" }}>{v.title}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <CopyButton text={v.title} label="نسخ العنوان" />
-            {v.description && v.description !== v.title && (
-              <CopyButton text={v.description} label="نسخ الوصف" />
-            )}
-            <a
-              href={v.video_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-              style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+    <div>
+      <p className="text-xs mb-2" style={{ color: "#9A9070" }}>
+        متبقي {remaining} من {videos.length}
+      </p>
+      <div className="space-y-3">
+        {videos.map((v) => {
+          const isDone = done.has(v.id);
+          return (
+            <div
+              key={v.id}
+              className="p-3 rounded-lg transition-opacity"
+              style={{ background: "#111008", border: "1px solid #2E2A18", opacity: isDone ? 0.4 : 1 }}
             >
-              ⬇️ تحميل الفيديو
-            </a>
-          </div>
-        </div>
-      ))}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <p className="text-sm font-medium" style={{ color: "#F0EAD6" }}>{v.title}</p>
+                {isDone && (
+                  <button
+                    onClick={() => undo(v.id)}
+                    className="text-xs font-bold shrink-0"
+                    style={{ color: "#6BCB77" }}
+                  >
+                    ✓ تم — تراجع
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <CopyButton text={v.title} label="نسخ العنوان" />
+                {v.description && v.description !== v.title && (
+                  <CopyButton text={v.description} label="نسخ الوصف" />
+                )}
+                <a
+                  href={v.video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  onClick={() => markDone(v.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                  style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+                >
+                  ⬇️ تحميل الفيديو
+                </a>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
