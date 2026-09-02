@@ -254,6 +254,45 @@ export async function fetchNewestUploadsDetailed(maxResults = 15): Promise<YTUpl
   }
 }
 
+// ── Fetch real playlist membership (video ID → YouTube playlist ID) ──────────
+// Authoritative alternative to guessing a video's show from its title: walks
+// every real playlist on the channel and records which videos are actually in it.
+
+export async function fetchPlaylistVideoMembership(
+  playlists?: { id: string; title: string }[]
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!YOUTUBE_API_KEY) return map;
+
+  const list = playlists ?? (await fetchPlaylistNames());
+
+  await Promise.all(
+    list.map(async (pl) => {
+      let pageToken: string | undefined;
+      try {
+        do {
+          const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+          url.searchParams.set("key", YOUTUBE_API_KEY!);
+          url.searchParams.set("playlistId", pl.id);
+          url.searchParams.set("part", "contentDetails");
+          url.searchParams.set("maxResults", "50");
+          if (pageToken) url.searchParams.set("pageToken", pageToken);
+          const data = await ytFetch(url, 3600);
+          for (const item of data.items ?? []) {
+            const vid = item.contentDetails?.videoId;
+            if (vid && !map.has(vid)) map.set(vid, pl.id);
+          }
+          pageToken = data.nextPageToken;
+        } while (pageToken);
+      } catch (e) {
+        console.error(`playlistItems fetch failed for ${pl.id}:`, e);
+      }
+    })
+  );
+
+  return map;
+}
+
 // ── Fetch featured playlists by name ─────────────────────────────────────────
 // Costs: 1 unit (playlists.list) + 1 unit per playlist (playlistItems.list)
 
