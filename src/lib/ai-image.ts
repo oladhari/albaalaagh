@@ -449,18 +449,26 @@ function buildPersonPhotoInstructions(people: PersonPhoto[]): string {
   return `
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REAL PERSON REFERENCE PHOTO(S) ATTACHED
+REFERENCE IMAGE(S) ATTACHED — CHECK BEFORE USING AS A FACE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Real, verified photo(s) are attached for: ${names}.
+Reference image(s) are attached, labeled as: ${names}.
 
-CRITICAL RULE — this overrides the "no faces" rule above for these specific people:
-* Use ONLY the attached reference photo(s) for these people's faces.
+FIRST, determine what each attached reference image actually is:
+
+CASE A — it is an authentic photograph of a real human being's face:
+* Use ONLY that attached photo for this person's face.
 * Do not modify, beautify, age, rejuvenate, or alter their facial features or ethnicity.
 * Do not invent an alternative face for them.
-* Preserve their identity exactly as shown in the attached photo(s).
+* Preserve their identity exactly as shown in the attached photo.
 * Integrate them naturally into the editorial scene (realistic lighting/composition matching the rest of the image).
-* Do NOT invent faces for anyone else who is not covered by an attached reference photo — for any other person mentioned in the story, keep using symbolic imagery only.`;
+
+CASE B — it is NOT a photograph of a human face (e.g. an organization logo, emblem, seal, banner, flag, or any other graphic/symbol):
+* Do NOT treat it as a person and do NOT use it as a face reference.
+* Do NOT invent a human face to "represent" it.
+* Place it into the composition only as what it actually is — a small graphic/emblem/badge/sign — reproduced as-is, not as a person.
+
+Do NOT invent faces for anyone else who is not covered by an attached photo — for any other person mentioned in the story, keep using symbolic imagery only, per the blanket rule above.`;
 }
 
 // ── Flag accuracy ──────────────────────────────────────────────────────────────
@@ -479,6 +487,31 @@ If a national flag appears in the image, it MUST be the CURRENT, internationally
 Syria (since December 2024): green-white-black horizontal stripes, with THREE red five-pointed stars in a row on the middle white stripe. This is NOT the same as the old flag (red-white-black with TWO green stars and an eagle) — never generate the old flag.
 
 If you are not fully certain of a country's current official flag, do NOT render a detailed, identifiable flag pattern for it — use a generic abstract banner/pennant shape instead of a specific, potentially wrong stripe/star arrangement.`;
+
+// ── No invented humans ───────────────────────────────────────────────────────
+// The narrower "don't invent a named public figure's face" wording left a loophole:
+// models would add an unnamed/generic person (a "lawyer", an "official", an elderly
+// man in a suit) to make a scene feel populated, which is exactly what must never
+// happen. This blanket rule closes that gap — no human figure at all, named or
+// anonymous, unless a genuine photographic reference was attached for that specific
+// person.
+
+const NO_INVENTED_HUMANS_RULE = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NO INVENTED HUMANS — MOST IMPORTANT RULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Do NOT include any human being, face, figure, silhouette-with-facial-features, or humanoid character in the image — UNLESS an authentic photographic reference was attached above for that specific, named real person.
+
+This applies to EVERYONE, not just famous public figures:
+* no invented politicians, ministers, journalists, judges, lawyers, or officials
+* no generic/anonymous "representative" person (e.g. "a defendant", "a protester", "an elderly man holding documents") added purely to make the scene feel populated
+* no invented person even when the story is about a named individual, an organization, a political party, or a court case — if no real photo of that person was attached, they simply do not appear as a person in the image
+
+It is a fully acceptable, often preferable, result for the image to contain ZERO people — just the Albaalaagh template, thematic/symbolic imagery (courthouse, documents, scales of justice, logos, maps, buildings, objects) and the headline text. Do not add a person "to make it feel complete" — the scene is complete without one.
+
+When in doubt, leave people out.`;
 
 function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1280×720 LANDSCAPE
@@ -509,11 +542,8 @@ When no verified person image is provided:
 * Use symbolic imagery: real-world locations, flags, maps, official buildings, courthouses, documents, factories, ports, airports, parliament, hospitals, schools, diplomatic meetings, ships, etc.
 
 NEVER:
-* invent a politician's face
-* invent a minister's face
-* invent a journalist's face
-* invent any public figure's face
 * show violence, blood, or graphic content
+${NO_INVENTED_HUMANS_RULE}
 ${buildPersonPhotoInstructions(people)}
 ${FLAG_ACCURACY_RULES}
 
@@ -576,14 +606,15 @@ DO NOT:
 * add bullet points or quotes
 
 ${people.length ? `⚠️ CRITICAL — FACES:
-A verified reference photo IS attached below for: ${people.map(p => p.name).join("، ")}.
-Use that attached photo for this person's face — see the mandatory rules below.
+Reference image(s) are attached below, labeled: ${people.map(p => p.name).join("، ")}.
+See the mandatory rules below — an attached image is used as a face ONLY if it is actually an authentic photograph of a human being.
 DO NOT invent a face for anyone else not covered by an attached photo — symbolic visuals only for them.` : `⚠️ CRITICAL — NO FACES:
-No verified photo of any person is attached to this request.
+No reference image of any person is attached to this request.
 DO NOT generate or invent any person's face.
 DO NOT attempt to depict any named individual whose photo was not attached.
 Even if a person is named in the title, DO NOT show their face.
 Use symbolic and thematic visuals only — no invented human faces.`}
+${NO_INVENTED_HUMANS_RULE}
 ${buildPersonPhotoInstructions(people)}
 ${FLAG_ACCURACY_RULES}
 
