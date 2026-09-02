@@ -462,6 +462,7 @@ CASE A — it is an authentic photograph of a real human being's face:
 * Do not invent an alternative face for them.
 * Preserve their identity exactly as shown in the attached photo.
 * Integrate them naturally into the editorial scene (realistic lighting/composition matching the rest of the image).
+* If the attached reference photo contains MULTIPLE people (e.g. a group/crowd photo), the label names only ONE specific individual in that photo — identify which face in the photo belongs to that named person and use ONLY that one face. Do not use, blend, or reference the faces of the other people who happen to appear in the same source photo, and do not include them in the output image at all. If you cannot confidently tell which face in a multi-person photo belongs to the named individual, treat this person per the "no authentic image" fallback below instead of guessing — never substitute a different attached face for them.
 
 CASE B — it is NOT a photograph of a human face (e.g. an organization logo, emblem, seal, banner, flag, or any other graphic/symbol):
 * Do NOT treat it as a person and do NOT use it as a face reference.
