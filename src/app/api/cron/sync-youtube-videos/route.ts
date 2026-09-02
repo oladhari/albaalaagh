@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { fetchNewestUploadsDetailed } from "@/lib/youtube";
+import { fetchNewestUploadsDetailed, fetchPlaylistNames, fetchPlaylistVideoMembership } from "@/lib/youtube";
 
 export const maxDuration = 60;
 
@@ -9,18 +9,6 @@ function extractYoutubeId(url: string): string | null {
   if (watch) return watch[1];
   const hosted = url.match(/\/([A-Za-z0-9_-]{11})\.[a-z0-9]+(?:$|[?#])/i);
   return hosted ? hosted[1] : null;
-}
-
-function matchPlaylistId(title: string, playlists: { id: string; name: string }[]): string | null {
-  const prefix = title.split("|")[0]?.trim();
-  if (prefix) {
-    const exact = playlists.find((p) => p.name.trim() === prefix);
-    if (exact) return exact.id;
-  }
-  const substring = playlists.find(
-    (p) => (prefix && p.name.includes(prefix)) || title.includes(p.name)
-  );
-  return substring?.id ?? null;
 }
 
 export async function GET(req: NextRequest) {
@@ -53,14 +41,28 @@ export async function GET(req: NextRequest) {
     const candidateIds = uploads.map((v) => v.videoId);
     const orFilter = candidateIds.map((id) => `video_url.ilike.%${id}%`).join(",");
 
-    const [playlistsRes, existingRes] = await Promise.all([
+    const ytPlaylists = await fetchPlaylistNames();
+
+    const [membership, playlistsRes, existingRes] = await Promise.all([
+      fetchPlaylistVideoMembership(ytPlaylists),
       supabaseAdmin.from("playlists").select("id, name"),
       candidateIds.length
         ? supabaseAdmin.from("site_videos").select("video_url").or(orFilter)
         : Promise.resolve({ data: [] as { video_url: string }[] }),
     ]);
 
-    const playlists = playlistsRes.data ?? [];
+    // Which real YouTube playlist does each internal playlists-table row correspond
+    // to? Matched by exact playlist NAME (a small, reviewable set — ~70 rows — unlike
+    // matching individual video titles, which the channel's history is too inconsistent for).
+    const nameToInternalId = new Map(
+      (playlistsRes.data ?? []).map((p: { id: string; name: string }) => [p.name.trim(), p.id])
+    );
+    const ytPlaylistIdToInternalId = new Map<string, string>();
+    for (const pl of ytPlaylists) {
+      const internalId = nameToInternalId.get(pl.title.trim());
+      if (internalId) ytPlaylistIdToInternalId.set(pl.id, internalId);
+    }
+
     const knownIds = new Set(
       (existingRes.data ?? [])
         .map((v: { video_url: string }) => extractYoutubeId(v.video_url))
@@ -78,7 +80,10 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      const playlistId = matchPlaylistId(v.title, playlists);
+      // Authoritative: is this video actually a member of a real YouTube playlist
+      // that we can map back to an internal playlist row? No guessing from the title.
+      const ytPlaylistId = membership.get(v.videoId);
+      const playlistId = ytPlaylistId ? ytPlaylistIdToInternalId.get(ytPlaylistId) ?? null : null;
       if (!playlistId) results.unmatchedPlaylist++;
 
       const { error } = await supabaseAdmin.from("site_videos").insert({
