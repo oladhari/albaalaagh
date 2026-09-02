@@ -186,6 +186,74 @@ export async function fetchLatestVideos(maxResults = 12): Promise<YTVideo[]> {
   }
 }
 
+// ── Fetch newest uploads with full livestream details (for sync cron) ────────
+// Unlike fetchLatestVideos, this also returns liveStreamingDetails so callers
+// can tell apart a finished livestream, one still in progress, and a regular clip.
+
+export interface YTUploadDetailed {
+  videoId: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  publishedAt: string;
+  isLivestream: boolean;
+  liveEnded: boolean;
+  liveStartedAt: string | null;
+}
+
+export async function fetchNewestUploadsDetailed(maxResults = 15): Promise<YTUploadDetailed[]> {
+  if (!YOUTUBE_API_KEY) return [];
+
+  try {
+    const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    chUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    chUrl.searchParams.set("id", CHANNEL_ID);
+    chUrl.searchParams.set("part", "contentDetails");
+    const chData = await ytFetch(chUrl, 86400);
+    const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) return [];
+
+    const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    plUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    plUrl.searchParams.set("playlistId", uploadsId);
+    plUrl.searchParams.set("part", "snippet");
+    plUrl.searchParams.set("maxResults", String(maxResults));
+    const plData = await ytFetch(plUrl, 300);
+
+    const videoIds: string[] = (plData.items ?? [])
+      .map((item: any) => item.snippet?.resourceId?.videoId)
+      .filter(Boolean);
+    if (!videoIds.length) return [];
+
+    const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+    vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
+    vidUrl.searchParams.set("id", videoIds.join(","));
+    vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
+    const vidData = await ytFetch(vidUrl, 300);
+
+    return (vidData.items ?? []).map((item: any) => {
+      const snippet = item.snippet ?? {};
+      const live = item.liveStreamingDetails;
+      return {
+        videoId:       item.id,
+        title:         snippet.title ?? "",
+        description:   snippet.description ?? "",
+        thumbnail_url:
+          snippet.thumbnails?.maxres?.url ||
+          snippet.thumbnails?.high?.url   ||
+          snippet.thumbnails?.medium?.url || "",
+        publishedAt:   snippet.publishedAt,
+        isLivestream:  !!live,
+        liveEnded:     !!live?.actualEndTime,
+        liveStartedAt: live?.actualStartTime ?? null,
+      } satisfies YTUploadDetailed;
+    });
+  } catch (e) {
+    console.error("YouTube fetchNewestUploadsDetailed error:", e);
+    return [];
+  }
+}
+
 // ── Fetch featured playlists by name ─────────────────────────────────────────
 // Costs: 1 unit (playlists.list) + 1 unit per playlist (playlistItems.list)
 
