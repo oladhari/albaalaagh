@@ -201,7 +201,7 @@ export interface YTUploadDetailed {
   liveStartedAt: string | null;
 }
 
-export async function fetchNewestUploadsDetailed(maxResults = 15): Promise<YTUploadDetailed[]> {
+export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUploadDetailed[]> {
   if (!YOUTUBE_API_KEY) return [];
 
   try {
@@ -213,25 +213,40 @@ export async function fetchNewestUploadsDetailed(maxResults = 15): Promise<YTUpl
     const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadsId) return [];
 
-    const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-    plUrl.searchParams.set("key", YOUTUBE_API_KEY);
-    plUrl.searchParams.set("playlistId", uploadsId);
-    plUrl.searchParams.set("part", "snippet");
-    plUrl.searchParams.set("maxResults", String(maxResults));
-    const plData = await ytFetch(plUrl, 300);
-
-    const videoIds: string[] = (plData.items ?? [])
-      .map((item: any) => item.snippet?.resourceId?.videoId)
-      .filter(Boolean);
+    // Paginate past the API's 50-per-page cap so an upload burst between cron
+    // runs (this channel posts ~20+ videos/day) can't silently push a video
+    // past a single fixed-size page and out of the sync window forever.
+    const videoIds: string[] = [];
+    let pageToken: string | undefined;
+    do {
+      const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+      plUrl.searchParams.set("key", YOUTUBE_API_KEY);
+      plUrl.searchParams.set("playlistId", uploadsId);
+      plUrl.searchParams.set("part", "snippet");
+      plUrl.searchParams.set("maxResults", String(Math.min(50, maxResults - videoIds.length)));
+      if (pageToken) plUrl.searchParams.set("pageToken", pageToken);
+      const plData = await ytFetch(plUrl, 300);
+      for (const item of plData.items ?? []) {
+        const id = item.snippet?.resourceId?.videoId;
+        if (id) videoIds.push(id);
+      }
+      pageToken = plData.nextPageToken;
+    } while (pageToken && videoIds.length < maxResults);
     if (!videoIds.length) return [];
 
-    const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-    vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
-    vidUrl.searchParams.set("id", videoIds.join(","));
-    vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
-    const vidData = await ytFetch(vidUrl, 300);
+    // videos.list accepts at most 50 IDs per call.
+    const items: any[] = [];
+    for (let i = 0; i < videoIds.length; i += 50) {
+      const chunk = videoIds.slice(i, i + 50);
+      const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+      vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
+      vidUrl.searchParams.set("id", chunk.join(","));
+      vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
+      const vidData = await ytFetch(vidUrl, 300);
+      items.push(...(vidData.items ?? []));
+    }
 
-    return (vidData.items ?? []).map((item: any) => {
+    return items.map((item: any) => {
       const snippet = item.snippet ?? {};
       const live = item.liveStreamingDetails;
       return {

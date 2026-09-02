@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    const uploads = await fetchNewestUploadsDetailed(15);
+    const uploads = await fetchNewestUploadsDetailed(100);
     results.checked = uploads.length;
 
     // Check existence per-candidate (ilike on the 11-char id) instead of pulling
