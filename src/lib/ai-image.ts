@@ -432,15 +432,34 @@ export interface PersonPhoto {
   url: string;
 }
 
-async function fetchPersonFiles(people: PersonPhoto[]) {
+interface FetchedPersonFiles {
+  files: Awaited<ReturnType<typeof toFile>>[];
+  attached: PersonPhoto[];
+  failed: PersonPhoto[];
+}
+
+// Returns only the people whose photo was actually downloaded successfully
+// (`attached`), separate from the full requested list. Callers MUST build
+// their prompt from `attached`, not the original list — telling the model a
+// reference photo is attached when the fetch actually failed (e.g. a broken
+// or hotlink-protected manual URL) causes it to silently fall back to a
+// symbolic/no-face image with no visible error anywhere.
+async function fetchPersonFiles(people: PersonPhoto[]): Promise<FetchedPersonFiles> {
   const files: Awaited<ReturnType<typeof toFile>>[] = [];
+  const attached: PersonPhoto[] = [];
+  const failed: PersonPhoto[] = [];
   for (const p of people) {
-    const res = await fetch(p.url);
-    if (!res.ok) continue;
-    const buf = Buffer.from(await res.arrayBuffer());
-    files.push(await toFile(buf, `person-${files.length}.png`, { type: res.headers.get("content-type") ?? "image/png" }));
+    try {
+      const res = await fetch(p.url);
+      if (!res.ok) { failed.push(p); continue; }
+      const buf = Buffer.from(await res.arrayBuffer());
+      files.push(await toFile(buf, `person-${files.length}.png`, { type: res.headers.get("content-type") ?? "image/png" }));
+      attached.push(p);
+    } catch {
+      failed.push(p);
+    }
   }
-  return files;
+  return { files, attached, failed };
 }
 
 function buildPersonPhotoInstructions(people: PersonPhoto[]): string {
@@ -567,12 +586,17 @@ TEMPLATE:
 first attached image — preserve it exactly as the base, only fill the content area`;
 }
 
-export async function generateNewsImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<string> {
-  const imagePrompt = buildNews16_9Prompt(title, excerpt, people);
+export interface GeneratedImageResult {
+  url: string;
+  failedPeople: string[];
+}
 
+export async function generateNewsImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<GeneratedImageResult> {
   const templateBuffer = await fs.readFile(NEWS_16_9_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
-  const personFiles = await fetchPersonFiles(people);
+  const { files: personFiles, attached, failed } = await fetchPersonFiles(people);
+
+  const imagePrompt = buildNews16_9Prompt(title, excerpt, attached);
 
   const result = await getOpenAI().images.edit({
     model: "gpt-image-2",
@@ -588,7 +612,8 @@ export async function generateNewsImage(title: string, excerpt: string, people: 
 
   const buffer = Buffer.from(b64, "base64");
   const key = `ai-images/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-  return uploadToR2(key, buffer, "image/png");
+  const url = await uploadToR2(key, buffer, "image/png");
+  return { url, failedPeople: failed.map((p) => p.name) };
 }
 
 const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
@@ -666,15 +691,15 @@ TEMPLATE:
 attached image — preserve it exactly as the base, only fill the content area`;
 }
 
-export async function generateFacebookImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<string> {
+export async function generateFacebookImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<GeneratedImageResult> {
   const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
-  const personFiles = await fetchPersonFiles(people);
+  const { files: personFiles, attached, failed } = await fetchPersonFiles(people);
 
   const result = await getOpenAI().images.edit({
     model: "gpt-image-2",
     image: personFiles.length ? [templateFile, ...personFiles] : templateFile,
-    prompt: buildFacebookPrompt(title, excerpt, people),
+    prompt: buildFacebookPrompt(title, excerpt, attached),
     size: "1024x1024",
     quality: "medium",
     n: 1,
@@ -689,7 +714,8 @@ export async function generateFacebookImage(title: string, excerpt: string, peop
     .toBuffer();
 
   const key = `ai-images/fb-${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-  return uploadToR2(key, buffer, "image/png");
+  const url = await uploadToR2(key, buffer, "image/png");
+  return { url, failedPeople: failed.map((p) => p.name) };
 }
 
 const WRITING_ARTICLE_SYSTEM_PROMPT = `You are the official image prompt generator for Albaalaagh (قناة البلاغ).

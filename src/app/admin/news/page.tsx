@@ -131,6 +131,9 @@ export default function AdminNewsPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في إنشاء الصورة"); return; }
       setPreview((p) => p && ({ ...p, image_url: data.url }));
+      if (data.failedPeople?.length) {
+        alert(`تعذر تحميل صورة: ${data.failedPeople.join("، ")} — تم إنشاء الصورة بدون استخدام صورتهم الحقيقية. تحقق من الرابط.`);
+      }
     } finally {
       setGeneratingImage(false);
     }
@@ -149,6 +152,9 @@ export default function AdminNewsPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في إنشاء الصورة"); return; }
       setPreview((p) => p && ({ ...p, facebook_image: data.url }));
+      if (data.failedPeople?.length) {
+        alert(`تعذر تحميل صورة: ${data.failedPeople.join("، ")} — تم إنشاء الصورة بدون استخدام صورتهم الحقيقية. تحقق من الرابط.`);
+      }
     } finally {
       setGeneratingFbImage(false);
     }
