@@ -19,15 +19,16 @@ export async function POST(req: NextRequest) {
 
   try {
     let url: string;
+    let failedPeople: string[] = [];
     if (target === "facebook") {
-      url = await generateFacebookImage(title, excerpt ?? "", people);
+      ({ url, failedPeople } = await generateFacebookImage(title, excerpt ?? "", people));
     } else if (target === "writer") {
       if (!writerName) return NextResponse.json({ error: "اسم الكاتب مطلوب" }, { status: 400 });
       url = await generateWriterArticleImage(title, excerpt ?? "", writerName, writerImageUrl ?? null);
     } else {
-      url = await generateNewsImage(title, excerpt ?? "", people);
+      ({ url, failedPeople } = await generateNewsImage(title, excerpt ?? "", people));
     }
-    return NextResponse.json({ url });
+    return NextResponse.json({ url, failedPeople });
   } catch (err: any) {
     console.error("[images/generate]", err);
     return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });

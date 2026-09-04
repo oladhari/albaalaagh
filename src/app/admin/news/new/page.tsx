@@ -20,6 +20,7 @@ export default function NewNewsPage() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingFbImage, setGeneratingFbImage] = useState(false);
   const [personPhotos, setPersonPhotos] = useState<PersonPhoto[]>([]);
+  const [photoWarning, setPhotoWarning] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -37,6 +38,7 @@ export default function NewNewsPage() {
   const generateImage = async () => {
     setGeneratingImage(true);
     setError(null);
+    setPhotoWarning(null);
     try {
       const res = await fetch("/api/admin/images/generate", {
         method: "POST",
@@ -47,6 +49,9 @@ export default function NewNewsPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("image_url", data.url);
+      if (data.failedPeople?.length) {
+        setPhotoWarning(`تعذر تحميل صورة: ${data.failedPeople.join("، ")} — تم إنشاء الصورة بدون استخدام صورتهم الحقيقية. تحقق من الرابط.`);
+      }
     } finally {
       setGeneratingImage(false);
     }
@@ -55,6 +60,7 @@ export default function NewNewsPage() {
   const generateFacebookImage = async () => {
     setGeneratingFbImage(true);
     setError(null);
+    setPhotoWarning(null);
     try {
       const res = await fetch("/api/admin/images/generate", {
         method: "POST",
@@ -65,6 +71,9 @@ export default function NewNewsPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("facebook_image", data.url);
+      if (data.failedPeople?.length) {
+        setPhotoWarning(`تعذر تحميل صورة: ${data.failedPeople.join("، ")} — تم إنشاء الصورة بدون استخدام صورتهم الحقيقية. تحقق من الرابط.`);
+      }
     } finally {
       setGeneratingFbImage(false);
     }
@@ -219,7 +228,14 @@ export default function NewNewsPage() {
               />
             </div>
 
-            <PersonPhotoPicker people={personPhotos} onChange={setPersonPhotos} />
+            <PersonPhotoPicker people={personPhotos} onChange={(p) => { setPersonPhotos(p); setPhotoWarning(null); }} />
+
+            {photoWarning && (
+              <div className="p-3 rounded-lg text-xs"
+                style={{ background: "rgba(255,180,60,0.1)", border: "1px solid rgba(255,180,60,0.3)", color: "#E0A93D" }}>
+                ⚠️ {photoWarning}
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between mb-1">
