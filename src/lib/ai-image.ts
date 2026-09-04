@@ -540,6 +540,26 @@ It is a fully acceptable, often preferable, result for the image to contain ZERO
 
 When in doubt, leave people out.`;
 
+// When a real reference photo WAS attached, the "prefer zero people" framing above
+// actively works against using it — the model was observed defaulting to a
+// people-less symbolic image even with a clean, unambiguous, successfully attached
+// photo, because the blanket rule tells it that omitting people is "often
+// preferable." For this case the rule must instead mandate using the attached
+// photo, and only fall back to "no invented humans" for anyone else in the story.
+function buildNoInventedHumansRule(people: PersonPhoto[]): string {
+  if (!people.length) return NO_INVENTED_HUMANS_RULE;
+  const names = people.map(p => p.name).join("، ");
+  return `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REAL PEOPLE MUST APPEAR — MOST IMPORTANT RULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+An authentic reference photo WAS attached above for: ${names}. You MUST include this exact person in the image, using their attached photo as the face reference exactly as instructed below (see CASE A). Do NOT omit them and do NOT fall back to a people-less/symbolic-only composition — that fallback only applies when NO reference photo was provided for a person, which is not the case here.
+
+For anyone else mentioned in the story who has no attached reference photo, do not invent a face for them — no invented politicians, officials, journalists, or generic "representative" people. Keep the human presence in the scene limited to the named person(s) whose real photo was attached above.`;
+}
+
 function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1280×720 LANDSCAPE
 
@@ -570,7 +590,7 @@ When no verified person image is provided:
 
 NEVER:
 * show violence, blood, or graphic content
-${NO_INVENTED_HUMANS_RULE}
+${buildNoInventedHumansRule(people)}
 ${buildPersonPhotoInstructions(people)}
 ${FLAG_ACCURACY_RULES}
 
@@ -647,7 +667,7 @@ DO NOT generate or invent any person's face.
 DO NOT attempt to depict any named individual whose photo was not attached.
 Even if a person is named in the title, DO NOT show their face.
 Use symbolic and thematic visuals only — no invented human faces.`}
-${NO_INVENTED_HUMANS_RULE}
+${buildNoInventedHumansRule(people)}
 ${buildPersonPhotoInstructions(people)}
 ${FLAG_ACCURACY_RULES}
 
