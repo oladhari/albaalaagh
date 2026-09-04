@@ -451,11 +451,18 @@ async function fetchPersonFiles(people: PersonPhoto[]): Promise<FetchedPersonFil
   for (const p of people) {
     try {
       const res = await fetch(p.url);
-      if (!res.ok) { failed.push(p); continue; }
+      if (!res.ok) {
+        console.warn(`[ai-image] person photo fetch failed: name="${p.name}" url="${p.url}" status=${res.status}`);
+        failed.push(p);
+        continue;
+      }
       const buf = Buffer.from(await res.arrayBuffer());
-      files.push(await toFile(buf, `person-${files.length}.png`, { type: res.headers.get("content-type") ?? "image/png" }));
+      const contentType = res.headers.get("content-type") ?? "image/png";
+      console.log(`[ai-image] person photo attached: name="${p.name}" url="${p.url}" contentType=${contentType} bytes=${buf.length}`);
+      files.push(await toFile(buf, `person-${files.length}.png`, { type: contentType }));
       attached.push(p);
-    } catch {
+    } catch (e) {
+      console.warn(`[ai-image] person photo fetch threw: name="${p.name}" url="${p.url}"`, e);
       failed.push(p);
     }
   }
