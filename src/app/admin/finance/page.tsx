@@ -45,6 +45,7 @@ export default function AdminFinancePage() {
   const [fxUsdToTnd, setFxUsdToTnd] = useState("");
   const [fxJpyToTnd, setFxJpyToTnd] = useState("");
   const [savingFx, setSavingFx]     = useState(false);
+  const [fetchingFx, setFetchingFx] = useState(false);
   const [summaryCurrency, setSummaryCurrency] = useState<"USD" | "JPY" | "TND">("USD");
 
   const [showServiceForm, setShowServiceForm] = useState(false);
@@ -97,6 +98,29 @@ export default function AdminFinancePage() {
       }),
     ]);
     setSavingFx(false);
+  }
+
+  async function fetchLiveFxRates() {
+    setFetchingFx(true);
+    try {
+      const res = await fetch("/api/admin/finance/fx-rates", { credentials: "include" });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setFxUsdToTnd(String(data.fx_usd_to_tnd));
+      setFxJpyToTnd(String(data.fx_jpy_to_tnd));
+      await Promise.all([
+        fetch("/api/admin/settings", {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include",
+          body: JSON.stringify({ key: "fx_usd_to_tnd", value: String(data.fx_usd_to_tnd) }),
+        }),
+        fetch("/api/admin/settings", {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include",
+          body: JSON.stringify({ key: "fx_jpy_to_tnd", value: String(data.fx_jpy_to_tnd) }),
+        }),
+      ]);
+    } finally {
+      setFetchingFx(false);
+    }
   }
 
   async function changeSummaryCurrency(cur: "USD" | "JPY" | "TND") {
@@ -295,9 +319,14 @@ export default function AdminFinancePage() {
             style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}>
             {savingFx ? "جارٍ الحفظ..." : "حفظ الأسعار"}
           </button>
+          <button onClick={fetchLiveFxRates} disabled={fetchingFx}
+            className="px-4 py-2 rounded-lg text-sm font-bold"
+            style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}>
+            {fetchingFx ? "جارٍ الجلب..." : "⟳ جلب الأسعار تلقائياً"}
+          </button>
           {missingRates && (
             <span className="text-xs" style={{ color: "#FF6B6B" }}>
-              أدخل سعري الصرف (USD→TND و JPY→TND) واضغط حفظ لعرض المجموع الكلي
+              أدخل سعري الصرف (USD→TND و JPY→TND) أو اضغط &quot;جلب الأسعار تلقائياً&quot; لعرض المجموع الكلي
             </span>
           )}
         </div>
