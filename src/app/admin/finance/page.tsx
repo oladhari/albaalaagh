@@ -9,6 +9,8 @@ interface Service {
   currency: "USD" | "JPY" | "TND";
   billing_type: "subscription" | "usage";
   display_order: number;
+  monthly_amount: number | null;
+  start_date: string | null;
 }
 
 interface Entry {
@@ -29,8 +31,10 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   display: "block", fontSize: "12px", color: "#9A9070", marginBottom: "6px", fontWeight: 600,
 };
-const EMPTY_SERVICE_FORM: { name: string; currency: Service["currency"]; billing_type: Service["billing_type"] } =
-  { name: "", currency: "USD", billing_type: "usage" };
+const EMPTY_SERVICE_FORM: {
+  name: string; currency: Service["currency"]; billing_type: Service["billing_type"];
+  monthly_amount: string; start_date: string;
+} = { name: "", currency: "USD", billing_type: "usage", monthly_amount: "", start_date: "" };
 const EMPTY_ENTRY_FORM = { amount: "", entry_date: new Date().toISOString().slice(0, 10), note: "" };
 
 export default function AdminFinancePage() {
@@ -50,6 +54,10 @@ export default function AdminFinancePage() {
   const [addingEntryFor, setAddingEntryFor] = useState<string | null>(null);
   const [entryForm, setEntryForm]           = useState({ ...EMPTY_ENTRY_FORM });
   const [savingEntry, setSavingEntry]       = useState(false);
+
+  const [editingRecurringFor, setEditingRecurringFor] = useState<string | null>(null);
+  const [recurringForm, setRecurringForm]   = useState({ monthly_amount: "", start_date: "" });
+  const [savingRecurring, setSavingRecurring] = useState(false);
 
   async function loadAll() {
     setLoading(true);
@@ -117,17 +125,36 @@ export default function AdminFinancePage() {
 
   const missingRates = (totalsByCurrency.USD > 0 && !fxUsdToTnd) || (totalsByCurrency.JPY > 0 && !fxJpyToTnd);
 
+  // اشتراك بـ monthly_amount و start_date يُسقَط تلقائياً على كل شهر من بدايته حتى الآن،
+  // إلا إذا وُجد سجلّ فعلي لنفس الخدمة في ذلك الشهر فيُستعمل السجلّ الفعلي بدلاً منه.
   const monthlyBreakdown = useMemo(() => {
-    const map: Record<string, Record<string, number>> = {};
-    for (const e of entries) {
-      const service = services.find(s => s.id === e.service_id);
-      if (!service) continue;
-      const month = e.entry_date.slice(0, 7); // YYYY-MM
-      (map[month] ??= { USD: 0, JPY: 0, TND: 0 })[service.currency] += e.amount;
+    const monthKeys = new Set<string>();
+    for (const e of entries) monthKeys.add(e.entry_date.slice(0, 7));
+    const nowMonth = new Date().toISOString().slice(0, 7);
+    for (const s of services) {
+      if (s.billing_type === "subscription" && s.monthly_amount && s.start_date) {
+        let month = s.start_date.slice(0, 7);
+        while (month <= nowMonth) {
+          monthKeys.add(month);
+          const [y, m] = month.split("-").map(Number);
+          const next = new Date(Date.UTC(y, m, 1));
+          month = next.toISOString().slice(0, 7);
+        }
+      }
     }
-    return Object.entries(map)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([month, totals]) => {
+
+    return Array.from(monthKeys)
+      .sort((a, b) => b.localeCompare(a))
+      .map(month => {
+        const totals: Record<string, number> = { USD: 0, JPY: 0, TND: 0 };
+        for (const s of services) {
+          const monthEntries = entries.filter(e => e.service_id === s.id && e.entry_date.slice(0, 7) === month);
+          if (monthEntries.length > 0) {
+            totals[s.currency] += monthEntries.reduce((sum, e) => sum + e.amount, 0);
+          } else if (s.billing_type === "subscription" && s.monthly_amount && s.start_date && s.start_date.slice(0, 7) <= month) {
+            totals[s.currency] += s.monthly_amount;
+          }
+        }
         const [year, m] = month.split("-");
         const tnd = Object.entries(totals).reduce((sum, [cur, amt]) => sum + amt * rateFor(cur), 0);
         return { month, label: `${TUNISIAN_MONTHS[parseInt(m, 10) - 1]} ${year}`, totals, tnd };
@@ -167,6 +194,18 @@ export default function AdminFinancePage() {
       setAddingEntryFor(null); setEntryForm({ ...EMPTY_ENTRY_FORM });
       loadAll();
     } finally { setSavingEntry(false); }
+  }
+
+  async function saveRecurring(serviceId: string) {
+    setSavingRecurring(true);
+    try {
+      await fetch(`/api/admin/finance/services/${serviceId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include",
+        body: JSON.stringify({ monthly_amount: recurringForm.monthly_amount, start_date: recurringForm.start_date }),
+      });
+      setEditingRecurringFor(null);
+      loadAll();
+    } finally { setSavingRecurring(false); }
   }
 
   async function deleteEntry(id: string) {
@@ -307,6 +346,21 @@ export default function AdminFinancePage() {
                 <option value="subscription">اشتراك شهري</option>
               </select>
             </div>
+            {serviceForm.billing_type === "subscription" && (
+              <>
+                <div>
+                  <label style={labelStyle}>القيمة الشهرية ({serviceForm.currency})</label>
+                  <input style={inputStyle} type="number" step="0.01" placeholder="تُحسب كل شهر تلقائياً"
+                    value={serviceForm.monthly_amount}
+                    onChange={e => setServiceForm(p => ({ ...p, monthly_amount: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={labelStyle}>تاريخ بداية الاشتراك</label>
+                  <input style={inputStyle} type="date" value={serviceForm.start_date}
+                    onChange={e => setServiceForm(p => ({ ...p, start_date: e.target.value }))} />
+                </div>
+              </>
+            )}
           </div>
           <div className="flex gap-3 mt-6">
             <button onClick={() => { setShowServiceForm(false); setError(null); }}
@@ -343,12 +397,33 @@ export default function AdminFinancePage() {
                     <p className="font-black text-base" style={{ color: "#C9A844" }}>{service.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
                       {service.billing_type === "subscription" ? "اشتراك شهري" : "حسب الاستخدام"} · {serviceEntries.length} سجلّ
+                      {service.billing_type === "subscription" && service.monthly_amount && service.start_date && (
+                        <> · يُحتسب تلقائياً {CURRENCY_SYMBOL[service.currency]}{service.monthly_amount} كل شهر منذ {service.start_date}</>
+                      )}
+                      {service.billing_type === "subscription" && !(service.monthly_amount && service.start_date) && (
+                        <span style={{ color: "#FF6B6B" }}> · لم يُحدَّد الاحتساب الشهري التلقائي بعد</span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="font-bold text-sm" style={{ color: "#F0EAD6" }}>
                       {CURRENCY_SYMBOL[service.currency]} {serviceTotal.toFixed(2)}
                     </p>
+                    {service.billing_type === "subscription" && (
+                      <button
+                        onClick={() => {
+                          if (editingRecurringFor === service.id) { setEditingRecurringFor(null); return; }
+                          setEditingRecurringFor(service.id);
+                          setRecurringForm({
+                            monthly_amount: service.monthly_amount != null ? String(service.monthly_amount) : "",
+                            start_date: service.start_date ?? "",
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                        style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844" }}>
+                        ⚙ الاحتساب الشهري
+                      </button>
+                    )}
                     <button
                       onClick={() => { setAddingEntryFor(addingEntryFor === service.id ? null : service.id); setEntryForm({ ...EMPTY_ENTRY_FORM }); }}
                       className="px-3 py-1.5 rounded-lg text-xs font-bold"
@@ -359,6 +434,29 @@ export default function AdminFinancePage() {
                       className="p-1.5 rounded-lg text-xs" style={{ background: "rgba(255,100,100,0.1)", color: "#FF6B6B" }}>🗑</button>
                   </div>
                 </div>
+
+                {editingRecurringFor === service.id && (
+                  <div className="px-5 py-4 flex flex-wrap items-end gap-3" style={{ background: "#111008" }}>
+                    <div style={{ width: "160px" }}>
+                      <label style={labelStyle}>القيمة الشهرية ({service.currency})</label>
+                      <input style={inputStyle} type="number" step="0.01" value={recurringForm.monthly_amount}
+                        onChange={e => setRecurringForm(p => ({ ...p, monthly_amount: e.target.value }))} />
+                    </div>
+                    <div style={{ width: "160px" }}>
+                      <label style={labelStyle}>تاريخ البداية</label>
+                      <input style={inputStyle} type="date" value={recurringForm.start_date}
+                        onChange={e => setRecurringForm(p => ({ ...p, start_date: e.target.value }))} />
+                    </div>
+                    <button onClick={() => saveRecurring(service.id)} disabled={savingRecurring}
+                      className="px-4 py-2.5 rounded-lg text-sm font-bold"
+                      style={{ background: "linear-gradient(135deg, #C9A844, #9A7B28)", color: "#111008" }}>
+                      {savingRecurring ? "..." : "حفظ"}
+                    </button>
+                    <p className="text-xs w-full" style={{ color: "#9A9070" }}>
+                      سيُحتسب هذا المبلغ تلقائياً في كل شهر من تاريخ البداية حتى الآن، إلا إذا أضفت سجلّاً فعلياً لنفس الشهر (يُستعمل عندها السجلّ الفعلي بدل القيمة الثابتة).
+                    </p>
+                  </div>
+                )}
 
                 {addingEntryFor === service.id && (
                   <div className="px-5 py-4 flex flex-wrap items-end gap-3" style={{ background: "#111008" }}>

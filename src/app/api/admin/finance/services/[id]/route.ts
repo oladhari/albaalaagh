@@ -13,6 +13,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.currency !== undefined) updates.currency = body.currency;
   if (body.billing_type !== undefined) updates.billing_type = body.billing_type;
   if (body.display_order !== undefined) updates.display_order = body.display_order;
+  if (body.monthly_amount !== undefined) updates.monthly_amount = body.monthly_amount === "" ? null : Number(body.monthly_amount);
+  if (body.start_date !== undefined) updates.start_date = body.start_date || null;
 
   const { data, error } = await supabaseAdmin
     .from("expense_services")

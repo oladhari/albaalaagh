@@ -163,6 +163,12 @@ CREATE INDEX IF NOT EXISTS idx_writer_articles_writer ON writer_articles(writer_
 ALTER TABLE writer_articles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_read_writer_articles" ON writer_articles
   FOR SELECT USING (status != 'rejected');
+
+-- اشتراكات المصاريف الشهرية: بدل إدخال سجلّ يدوي كل شهر، الاشتراك يُسقَط
+-- تلقائياً على كل شهر من start_date حتى الآن بقيمة monthly_amount، إلا إذا وُجد
+-- سجلّ فعلي (expense_entries) لنفس الخدمة في ذلك الشهر فيُستعمل بدلاً منه
+ALTER TABLE expense_services ADD COLUMN IF NOT EXISTS monthly_amount NUMERIC(12,2);
+ALTER TABLE expense_services ADD COLUMN IF NOT EXISTS start_date DATE;
 ```
 
 ---
