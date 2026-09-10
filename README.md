@@ -152,7 +152,7 @@ CREATE POLICY "public_read_writer_articles" ON writer_articles
 لعرض جميع الجداول والأعمدة محلياً (لا يُحفظ في git):
 
 ```bash
-curl -s "https://vtsadbazsctspncausha.supabase.co/rest/v1/?apikey=***REMOVED-LEAKED-SUPABASE-SERVICE-ROLE-KEY***" | node -e "
+source .env.local && curl -s "https://vtsadbazsctspncausha.supabase.co/rest/v1/?apikey=$SUPABASE_SERVICE_ROLE_KEY" | node -e "
 const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
 const defs = d.definitions;
 const lines = ['# Supabase Schema — albaalaagh\n'];
