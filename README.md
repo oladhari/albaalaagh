@@ -106,6 +106,26 @@ CREATE TABLE IF NOT EXISTS subscribers (
   status                 TEXT,
   created_at             TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- تتبّع المصاريف (Claude/OpenAI/Grok/Gemini/استضافة...)
+CREATE TABLE IF NOT EXISTS expense_services (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name          TEXT NOT NULL,
+  currency      TEXT NOT NULL DEFAULT 'USD' CHECK (currency IN ('USD', 'JPY', 'TND')),
+  billing_type  TEXT NOT NULL DEFAULT 'usage' CHECK (billing_type IN ('subscription', 'usage')),
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS expense_entries (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  service_id UUID NOT NULL REFERENCES expense_services(id) ON DELETE CASCADE,
+  amount     NUMERIC(12,2) NOT NULL,
+  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  note       TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_expense_entries_service ON expense_entries(service_id, entry_date DESC);
+-- أسعار الصرف تُحفظ في site_settings بالمفاتيح fx_usd_to_tnd و fx_jpy_to_tnd
 ```
 
 #### تحديثات على جداول موجودة
