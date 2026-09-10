@@ -145,6 +145,7 @@ export default function AdminFinancePage() {
 
     return Array.from(monthKeys)
       .sort((a, b) => b.localeCompare(a))
+      .slice(0, 12) // آخر 12 شهراً فقط — تفادياً لجدول طويل بأشهر قديمة متطابقة القيم
       .map(month => {
         const totals: Record<string, number> = { USD: 0, JPY: 0, TND: 0 };
         for (const s of services) {
