@@ -9,7 +9,7 @@ export async function GET() {
   const [servicesRes, entriesRes] = await Promise.all([
     supabaseAdmin
       .from("expense_services")
-      .select("id, name, currency, billing_type, display_order, created_at")
+      .select("id, name, currency, billing_type, display_order, monthly_amount, start_date, created_at")
       .order("display_order", { ascending: true })
       .order("name", { ascending: true }),
     supabaseAdmin
