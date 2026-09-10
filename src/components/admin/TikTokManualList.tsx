@@ -106,15 +106,6 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <p className="text-sm font-medium" style={{ color: "#F0EAD6" }}>{v.title}</p>
-                {isDone && (
-                  <button
-                    onClick={() => undo(v.id)}
-                    className="text-xs font-bold shrink-0"
-                    style={{ color: "#6BCB77" }}
-                  >
-                    ✓ تم — تراجع
-                  </button>
-                )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <CopyButton text={v.title} label="نسخ العنوان" />
@@ -126,12 +117,22 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  onClick={() => markDone(v.id)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
                   style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
                 >
                   ⬇️ تحميل الفيديو
                 </a>
+                <button
+                  onClick={() => (isDone ? undo(v.id) : markDone(v.id))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                  style={{
+                    background: isDone ? "rgba(107,203,119,0.15)" : "transparent",
+                    color: isDone ? "#6BCB77" : "#9A9070",
+                    border: isDone ? "none" : "1px solid #2E2A18",
+                  }}
+                >
+                  {isDone ? "✓ تم النشر — تراجع" : "وضع علامة: تم النشر"}
+                </button>
               </div>
             </div>
           );
