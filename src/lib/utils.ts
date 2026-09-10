@@ -4,7 +4,7 @@ import { ar } from "date-fns/locale";
 // Tunisian dialect month names (French-derived), by getMonth() index.
 // Most of our readers are in Tunisia and use these day-to-day rather than
 // the Mashriqi/MSA names date-fns gives us — shown alongside when they differ.
-const TUNISIAN_MONTHS = [
+export const TUNISIAN_MONTHS = [
   "جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان",
   "جويلية", "أوت", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
 ];

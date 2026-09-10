@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { TUNISIAN_MONTHS } from "@/lib/utils";
 
 interface Service {
   id: string;
@@ -116,6 +117,23 @@ export default function AdminFinancePage() {
 
   const missingRates = (totalsByCurrency.USD > 0 && !fxUsdToTnd) || (totalsByCurrency.JPY > 0 && !fxJpyToTnd);
 
+  const monthlyBreakdown = useMemo(() => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const e of entries) {
+      const service = services.find(s => s.id === e.service_id);
+      if (!service) continue;
+      const month = e.entry_date.slice(0, 7); // YYYY-MM
+      (map[month] ??= { USD: 0, JPY: 0, TND: 0 })[service.currency] += e.amount;
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([month, totals]) => {
+        const [year, m] = month.split("-");
+        const tnd = Object.entries(totals).reduce((sum, [cur, amt]) => sum + amt * rateFor(cur), 0);
+        return { month, label: `${TUNISIAN_MONTHS[parseInt(m, 10) - 1]} ${year}`, totals, tnd };
+      });
+  }, [entries, services, fxUsdToTnd, fxJpyToTnd]);
+
   async function handleSaveService() {
     if (!serviceForm.name.trim()) { setError("اسم الخدمة مطلوب"); return; }
     setSavingService(true); setError(null);
@@ -216,6 +234,45 @@ export default function AdminFinancePage() {
           )}
         </div>
       </div>
+
+      {/* Monthly breakdown */}
+      {monthlyBreakdown.length > 0 && (
+        <div className="rounded-2xl p-5 mb-6" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
+          <p className="text-sm font-bold mb-4" style={{ color: "#F0EAD6" }}>المصاريف حسب الشهر</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #2E2A18" }}>
+                  <th className="text-right py-2 pr-2" style={{ color: "#9A9070" }}>الشهر</th>
+                  <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>USD</th>
+                  <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>JPY</th>
+                  <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>TND</th>
+                  <th className="text-right py-2 pl-2" style={{ color: "#9A9070" }}>المجموع (د.ت)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyBreakdown.map(row => (
+                  <tr key={row.month} style={{ borderBottom: "1px solid #2E2A18" }}>
+                    <td className="py-2 pr-2 font-bold" style={{ color: "#C9A844" }}>{row.label}</td>
+                    <td className="py-2 px-2" style={{ color: row.totals.USD ? "#F0EAD6" : "#6B6040" }}>
+                      {row.totals.USD ? `$${row.totals.USD.toFixed(2)}` : "—"}
+                    </td>
+                    <td className="py-2 px-2" style={{ color: row.totals.JPY ? "#F0EAD6" : "#6B6040" }}>
+                      {row.totals.JPY ? `¥${row.totals.JPY.toFixed(0)}` : "—"}
+                    </td>
+                    <td className="py-2 px-2" style={{ color: row.totals.TND ? "#F0EAD6" : "#6B6040" }}>
+                      {row.totals.TND ? `${row.totals.TND.toFixed(2)} د.ت` : "—"}
+                    </td>
+                    <td className="py-2 pl-2 font-bold" style={{ color: "#F0EAD6" }}>
+                      {missingRates ? "—" : `${row.tnd.toFixed(2)} د.ت`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* New service form */}
       {showServiceForm && (
