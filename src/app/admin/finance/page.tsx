@@ -45,6 +45,7 @@ export default function AdminFinancePage() {
   const [fxUsdToTnd, setFxUsdToTnd] = useState("");
   const [fxJpyToTnd, setFxJpyToTnd] = useState("");
   const [savingFx, setSavingFx]     = useState(false);
+  const [summaryCurrency, setSummaryCurrency] = useState<"USD" | "JPY" | "TND">("USD");
 
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceForm, setServiceForm]         = useState({ ...EMPTY_SERVICE_FORM });
@@ -71,12 +72,14 @@ export default function AdminFinancePage() {
   }
 
   async function loadFx() {
-    const [u, j] = await Promise.all([
+    const [u, j, c] = await Promise.all([
       fetch("/api/admin/settings?key=fx_usd_to_tnd", { credentials: "include" }).then(r => r.json()),
       fetch("/api/admin/settings?key=fx_jpy_to_tnd", { credentials: "include" }).then(r => r.json()),
+      fetch("/api/admin/settings?key=fx_summary_currency", { credentials: "include" }).then(r => r.json()),
     ]);
     if (u.value) setFxUsdToTnd(u.value);
     if (j.value) setFxJpyToTnd(j.value);
+    if (c.value === "USD" || c.value === "JPY" || c.value === "TND") setSummaryCurrency(c.value);
   }
 
   useEffect(() => { loadAll(); loadFx(); }, []);
@@ -94,6 +97,14 @@ export default function AdminFinancePage() {
       }),
     ]);
     setSavingFx(false);
+  }
+
+  async function changeSummaryCurrency(cur: "USD" | "JPY" | "TND") {
+    setSummaryCurrency(cur);
+    await fetch("/api/admin/settings", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include",
+      body: JSON.stringify({ key: "fx_summary_currency", value: cur }),
+    });
   }
 
   function rateFor(currency: string): number {
@@ -119,11 +130,19 @@ export default function AdminFinancePage() {
     return totals;
   }, [entries, services]);
 
+  // كل المبالغ تُحوَّل أولاً للدينار (rateFor يعطي سعر الصرف إلى TND)، ثم تُقسَم
+  // على سعر صرف عملة الملخّص لتصل للعملة المطلوب عرض المجموع بها.
   const grandTotalTnd = useMemo(() => {
     return Object.entries(totalsByCurrency).reduce((sum, [cur, amt]) => sum + amt * rateFor(cur), 0);
   }, [totalsByCurrency, fxUsdToTnd, fxJpyToTnd]);
 
-  const missingRates = (totalsByCurrency.USD > 0 && !fxUsdToTnd) || (totalsByCurrency.JPY > 0 && !fxJpyToTnd);
+  const missingRates = !fxUsdToTnd || !fxJpyToTnd;
+
+  const grandTotalSummary = missingRates ? 0 : grandTotalTnd / rateFor(summaryCurrency);
+
+  function toSummary(tndAmount: number): number {
+    return tndAmount / rateFor(summaryCurrency);
+  }
 
   // اشتراك بـ monthly_amount و start_date يُسقَط تلقائياً على كل شهر من بدايته حتى الآن،
   // إلا إذا وُجد سجلّ فعلي لنفس الخدمة في ذلك الشهر فيُستعمل السجلّ الفعلي بدلاً منه.
@@ -158,9 +177,9 @@ export default function AdminFinancePage() {
         }
         const [year, m] = month.split("-");
         const tnd = Object.entries(totals).reduce((sum, [cur, amt]) => sum + amt * rateFor(cur), 0);
-        return { month, label: `${TUNISIAN_MONTHS[parseInt(m, 10) - 1]} ${year}`, totals, tnd };
+        return { month, label: `${TUNISIAN_MONTHS[parseInt(m, 10) - 1]} ${year}`, totals, summary: toSummary(tnd) };
       });
-  }, [entries, services, fxUsdToTnd, fxJpyToTnd]);
+  }, [entries, services, fxUsdToTnd, fxJpyToTnd, summaryCurrency]);
 
   async function handleSaveService() {
     if (!serviceForm.name.trim()) { setError("اسم الخدمة مطلوب"); return; }
@@ -244,9 +263,9 @@ export default function AdminFinancePage() {
             )
           ))}
           <div className="mr-auto">
-            <p className="text-xs" style={{ color: "#9A9070" }}>المجموع الكلي (د.ت)</p>
+            <p className="text-xs" style={{ color: "#9A9070" }}>المجموع الكلي ({summaryCurrency})</p>
             <p className="text-2xl font-black" style={{ color: "#F0EAD6" }}>
-              {missingRates ? "—" : `${grandTotalTnd.toFixed(2)} د.ت`}
+              {missingRates ? "—" : `${CURRENCY_SYMBOL[summaryCurrency]} ${grandTotalSummary.toFixed(summaryCurrency === "JPY" ? 0 : 2)}`}
             </p>
           </div>
         </div>
@@ -262,6 +281,15 @@ export default function AdminFinancePage() {
             <input style={inputStyle} type="number" step="0.0001" placeholder="مثال: 0.021" value={fxJpyToTnd}
               onChange={e => setFxJpyToTnd(e.target.value)} />
           </div>
+          <div style={{ width: "160px" }}>
+            <label style={labelStyle}>عملة المجموع الرئيسي</label>
+            <select style={inputStyle} value={summaryCurrency}
+              onChange={e => changeSummaryCurrency(e.target.value as "USD" | "JPY" | "TND")}>
+              <option value="USD">USD ($)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="TND">TND (د.ت)</option>
+            </select>
+          </div>
           <button onClick={saveFxRates} disabled={savingFx}
             className="px-4 py-2 rounded-lg text-sm font-bold"
             style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}>
@@ -269,7 +297,7 @@ export default function AdminFinancePage() {
           </button>
           {missingRates && (
             <span className="text-xs" style={{ color: "#FF6B6B" }}>
-              أدخل سعر الصرف لعرض المجموع الكلي بالدينار
+              أدخل سعري الصرف (USD→TND و JPY→TND) واضغط حفظ لعرض المجموع الكلي
             </span>
           )}
         </div>
@@ -287,7 +315,7 @@ export default function AdminFinancePage() {
                   <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>USD</th>
                   <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>JPY</th>
                   <th className="text-right py-2 px-2" style={{ color: "#9A9070" }}>TND</th>
-                  <th className="text-right py-2 pl-2" style={{ color: "#9A9070" }}>المجموع (د.ت)</th>
+                  <th className="text-right py-2 pl-2" style={{ color: "#9A9070" }}>المجموع ({summaryCurrency})</th>
                 </tr>
               </thead>
               <tbody>
@@ -304,7 +332,7 @@ export default function AdminFinancePage() {
                       {row.totals.TND ? `${row.totals.TND.toFixed(2)} د.ت` : "—"}
                     </td>
                     <td className="py-2 pl-2 font-bold" style={{ color: "#F0EAD6" }}>
-                      {missingRates ? "—" : `${row.tnd.toFixed(2)} د.ت`}
+                      {missingRates ? "—" : `${CURRENCY_SYMBOL[summaryCurrency]} ${row.summary.toFixed(summaryCurrency === "JPY" ? 0 : 2)}`}
                     </td>
                   </tr>
                 ))}
