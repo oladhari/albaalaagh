@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
+import { headers } from "next/headers";
 import Script from "next/script";
 import CookieBanner from "@/components/ui/CookieBanner";
 import "./globals.css";
@@ -63,19 +64,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
       {/* Google Analytics */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-NMKWZ1979E"
         strategy="afterInteractive"
+        nonce={nonce}
       />
-      <Script id="google-analytics" strategy="afterInteractive">
+      <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -90,6 +94,7 @@ export default function RootLayout({
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4198439711456588"
         crossOrigin="anonymous"
         strategy="afterInteractive"
+        nonce={nonce}
       />
       <body className="min-h-full flex flex-col">
         {children}

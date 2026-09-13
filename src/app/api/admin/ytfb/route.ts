@@ -463,16 +463,8 @@ export async function GET(req: NextRequest) {
 
         const isLast = i === urls.length - 1;
         if (!isLast) {
-          const doneCount = i + 1;
-          const isCheckpoint = doneCount % 5 === 0;
-          const waitMs = isCheckpoint ? 5 * 60_000 : 60_000;
-          emit(
-            "status",
-            isCheckpoint
-              ? "⏸️ انتظار 5 دقائق (كل 5 فيديوهات) لتفادي حظر فيسبوك..."
-              : "⏸️ انتظار دقيقة واحدة قبل الفيديو التالي لتفادي حظر فيسبوك...",
-          );
-          await sleep(waitMs);
+          emit("status", "⏸️ انتظار دقيقة واحدة قبل الفيديو التالي لتفادي حظر فيسبوك...");
+          await sleep(60_000);
         }
       }
 

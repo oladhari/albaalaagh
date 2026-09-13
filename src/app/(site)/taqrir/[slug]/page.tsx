@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
@@ -62,6 +63,7 @@ const formatContent = formatAndSanitize;
 
 export default async function TaqrirPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const article = await getArticle(slug);
   if (!article) notFound();
 
@@ -92,7 +94,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-xs mb-6 flex items-center gap-2" style={{ color: "#9A9070" }}>
