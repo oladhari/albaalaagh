@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import CoverUpload from "@/components/admin/CoverUpload";
+import { videoPath } from "@/lib/public-urls";
 
 interface SiteVideo {
   id: string;
@@ -490,7 +491,7 @@ export default function AdminVideosPage() {
                     style={{ borderColor: "#C9A844", color: "#C9A844" }}>
                     تعديل
                   </button>
-                  <a href={`/videos/${v.id}`} target="_blank" rel="noopener noreferrer"
+                  <a href={videoPath(v.id)} target="_blank" rel="noopener noreferrer"
                     className="px-3 py-1.5 rounded-full text-xs font-bold border"
                     style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
                     معاينة

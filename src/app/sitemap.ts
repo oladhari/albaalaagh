@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { newsPath, videoPath } from "@/lib/public-urls";
 import { MetadataRoute } from "next";
 
 const BASE = "https://www.albaalaagh.com";
@@ -6,10 +7,10 @@ const BASE = "https://www.albaalaagh.com";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [{ data: news }, { data: articles }] = await Promise.all([
+  const [{ data: news }, { data: articles }, { data: videos }] = await Promise.all([
     supabaseAdmin
       .from("news")
-      .select("slug, published_at")
+      .select("id, slug, published_at")
       .eq("source", "البلاغ")
       .eq("status", "approved")
       .order("published_at", { ascending: false }),
@@ -18,6 +19,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select("slug, published_at")
       .eq("published", true)
       .order("published_at", { ascending: false }),
+    supabaseAdmin
+      .from("site_videos")
+      .select("id, published_at, created_at")
+      .eq("published", true)
+      .order("published_at", { ascending: false, nullsFirst: false }),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -35,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const newsPages: MetadataRoute.Sitemap = (news ?? []).map((n) => ({
-    url:             `${BASE}/taqrir/${n.slug}`,
+    url:             `${BASE}${newsPath(n)}`,
     lastModified:    new Date(n.published_at),
     changeFrequency: "never",
     priority:        0.7,
@@ -48,5 +54,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.8,
   }));
 
-  return [...staticPages, ...newsPages, ...articlePages];
+  const videoPages: MetadataRoute.Sitemap = (videos ?? []).map((v) => ({
+    url:             `${BASE}${videoPath(v.id)}`,
+    lastModified:    new Date(v.published_at ?? v.created_at),
+    changeFrequency: "never",
+    priority:        0.7,
+  }));
+
+  return [...staticPages, ...newsPages, ...articlePages, ...videoPages];
 }

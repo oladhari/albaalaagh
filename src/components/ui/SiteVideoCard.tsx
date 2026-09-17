@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
+import { videoPath } from "@/lib/public-urls";
 
 interface Props {
   id: string;
@@ -67,6 +68,8 @@ const innerContent = (title: string, description: string | null | undefined, thu
 );
 
 export default function SiteVideoCard({ id, title, description, video_url, thumbnail_url, published_at, onPlay }: Props) {
+  const href = videoPath(id);
+
   return (
     <div
       className="group text-right w-full rounded-2xl overflow-hidden flex flex-col card-hover relative"
@@ -74,7 +77,7 @@ export default function SiteVideoCard({ id, title, description, video_url, thumb
     >
       {/* Share link — appears on hover */}
       <Link
-        href={`/videos/${id}`}
+        href={href}
         title="مشاركة الفيديو"
         className="absolute top-2 left-2 z-10 flex items-center justify-center w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ background: "rgba(17,16,8,0.75)", backdropFilter: "blur(4px)" }}
@@ -93,7 +96,7 @@ export default function SiteVideoCard({ id, title, description, video_url, thumb
           {innerContent(title, description, thumbnail_url, published_at)}
         </button>
       ) : (
-        <Link href={`/videos/${id}`} className="text-right w-full flex flex-col flex-1">
+        <Link href={href} className="text-right w-full flex flex-col flex-1">
           {innerContent(title, description, thumbnail_url, published_at)}
         </Link>
       )}

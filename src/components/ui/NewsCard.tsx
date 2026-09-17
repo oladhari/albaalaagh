@@ -1,6 +1,7 @@
 "use client";
 
 import { timeAgo } from "@/lib/utils";
+import { newsPath } from "@/lib/public-urls";
 import type { NewsArticle } from "@/types";
 
 function isValidNewsImage(url?: string): boolean {
@@ -14,10 +15,11 @@ function isValidNewsImage(url?: string): boolean {
 export default function NewsCard({ article }: { article: NewsArticle }) {
   const validImage = isValidNewsImage(article.image_url) ? article.image_url : undefined;
   const isInternal = article.source === "البلاغ";
+  const href = isInternal ? newsPath(article) : article.url;
 
   return (
     <a
-      href={article.url}
+      href={href}
       target={isInternal ? "_self" : "_blank"}
       rel={isInternal ? undefined : "noopener noreferrer"}
       className="group flex gap-3 p-3 rounded-xl card-hover"

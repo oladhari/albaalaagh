@@ -1,9 +1,30 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { newsPath } from "@/lib/public-urls";
 
 export const revalidate = 300;
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
+
+type NewsFeedRow = {
+  id: string;
+  slug: string | null;
+  title: string;
+  excerpt: string | null;
+  image_url: string | null;
+  source: string | null;
+  published_at: string;
+  category: string | null;
+};
+
+type ArticleFeedRow = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  writer_name: string | null;
+  published_at: string;
+};
 
 function esc(str: string | null | undefined): string {
   if (!str) return "";
@@ -48,17 +69,17 @@ export async function GET() {
   };
 
   const combined: FeedItem[] = [
-    ...(newsItems ?? []).map((n: any) => ({
-      guid:        `${BASE}/taqrir/${n.slug}`,
+    ...((newsItems ?? []) as NewsFeedRow[]).map((n) => ({
+      guid:        `${BASE}${newsPath(n)}`,
       title:       n.title,
-      link:        `${BASE}/taqrir/${n.slug}`,
+      link:        `${BASE}${newsPath(n)}`,
       description: n.excerpt ?? "",
       pubDate:     n.published_at,
       author:      n.source ?? "البلاغ",
       image_url:   n.image_url,
-      category:    n.category,
+      category:    n.category ?? undefined,
     })),
-    ...(articles ?? []).map((a: any) => ({
+    ...((articles ?? []) as ArticleFeedRow[]).map((a) => ({
       guid:        `${BASE}/articles/${a.slug}`,
       title:       a.title,
       link:        `${BASE}/articles/${a.slug}`,

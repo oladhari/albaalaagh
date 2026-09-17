@@ -1,9 +1,20 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-05-27.dahlia",
-  httpClient: Stripe.createNodeHttpClient(),
-});
+let stripeClient: Stripe | null = null;
+
+export function getStripe() {
+  if (stripeClient) return stripeClient;
+
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) throw new Error("STRIPE_SECRET_KEY is not configured");
+
+  stripeClient = new Stripe(apiKey, {
+    apiVersion: "2026-05-27.dahlia",
+    httpClient: Stripe.createNodeHttpClient(),
+  });
+
+  return stripeClient;
+}
 
 export const PLANS = {
   basic:   { nameAr: "داعم",  nameEn: "Basic",   eur: 5,  usd: 6  },

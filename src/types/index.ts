@@ -24,6 +24,7 @@ export interface Guest {
 
 export interface NewsArticle {
   id: string;
+  slug?: string | null;
   title: string;
   excerpt: string;
   url: string;
