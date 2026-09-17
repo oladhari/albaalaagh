@@ -7,7 +7,6 @@ import { shareToAll } from "@/lib/share";
 const SOURCE_PRIORITY: Record<string, number> = {
   "رئاسة الحكومة التونسية": 1,
   "موزاييك FM": 2,
-  "نواة": 3,
   "أخبار الأمم المتحدة": 4,
   "الجزيرة": 5,
   "الأناضول": 6,
