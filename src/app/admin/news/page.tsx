@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, toDateTimeLocal } from "@/lib/utils";
 import type { NewsArticle, NewsCitation } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
@@ -111,7 +111,7 @@ export default function AdminNewsPage() {
         facebook_image: null,
         geo:            data.geo ?? "tunisia",
         category:       data.category ?? "سياسة",
-        published_at:   new Date().toISOString().slice(0, 16),
+        published_at:   toDateTimeLocal(),
         tone,
         citations:       data.citations ?? [],
       });
@@ -179,8 +179,8 @@ export default function AdminNewsPage() {
       geo:            VALID_GEOS.includes(rawGeo) ? rawGeo : "general",
       category:       VALID_CATEGORIES.includes(rawCat) ? rawCat : "عام",
       published_at:   news.published_at
-        ? new Date(news.published_at).toISOString().slice(0, 16)
-        : new Date().toISOString().slice(0, 16),
+        ? toDateTimeLocal(news.published_at)
+        : toDateTimeLocal(),
       tone:           "accountability" as Tone,
       citations:      news.news_citations ?? [],
       editMode:       true,
@@ -197,7 +197,10 @@ export default function AdminNewsPage() {
         method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(preview),
+        body: JSON.stringify({
+          ...preview,
+          published_at: new Date(preview.published_at).toISOString(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "خطأ في النشر"); return; }
@@ -247,7 +250,7 @@ export default function AdminNewsPage() {
         facebook_image: null,
         geo:            data.geo ?? "general",
         category:       data.category ?? "عام",
-        published_at:   new Date().toISOString().slice(0, 16),
+        published_at:   toDateTimeLocal(),
         tone:         "accountability",
         citations:    data.citations ?? [],
       });

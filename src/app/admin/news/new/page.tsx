@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { NEWS_CATEGORIES } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
+import { toDateTimeLocal } from "@/lib/utils";
 
 const GEO_OPTIONS = [
   { value: "tunisia",       label: "تونس" },
@@ -31,7 +32,7 @@ export default function NewNewsPage() {
     geo: "tunisia",
     source_name: "",
     source_url: "",
-    published_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+    published_at: toDateTimeLocal(),
   });
 
   const set = (field: string, value: string) =>
@@ -93,7 +94,10 @@ export default function NewNewsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          published_at: new Date(form.published_at).toISOString(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "حدث خطأ"); return; }
