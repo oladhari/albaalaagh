@@ -44,10 +44,11 @@ Run the citation recovery tool in dry-run mode first:
 npm run news:recover-citations -- --output=/tmp/news-citation-review.json
 ```
 
-The tool preserves report titles, introductions, and bodies. It compares old
-reports with retained source items from the same three-day window and marks a
-match as high confidence only when title similarity is strong, numbers agree,
-and there is no ambiguous runner-up. Review every proposed URL before applying:
+The tool preserves report titles, introductions, and bodies. It compares each
+old report's title, introduction, and body with retained source titles and text.
+Its evidence score includes title similarity, distinctive-word and phrase
+coverage, compatible numbers, publication proximity, and ambiguity from other
+possible matches. Review every proposed URL before applying:
 
 ```bash
 npm run news:recover-citations -- --apply
@@ -57,10 +58,12 @@ npm run news:recover-citations -- --apply
 published content. Reports marked `manual_research` need an editor to find and
 verify the exact original page.
 
-The production audit on 17 September 2026 found 519 approved historical reports,
-no existing citations, and no matches that met the automatic safety threshold.
-No production rows were changed. Recover these reports in editorial batches,
-starting with recent and high-traffic pages, instead of lowering the threshold.
+The initial production audit on 17 September 2026 found 519 approved historical
+reports and no title-only matches that met the automatic safety threshold. The
+later full-text audit found one high-confidence match and two review candidates.
+The verified high-confidence citation was applied; the ambiguous candidates were
+left unchanged. Recover the remaining reports in editorial batches, starting
+with recent and high-traffic pages, instead of lowering the threshold.
 
 Adding a citation is necessary but is not an editorial rewrite. After confirming
 the source, retain an accurate title and introduction if desired, then revise the
