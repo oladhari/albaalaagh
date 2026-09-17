@@ -11,13 +11,31 @@ async function getVideo(id: string) {
   const dbId = expandCompactUuid(id);
   if (!isDashedUuid(dbId)) return null;
 
-  const { data } = await supabaseAdmin
+  const { data: video } = await supabaseAdmin
     .from("site_videos")
     .select("id, title, description, video_url, thumbnail_url, published_at, video_type, hashtags")
     .eq("id", dbId)
     .eq("published", true)
-    .single();
-  return data;
+    .maybeSingle();
+
+  if (video) return { video, redirected: false };
+
+  const { data: redirect } = await supabaseAdmin
+    .from("video_redirects")
+    .select("canonical_id")
+    .eq("old_id", dbId)
+    .maybeSingle();
+
+  if (!redirect) return null;
+
+  const { data: canonical } = await supabaseAdmin
+    .from("site_videos")
+    .select("id, title, description, video_url, thumbnail_url, published_at, video_type, hashtags")
+    .eq("id", redirect.canonical_id)
+    .eq("published", true)
+    .maybeSingle();
+
+  return canonical ? { video: canonical, redirected: true } : null;
 }
 
 // Strip Unicode replacement characters (U+FFFD) left by corrupted emojis from Facebook/YouTube.
@@ -39,8 +57,9 @@ function ogSnippet(raw: string | null | undefined): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const video = await getVideo(id);
-  if (!video) return {};
+  const result = await getVideo(id);
+  if (!result) return {};
+  const { video } = result;
 
   const base = "https://www.albaalaagh.com";
   const url = `${base}${videoPath(video.id)}`;
@@ -90,9 +109,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const video = await getVideo(id);
-  if (!video) notFound();
-  if (isDashedUuid(id)) permanentRedirect(videoPath(video.id));
+  const result = await getVideo(id);
+  if (!result) notFound();
+  const { video, redirected } = result;
+  if (redirected || isDashedUuid(id)) permanentRedirect(videoPath(video.id));
 
   const url = `https://www.albaalaagh.com${videoPath(video.id)}`;
 
