@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
+import { publishedAtOrNow } from "@/lib/utils";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
       status:       "approved",
       category:     category || "عام",
       geo:          geo || "tunisia",
-      published_at: published_at ? new Date(published_at).toISOString() : new Date().toISOString(),
+      published_at: publishedAtOrNow(published_at),
     })
     .select()
     .single();
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     url: source_url.trim(),
     kind: "media",
     is_primary: true,
-    published_at: published_at ? new Date(published_at).toISOString() : new Date().toISOString(),
+    published_at: publishedAtOrNow(published_at),
   });
   if (citationError) {
     await supabaseAdmin.from("news").delete().eq("id", data.id);

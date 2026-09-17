@@ -25,10 +25,29 @@ export function formatArabicDate(dateStr: string): string {
 
 export function timeAgo(dateStr: string): string {
   try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: ar });
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return dateStr;
+    if (date.getTime() > Date.now()) return "الآن";
+    return formatDistanceToNow(date, { addSuffix: true, locale: ar });
   } catch {
     return dateStr;
   }
+}
+
+export function toDateTimeLocal(date: Date | string = new Date()): string {
+  const value = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(value.getTime())) return "";
+  const offset = value.getTimezoneOffset() * 60_000;
+  return new Date(value.getTime() - offset).toISOString().slice(0, 16);
+}
+
+export function publishedAtOrNow(value: unknown, now = new Date()): string {
+  if (typeof value !== "string" || !value.trim()) return now.toISOString();
+  const requested = new Date(value);
+  if (Number.isNaN(requested.getTime()) || requested.getTime() > now.getTime()) {
+    return now.toISOString();
+  }
+  return requested.toISOString();
 }
 
 export function truncate(text: string, maxLength: number): string {

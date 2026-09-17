@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
 import { uploadToR2 } from "@/lib/r2";
 import type { NewsCitation } from "@/types";
+import { publishedAtOrNow } from "@/lib/utils";
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
 
 function cleanCitations(value: unknown): NewsCitation[] {
@@ -132,7 +133,7 @@ export async function PATCH(
   if (excerpt      !== undefined) patch.excerpt      = excerpt;
   if (content      !== undefined) patch.content      = content;
   if (image_url    !== undefined) patch.image_url    = image_url || null;
-  if (published_at !== undefined) patch.published_at = new Date(published_at).toISOString();
+  if (published_at !== undefined) patch.published_at = publishedAtOrNow(published_at);
   if (geo          !== undefined) patch.geo          = geo;
   if (category     !== undefined) patch.category     = category;
   patch.updated_at = new Date().toISOString();

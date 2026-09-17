@@ -17,6 +17,7 @@ async function getLatestNews() {
     .select("*")
     .eq("source", "البلاغ")
     .eq("status", "approved")
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(6);
   return data ?? [];

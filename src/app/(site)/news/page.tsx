@@ -24,6 +24,7 @@ async function getDefaultData() {
       .eq("source", "البلاغ")
       .eq("status", "approved")
       .gte("published_at", cutoff)
+      .lte("published_at", new Date().toISOString())
       .order("published_at", { ascending: false }),
 
     // Lightweight: only fetch geo column to compute totals
@@ -51,6 +52,7 @@ async function getGeoData(geo: string, page: number) {
     .eq("source", "البلاغ")
     .eq("status", "approved")
     .eq("geo", geo)
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
