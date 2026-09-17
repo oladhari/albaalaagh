@@ -36,6 +36,38 @@ the report where necessary, and saving it.
 Do not guess historical sources. A similar headline is not enough when the
 publisher or exact original URL cannot be confirmed.
 
+### Recovery audit
+
+Run the citation recovery tool in dry-run mode first:
+
+```bash
+npm run news:recover-citations -- --output=/tmp/news-citation-review.json
+```
+
+The tool preserves report titles, introductions, and bodies. It compares old
+reports with retained source items from the same three-day window and marks a
+match as high confidence only when title similarity is strong, numbers agree,
+and there is no ambiguous runner-up. Review every proposed URL before applying:
+
+```bash
+npm run news:recover-citations -- --apply
+```
+
+`--apply` inserts citations for high-confidence matches only. It never rewrites
+published content. Reports marked `manual_research` need an editor to find and
+verify the exact original page.
+
+The production audit on 17 September 2026 found 519 approved historical reports,
+no existing citations, and no matches that met the automatic safety threshold.
+No production rows were changed. Recover these reports in editorial batches,
+starting with recent and high-traffic pages, instead of lowering the threshold.
+
+Adding a citation is necessary but is not an editorial rewrite. After confirming
+the source, retain an accurate title and introduction if desired, then revise the
+body to include attributable facts plus Albaalaagh's own context, verification,
+implications, or unanswered questions. Do not use AI to expand a source merely
+to make an article longer, and do not republish source wording as a translation.
+
 ## Deployment
 
 Apply `supabase/migrations/20260917070000_news_citations.sql` before deploying
