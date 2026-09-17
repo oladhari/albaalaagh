@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/utils";
-import type { NewsArticle } from "@/types";
+import type { NewsArticle, NewsCitation } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
 
@@ -27,6 +27,7 @@ interface Preview {
   category:       string;
   published_at:   string;
   tone:           Tone;
+  citations:      NewsCitation[];
   editMode?:      boolean;
 }
 
@@ -112,6 +113,7 @@ export default function AdminNewsPage() {
         category:       data.category ?? "سياسة",
         published_at:   new Date().toISOString().slice(0, 16),
         tone,
+        citations:       data.citations ?? [],
       });
     } finally {
       setGenerating(null);
@@ -160,7 +162,7 @@ export default function AdminNewsPage() {
     }
   };
 
-  const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"];
+  const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"];
   const VALID_GEOS = ["tunisia", "arab", "international", "general"];
 
   const openEdit = (news: any) => {
@@ -180,6 +182,7 @@ export default function AdminNewsPage() {
         ? new Date(news.published_at).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16),
       tone:           "accountability" as Tone,
+      citations:      news.news_citations ?? [],
       editMode:       true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -246,6 +249,7 @@ export default function AdminNewsPage() {
         category:       data.category ?? "عام",
         published_at:   new Date().toISOString().slice(0, 16),
         tone:         "accountability",
+        citations:    data.citations ?? [],
       });
       setUrlInput("");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -474,7 +478,7 @@ export default function AdminNewsPage() {
                 onFocus={(e) => (e.target.style.borderColor = GOLD)}
                 onBlur={(e)  => (e.target.style.borderColor = "#2E2A18")}
               >
-                {["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"].map((c) => (
+                {["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -520,10 +524,61 @@ export default function AdminNewsPage() {
             />
           </div>
 
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold" style={{ color: DIM }}>المصادر الظاهرة للقراء</label>
+              <button
+                type="button"
+                onClick={() => setPreview((p) => p && ({
+                  ...p,
+                  citations: [...p.citations, { name: "", url: "", kind: "media", is_primary: false }],
+                }))}
+                className="px-3 py-1 rounded-lg text-xs font-bold border"
+                style={{ borderColor: GOLD, color: GOLD }}
+              >
+                + إضافة مصدر
+              </button>
+            </div>
+            {preview.citations.map((citation, index) => (
+              <div key={`${citation.url}-${index}`} className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-2">
+                <input
+                  style={{ ...inputStyle, resize: undefined }}
+                  placeholder="اسم المصدر"
+                  value={citation.name}
+                  onChange={(e) => setPreview((p) => p && ({
+                    ...p,
+                    citations: p.citations.map((item, i) => i === index ? { ...item, name: e.target.value } : item),
+                  }))}
+                />
+                <input
+                  type="url"
+                  style={{ ...inputStyle, resize: undefined }}
+                  placeholder="رابط المادة الأصلية"
+                  value={citation.url}
+                  onChange={(e) => setPreview((p) => p && ({
+                    ...p,
+                    citations: p.citations.map((item, i) => i === index ? { ...item, url: e.target.value } : item),
+                  }))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPreview((p) => p && ({ ...p, citations: p.citations.filter((_, i) => i !== index) }))}
+                  className="px-3 rounded-lg text-xs"
+                  style={{ color: RED }}
+                >
+                  حذف
+                </button>
+              </div>
+            ))}
+            {preview.citations.length === 0 && (
+              <p className="text-xs" style={{ color: RED }}>يجب إضافة مصدر موثوق واحد على الأقل قبل النشر.</p>
+            )}
+          </div>
+
           <div className="flex items-center gap-3 pt-1">
             <button
               onClick={publish}
-              disabled={publishing}
+              disabled={publishing || preview.citations.every((citation) => !citation.name.trim() || !citation.url.trim())}
               className="px-5 py-2.5 rounded-full text-sm font-bold"
               style={{ background: `linear-gradient(135deg, ${GOLD}, #9A7B28)`, color: "#111008" }}
             >

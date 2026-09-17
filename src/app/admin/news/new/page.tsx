@@ -29,6 +29,8 @@ export default function NewNewsPage() {
     facebook_image: "",
     category: "عام",
     geo: "tunisia",
+    source_name: "",
+    source_url: "",
     published_at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
   });
 
@@ -80,8 +82,8 @@ export default function NewNewsPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.title || !form.content) {
-      setError("العنوان والمحتوى مطلوبان");
+    if (!form.title || !form.content || !form.source_name || !form.source_url) {
+      setError("العنوان والمحتوى والمصدر مطلوبة");
       return;
     }
     setSaving(true);
@@ -133,11 +135,11 @@ export default function NewNewsPage() {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={saving || !form.title || !form.content}
+            disabled={saving || !form.title || !form.content || !form.source_name || !form.source_url}
             className="px-5 py-2 rounded-full text-sm font-bold"
             style={{
-              background: (form.title && form.content) ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "#2E2A18",
-              color: (form.title && form.content) ? "#111008" : "#9A9070",
+              background: (form.title && form.content && form.source_name && form.source_url) ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "#2E2A18",
+              color: (form.title && form.content && form.source_name && form.source_url) ? "#111008" : "#9A9070",
             }}
           >
             {saving ? "جارٍ النشر..." : "نشر التقرير"}
@@ -191,6 +193,28 @@ export default function NewNewsPage() {
               onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
               onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label style={labelStyle}>اسم المصدر الأساسي *</label>
+              <input
+                style={inputStyle}
+                placeholder="مثال: رئاسة الحكومة التونسية"
+                value={form.source_name}
+                onChange={(e) => set("source_name", e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>رابط المصدر الأساسي *</label>
+              <input
+                type="url"
+                style={inputStyle}
+                placeholder="https://..."
+                value={form.source_url}
+                onChange={(e) => set("source_url", e.target.value)}
+              />
+            </div>
           </div>
         </div>
 

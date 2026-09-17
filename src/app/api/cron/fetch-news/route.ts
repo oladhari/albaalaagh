@@ -58,7 +58,7 @@ geo:
 إذا كان الخبر عن ترامب أو أوروبا أو روسيا فهو "international".
 
 category (اختر واحدة):
-سياسة | اقتصاد | قضاء | مجتمع | أمن | ثقافة | رياضة | بيئة | صحة | تعليم | عام
+سياسة | اقتصاد | قضاء | مجتمع | أمن | ثقافة | رياضة | تكنولوجيا | بيئة | صحة | تعليم | عام
 
 أجب بـ JSON فقط، مصفوفة بنفس ترتيب المدخلات:
 [{"geo":"...","category":"..."},...]
@@ -107,6 +107,8 @@ function detectGeoFallback(title: string, source: string): Classification["geo"]
 }
 
 function detectCategoryFallback(title: string): string {
+  if (/technology|artificial intelligence|cyber|software|startup|space|nasa|ذكاء اصطناعي|تكنولوجيا|تقنية/.test(title.toLowerCase())) return "تكنولوجيا";
+  if (/earthquake|flood|wildfire|volcano|cyclone|tsunami|زلزال|فيضان|إعصار|بركان/.test(title.toLowerCase())) return "بيئة";
   if (/قضاء|محكمة|اعتقال|سجن/.test(title)) return "قضاء";
   if (/اقتصاد|مالية|بنك|ميزانية/.test(title)) return "اقتصاد";
   if (/أمن|عسكر|جيش|إرهاب/.test(title)) return "أمن";
@@ -145,6 +147,9 @@ export async function GET(req: NextRequest) {
   const toInsert: {
     title: string; excerpt: string; url: string;
     source: string; image_url?: string; published_at: string;
+    source_language: "ar" | "en";
+    source_kind: "official" | "agency" | "media" | "emergency" | "science";
+    source_topic: "tunisia" | "arab" | "international" | "technology" | "disaster";
   }[] = [];
 
   for (const source of NEWS_SOURCES) {
@@ -152,7 +157,7 @@ export async function GET(req: NextRequest) {
       const feed = await parser.parseURL(source.rss);
       results.fetched += feed.items.length;
 
-      for (const item of feed.items.slice(0, 30)) {
+      for (const item of feed.items.slice(0, source.maxItems)) {
         const title = item.title?.trim() || "";
         const url = item.link?.trim() || "";
         if (!url || !title) { results.skipped++; continue; }
@@ -173,6 +178,9 @@ export async function GET(req: NextRequest) {
           source: source.name,
           image_url: extractImage(item),
           published_at: item.isoDate || new Date().toISOString(),
+          source_language: source.language,
+          source_kind: source.kind,
+          source_topic: source.topic,
         });
       }
     } catch (e: any) {
@@ -193,7 +201,17 @@ export async function GET(req: NextRequest) {
   // Step 3: insert with AI classifications + priority scoring
   for (let i = 0; i < toInsert.length; i++) {
     const article = toInsert[i];
-    const { geo, category } = classifications[i] ?? { geo: "general", category: "سياسة" };
+    const inferred = classifications[i] ?? { geo: "general", category: "سياسة" };
+    const geo = article.source_topic === "tunisia"
+      ? "tunisia"
+      : article.source_topic === "arab"
+        ? "arab"
+        : inferred.geo;
+    const category = article.source_topic === "technology"
+      ? "تكنولوجيا"
+      : article.source_topic === "disaster"
+        ? "بيئة"
+        : inferred.category;
     const priority_score = scoreNewsPriority(article.title, article.excerpt);
 
     const { error } = await supabaseAdmin.from("news").insert({

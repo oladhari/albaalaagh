@@ -5,7 +5,7 @@ import Link from "next/link";
 import NewsCard from "@/components/ui/NewsCard";
 import { GEO_META } from "./geo-meta";
 
-const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "ثقافة", "رياضة", "بيئة", "صحة", "تعليم", "عام"];
+const CATEGORIES = ["الكل", "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "ثقافة", "رياضة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"];
 
 const GEO_ORDER = ["tunisia", "arab", "international", "general"] as const;
 

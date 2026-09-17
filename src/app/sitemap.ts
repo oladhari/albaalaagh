@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ data: news }, { data: articles }, { data: videos }] = await Promise.all([
     supabaseAdmin
       .from("news")
-      .select("id, slug, published_at")
+      .select("id, slug, published_at, news_citations(id)")
       .eq("source", "البلاغ")
       .eq("status", "approved")
       .order("published_at", { ascending: false }),
@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/terms-of-use`,       lastModified: new Date(), changeFrequency: "yearly",  priority: 0.3 },
   ];
 
-  const newsPages: MetadataRoute.Sitemap = (news ?? []).map((n) => ({
+  const newsPages: MetadataRoute.Sitemap = (news ?? []).filter((n) => (n.news_citations?.length ?? 0) > 0).map((n) => ({
     url:             `${BASE}${newsPath(n)}`,
     lastModified:    new Date(n.published_at),
     changeFrequency: "never",

@@ -34,7 +34,20 @@ export interface NewsArticle {
   published_at: string;
   status: "pending" | "approved" | "rejected";
   category?: string;
+  source_language?: "ar" | "en";
+  source_kind?: "official" | "agency" | "media" | "emergency" | "science";
+  source_topic?: "tunisia" | "arab" | "international" | "technology" | "disaster";
+  news_citations?: NewsCitation[];
   created_at: string;
+}
+
+export interface NewsCitation {
+  id?: string;
+  name: string;
+  url: string;
+  kind: "official" | "agency" | "media" | "document" | "interview";
+  is_primary: boolean;
+  published_at?: string | null;
 }
 
 export interface Writer {
@@ -91,7 +104,7 @@ export const ARTICLE_CATEGORIES = [
 ] as const;
 
 export const NEWS_CATEGORIES = [
-  "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "بيئة", "صحة", "تعليم", "عام"
+  "سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"
 ] as const;
 
 export const VIDEO_CATEGORIES = [
@@ -114,14 +127,28 @@ export const WRITERS = [
 ] as const;
 
 export const NEWS_SOURCES = [
-  { name: "تيوميديا",              rss: "https://tumedia.net/feed/",                                    logo: "" },
-  { name: "موزاييك FM",            rss: "https://www.mosaiquefm.net/ar/rss",                            logo: "" },
-  { name: "نواة",                  rss: "https://nawaat.org/feed/",                                     logo: "" },
-  { name: "ديوان FM",              rss: "https://diwanfm.net/feed",                                     logo: "" },
-  { name: "تونس تلغراف",           rss: "https://tunisie-telegraph.com/feed/",                          logo: "" },
-  { name: "عربي21",                rss: "https://arabi21.com/feed",                                     logo: "" },
-  { name: "الجزيرة",               rss: "https://www.aljazeera.net/rss",                                logo: "" },
-  { name: "العربي الجديد",         rss: "https://www.alaraby.co.uk/rss.xml",                            logo: "" },
-  { name: "القدس العربي",          rss: "https://www.alquds.co.uk/feed/",                               logo: "" },
-  { name: "الأناضول",              rss: "https://www.aa.com.tr/ar/rss/default?cat=live",                logo: "" },
+  // Tunisia: primary institutions first, followed by established local media.
+  { name: "رئاسة الحكومة التونسية", rss: "https://www.pm.gov.tn/ar/rss.xml", language: "ar", kind: "official", topic: "tunisia", maxItems: 15 },
+  { name: "موزاييك FM", rss: "https://www.mosaiquefm.net/ar/rss", language: "ar", kind: "media", topic: "tunisia", maxItems: 25 },
+  { name: "نواة", rss: "https://nawaat.org/feed/", language: "ar", kind: "media", topic: "tunisia", maxItems: 10 },
+
+  // Arabic regional and international coverage.
+  { name: "الجزيرة", rss: "https://www.aljazeera.net/rss", language: "ar", kind: "media", topic: "arab", maxItems: 20 },
+  { name: "الأناضول", rss: "https://www.aa.com.tr/ar/rss/default?cat=live", language: "ar", kind: "agency", topic: "arab", maxItems: 20 },
+  { name: "أخبار الأمم المتحدة", rss: "https://news.un.org/feed/subscribe/ar/news/all/rss.xml", language: "ar", kind: "official", topic: "international", maxItems: 15 },
+  { name: "DW عربية", rss: "https://rss.dw.com/rdf/rss-ar-all", language: "ar", kind: "media", topic: "international", maxItems: 15 },
+  { name: "فرانس 24 عربي", rss: "https://www.france24.com/ar/rss", language: "ar", kind: "media", topic: "international", maxItems: 15 },
+
+  // English discovery feeds. Published reports must be translated, attributed,
+  // verified, and expanded with Albaalaagh context in the review screen.
+  { name: "BBC World", rss: "https://feeds.bbci.co.uk/news/world/rss.xml", language: "en", kind: "media", topic: "international", maxItems: 15 },
+  { name: "GDACS", rss: "https://www.gdacs.org/xml/rss.xml", language: "en", kind: "emergency", topic: "disaster", maxItems: 12 },
+  { name: "USGS", rss: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.atom", language: "en", kind: "official", topic: "disaster", maxItems: 8 },
+
+  // Technology and science.
+  { name: "BBC Technology", rss: "https://feeds.bbci.co.uk/news/technology/rss.xml", language: "en", kind: "media", topic: "technology", maxItems: 12 },
+  { name: "MIT Technology Review", rss: "https://www.technologyreview.com/feed/", language: "en", kind: "media", topic: "technology", maxItems: 10 },
+  { name: "Ars Technica", rss: "https://feeds.arstechnica.com/arstechnica/index", language: "en", kind: "media", topic: "technology", maxItems: 10 },
+  { name: "TechCrunch", rss: "https://techcrunch.com/feed/", language: "en", kind: "media", topic: "technology", maxItems: 10 },
+  { name: "NASA", rss: "https://www.nasa.gov/news-release/feed/", language: "en", kind: "science", topic: "technology", maxItems: 8 },
 ] as const;
