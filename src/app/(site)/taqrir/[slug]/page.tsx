@@ -1,20 +1,38 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
 import { formatAndSanitize } from "@/lib/sanitize";
+import { expandCompactUuid, newsPath } from "@/lib/public-urls";
 
 export const revalidate = 60;
 
-async function getArticle(slug: string) {
+async function getArticle(slugOrId: string) {
+  const expandedId = expandCompactUuid(slugOrId);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(expandedId);
+  const filter = isUuid ? `id.eq.${expandedId},slug.eq.${slugOrId}` : `slug.eq.${slugOrId}`;
+
   const { data } = await supabaseAdmin
     .from("news")
     .select("*")
-    .eq("slug", slug)
+    .or(filter)
     .eq("source", "البلاغ")
     .single();
-  return data ?? null;
+  if (data) return data;
+
+  const prefix = slugOrId.replace(/-+$/, "");
+  if (!prefix || prefix === slugOrId) return null;
+
+  const { data: prefixMatches } = await supabaseAdmin
+    .from("news")
+    .select("*")
+    .eq("source", "البلاغ")
+    .like("slug", `${prefix}%`)
+    .limit(2);
+
+  return prefixMatches?.length === 1 ? prefixMatches[0] : null;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -23,6 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!article) return {};
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
+  const canonicalUrl = `${base}${newsPath(article)}`;
 
   // Always serve og:image through our Vercel OG generator so Facebook's crawler
   // never hits Cloudflare R2 directly (bot-protection blocks it). The generator
@@ -37,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: article.title,
       description: article.excerpt ?? article.title,
-      url: `${base}/taqrir/${slug}`,
+      url: canonicalUrl,
       siteName: "البلاغ",
       locale: "ar_TN",
       type: "article",
@@ -54,7 +73,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: [ogImage],
     },
     alternates: {
-      canonical: `${base}/taqrir/${slug}`,
+      canonical: canonicalUrl,
     },
   };
 }
@@ -66,8 +85,10 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   const article = await getArticle(slug);
   if (!article) notFound();
+  if (slug !== newsPath(article).split("/").pop()) permanentRedirect(newsPath(article));
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.albaalaagh.com";
+  const canonicalUrl = `${base}${newsPath(article)}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -88,7 +109,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
       url: base,
       logo: { "@type": "ImageObject", url: `${base}/albaalaagh-logo.png` },
     },
-    mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/taqrir/${slug}` },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
     ...(article.image_url ? { image: article.image_url } : {}),
   };
 
@@ -98,9 +119,9 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-xs mb-6 flex items-center gap-2" style={{ color: "#9A9070" }}>
-        <a href="/" style={{ color: "#9A9070" }}>الرئيسية</a>
+        <Link href="/" style={{ color: "#9A9070" }}>الرئيسية</Link>
         <span>›</span>
-        <a href="/news" style={{ color: "#9A9070" }}>الأخبار</a>
+        <Link href="/news" style={{ color: "#9A9070" }}>الأخبار</Link>
         <span>›</span>
         <span style={{ color: "#C9A844" }}>تقرير البلاغ</span>
       </nav>
@@ -157,7 +178,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
       {/* Share */}
       <div className="mb-6">
-        <ShareButtons url={`${base}/taqrir/${slug}`} title={article.title} />
+        <ShareButtons url={canonicalUrl} title={article.title} />
       </div>
 
       {/* Cover image */}

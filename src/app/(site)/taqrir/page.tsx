@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import SectionHeader from "@/components/ui/SectionHeader";
+import { newsPath } from "@/lib/public-urls";
 
 export const revalidate = 300;
 
@@ -39,7 +40,7 @@ export default async function TaqrirListPage() {
           {editorials.map((article) => (
             <Link
               key={article.id}
-              href={`/taqrir/${article.slug}`}
+              href={newsPath(article)}
               className="group flex flex-col rounded-xl overflow-hidden transition-all card-hover"
               style={{ background: "#1A1810", border: "1px solid #C9A844" }}
             >

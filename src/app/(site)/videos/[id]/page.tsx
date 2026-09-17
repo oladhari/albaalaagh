@@ -1,16 +1,20 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import ShareButtons from "@/components/ui/ShareButtons";
 import { formatArabicDate } from "@/lib/utils";
+import { expandCompactUuid, isDashedUuid, videoPath } from "@/lib/public-urls";
 
 export const revalidate = 300;
 
 async function getVideo(id: string) {
+  const dbId = expandCompactUuid(id);
+  if (!isDashedUuid(dbId)) return null;
+
   const { data } = await supabaseAdmin
     .from("site_videos")
     .select("id, title, description, video_url, thumbnail_url, published_at, video_type, hashtags")
-    .eq("id", id)
+    .eq("id", dbId)
     .eq("published", true)
     .single();
   return data;
@@ -39,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!video) return {};
 
   const base = "https://www.albaalaagh.com";
-  const url = `${base}/videos/${id}`;
+  const url = `${base}${videoPath(video.id)}`;
   const isShort = video.video_type === "short";
   const w = isShort ? 720 : 1280;
   const h = isShort ? 1280 : 720;
@@ -88,8 +92,9 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const video = await getVideo(id);
   if (!video) notFound();
+  if (isDashedUuid(id)) permanentRedirect(videoPath(video.id));
 
-  const url = `https://www.albaalaagh.com/videos/${id}`;
+  const url = `https://www.albaalaagh.com${videoPath(video.id)}`;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">

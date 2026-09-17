@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
+import { videoPath } from "@/lib/public-urls";
 
 interface Video {
   id: string;
@@ -30,7 +31,7 @@ function PlayIcon() {
 
 function ShortCard({ video }: { video: Video }) {
   return (
-    <Link href={`/videos/${video.id}`} className="group block">
+    <Link href={videoPath(video.id)} className="group block">
       <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "9/16", background: "#1A1810" }}>
         {video.thumbnail_url ? (
           <img
@@ -62,7 +63,7 @@ function ShortCard({ video }: { video: Video }) {
 
 function VideoCard({ video }: { video: Video }) {
   return (
-    <Link href={`/videos/${video.id}`} className="group block">
+    <Link href={videoPath(video.id)} className="group block">
       <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: "16/9", background: "#1A1810" }}>
         {video.thumbnail_url ? (
           <img

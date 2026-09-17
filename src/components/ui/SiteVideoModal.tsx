@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { videoPath } from "@/lib/public-urls";
 
 function getYouTubeId(url: string): string | null {
   return url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
@@ -38,7 +39,7 @@ export default function SiteVideoModal({ id, title, video_url, onClose }: Props)
         <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: "1px solid #2E2A18" }}>
           <h2 className="font-black text-base line-clamp-1 flex-1" style={{ color: "#F0EAD6" }}>{title}</h2>
           <Link
-            href={`/videos/${id}`}
+            href={videoPath(id)}
             onClick={onClose}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-opacity hover:opacity-80"
             style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}

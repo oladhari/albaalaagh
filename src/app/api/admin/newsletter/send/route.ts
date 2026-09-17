@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Resend } from "resend";
+import { videoPath } from "@/lib/public-urls";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://albaalaagh.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.albaalaagh.com";
 
 export async function POST(req: NextRequest) {
   const { subject, intro, videos, articles, news } = await req.json();
@@ -48,8 +49,8 @@ export async function POST(req: NextRequest) {
           html,
         });
         sent++;
-      } catch (e: any) {
-        errors.push(`${sub.email}: ${e.message}`);
+      } catch (e: unknown) {
+        errors.push(`${sub.email}: ${e instanceof Error ? e.message : "Unknown error"}`);
       }
     }));
     if (i + 10 < recipients.length) await new Promise(r => setTimeout(r, 500));
@@ -105,8 +106,8 @@ function buildEmailHtml({ subject, intro, videos, articles, news, unsubscribeTok
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
           <tr>
             <td>
-              <a href="${SITE_URL}/videos/${v.id}" style="color:#E8D5A3;text-decoration:none;font-size:14px;font-weight:bold;">${v.title}</a>
-              <br><a href="${SITE_URL}/videos/${v.id}" style="color:#C9A844;font-size:12px;text-decoration:none;">مشاهدة الحلقة ←</a>
+              <a href="${SITE_URL}${videoPath(v.id)}" style="color:#E8D5A3;text-decoration:none;font-size:14px;font-weight:bold;">${v.title}</a>
+              <br><a href="${SITE_URL}${videoPath(v.id)}" style="color:#C9A844;font-size:12px;text-decoration:none;">مشاهدة الحلقة ←</a>
             </td>
           </tr>
         </table>`).join("")}

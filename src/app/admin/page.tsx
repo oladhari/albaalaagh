@@ -1,8 +1,32 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
+import { newsPath } from "@/lib/public-urls";
 
 export const dynamic = "force-dynamic";
+
+type RecentNews = {
+  id: string;
+  title: string;
+  source: string;
+  published_at: string;
+  status: string;
+};
+
+type RecentArticle = {
+  id: string;
+  title: string;
+  slug: string;
+  published_at: string;
+  writer?: { name: string | null } | { name: string | null }[] | null;
+};
+
+type RecentEditorial = {
+  id: string;
+  title: string;
+  slug: string | null;
+  published_at: string;
+};
 
 async function getStats() {
   const [pendingNews, approvedNews, editorials, articles, writers, guests] = await Promise.all([
@@ -46,9 +70,9 @@ async function getRecentActivity() {
       .limit(3),
   ]);
   return {
-    news:       recentNews.data       ?? [],
-    articles:   recentArticles.data   ?? [],
-    editorials: recentEditorials.data ?? [],
+    news:       (recentNews.data       ?? []) as RecentNews[],
+    articles:   (recentArticles.data   ?? []) as RecentArticle[],
+    editorials: (recentEditorials.data ?? []) as RecentEditorial[],
   };
 }
 
@@ -137,10 +161,10 @@ export default async function AdminDashboard() {
             <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد تقارير بعد</p>
           ) : (
             <div className="space-y-2">
-              {activity.editorials.map((e: any) => (
+              {activity.editorials.map((e) => (
                 <div key={e.id}>
                   <a
-                    href={`/taqrir/${e.slug}`}
+                    href={newsPath(e)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-medium line-clamp-2 hover:text-[#C9A844] transition-colors"
@@ -162,7 +186,7 @@ export default async function AdminDashboard() {
             <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد مقالات بعد</p>
           ) : (
             <div className="space-y-2">
-              {activity.articles.map((a: any) => (
+              {activity.articles.map((a) => (
                 <div key={a.id}>
                   <a
                     href={`/articles/${a.slug}`}
@@ -174,7 +198,7 @@ export default async function AdminDashboard() {
                     {a.title} ↗
                   </a>
                   <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
-                    {a.writer?.name ?? "البلاغ - فريق التحرير"} · {formatArabicDate(a.published_at)}
+                    {(Array.isArray(a.writer) ? a.writer[0]?.name : a.writer?.name) ?? "البلاغ - فريق التحرير"} · {formatArabicDate(a.published_at)}
                   </p>
                 </div>
               ))}
@@ -189,7 +213,7 @@ export default async function AdminDashboard() {
             <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة</p>
           ) : (
             <div className="space-y-2">
-              {activity.news.map((n: any) => (
+              {activity.news.map((n) => (
                 <div key={n.id}>
                   <p className="text-xs font-medium line-clamp-2" style={{ color: "#F0EAD6" }}>{n.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: "#9A9070" }}>
