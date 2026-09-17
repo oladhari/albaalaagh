@@ -48,14 +48,33 @@ CREATE TABLE IF NOT EXISTS news (
   source_logo  TEXT,
   image_url    TEXT,
   category     TEXT,
+  source_language TEXT CHECK (source_language IN ('ar','en')),
+  source_kind  TEXT CHECK (source_kind IN ('official','agency','media','emergency','science')),
+  source_topic TEXT CHECK (source_topic IN ('tunisia','arab','international','technology','disaster')),
   published_at TIMESTAMPTZ NOT NULL,
   status       TEXT NOT NULL DEFAULT 'pending'
                  CHECK (status IN ('pending','approved','rejected')),
-  created_at   TIMESTAMPTZ DEFAULT NOW()
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_news_status       ON news(status, published_at DESC);
 CREATE INDEX idx_news_published_at ON news(published_at DESC);
+
+CREATE TABLE IF NOT EXISTS news_citations (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  news_id      UUID NOT NULL REFERENCES news(id) ON DELETE CASCADE,
+  name         TEXT NOT NULL,
+  url          TEXT NOT NULL,
+  kind         TEXT NOT NULL DEFAULT 'media'
+                 CHECK (kind IN ('official','agency','media','document','interview')),
+  is_primary   BOOLEAN NOT NULL DEFAULT FALSE,
+  published_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (news_id, url)
+);
+
+CREATE INDEX idx_news_citations_news_id ON news_citations(news_id);
 
 -- ── Guests ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS guests (

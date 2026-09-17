@@ -16,7 +16,7 @@ async function getArticle(slugOrId: string) {
 
   const { data } = await supabaseAdmin
     .from("news")
-    .select("*")
+    .select("*, news_citations(*)")
     .or(filter)
     .eq("source", "البلاغ")
     .single();
@@ -27,7 +27,7 @@ async function getArticle(slugOrId: string) {
 
   const { data: prefixMatches } = await supabaseAdmin
     .from("news")
-    .select("*")
+    .select("*, news_citations(*)")
     .eq("source", "البلاغ")
     .like("slug", `${prefix}%`)
     .limit(2);
@@ -75,6 +75,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     alternates: {
       canonical: canonicalUrl,
     },
+    robots: article.news_citations?.length
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
   };
 }
 
@@ -96,7 +99,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
     headline: article.title,
     description: article.excerpt ?? article.title,
     datePublished: article.published_at,
-    dateModified: article.published_at,
+    dateModified: article.updated_at ?? article.published_at,
     author: {
       "@type": "Organization",
       name: "تحرير البلاغ",
@@ -110,6 +113,13 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
       logo: { "@type": "ImageObject", url: `${base}/albaalaagh-logo.png` },
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+    ...(article.news_citations?.length ? {
+      citation: article.news_citations.map((citation: { name: string; url: string }) => ({
+        "@type": "CreativeWork",
+        name: citation.name,
+        url: citation.url,
+      })),
+    } : {}),
     ...(article.image_url ? { image: article.image_url } : {}),
   };
 
@@ -198,6 +208,37 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
         style={{ color: "#D4CCBA", fontSize: 16, lineHeight: 1.9 }}
         dangerouslySetInnerHTML={{ __html: formatContent(article.content ?? "") }}
       />
+
+      {article.news_citations?.length > 0 && (
+        <section
+          className="mt-10 pt-6"
+          style={{ borderTop: "1px solid #2E2A18" }}
+          aria-labelledby="report-sources"
+        >
+          <h2 id="report-sources" className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>
+            المصادر
+          </h2>
+          <ul className="space-y-2">
+            {article.news_citations.map((citation: { id: string; name: string; url: string; is_primary: boolean }) => (
+              <li key={citation.id} className="text-sm">
+                <a
+                  href={citation.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                  style={{ color: "#D4CCBA" }}
+                >
+                  {citation.name}
+                  {citation.is_primary ? " — المصدر الأساسي" : ""}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs mt-4" style={{ color: "#6B6448" }}>
+            إعداد وتحرير: فريق تحرير البلاغ
+          </p>
+        </section>
+      )}
     </div>
     </>
   );

@@ -5,16 +5,21 @@ import { shareToAll } from "@/lib/share";
 
 // Priority order for sources — Tunisia first, then Arab regional, then others
 const SOURCE_PRIORITY: Record<string, number> = {
-  "تيوميديا":      1,
-  "موزاييك FM":    2,
-  "نواة":          3,
-  "ديوان FM":      4,
-  "تونس تلغراف":  5,
-  "عربي21":        6,
-  "الجزيرة":       7,
-  "العربي الجديد": 8,
-  "القدس العربي":  9,
-  "الأناضول":      10,
+  "رئاسة الحكومة التونسية": 1,
+  "موزاييك FM": 2,
+  "أخبار الأمم المتحدة": 3,
+  "الجزيرة": 4,
+  "الأناضول": 5,
+  "DW عربية": 6,
+  "فرانس 24 عربي": 7,
+  "USGS": 8,
+  "GDACS": 9,
+  "BBC World": 10,
+  "BBC Technology": 11,
+  "MIT Technology Review": 12,
+  "Ars Technica": 13,
+  "TechCrunch": 14,
+  "NASA": 15,
 };
 
 export async function POST(req: NextRequest) {
@@ -22,10 +27,19 @@ export async function POST(req: NextRequest) {
   if (unauthed) return unauthed;
 
   const body = await req.json();
-  const { title, excerpt, content, image_url, facebook_image, category, geo, published_at } = body;
+  const { title, excerpt, content, image_url, facebook_image, category, geo, published_at, source_name, source_url } = body;
 
   if (!title || !content) {
     return NextResponse.json({ error: "العنوان والمحتوى مطلوبان" }, { status: 400 });
+  }
+  if (!source_name || !source_url) {
+    return NextResponse.json({ error: "المصدر الأساسي مطلوب" }, { status: 400 });
+  }
+  try {
+    const parsed = new URL(source_url);
+    if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("Invalid protocol");
+  } catch {
+    return NextResponse.json({ error: "رابط المصدر غير صالح" }, { status: 400 });
   }
 
   const slug = Date.now().toString(36);
@@ -50,6 +64,19 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const { error: citationError } = await supabaseAdmin.from("news_citations").insert({
+    news_id: data.id,
+    name: source_name.trim(),
+    url: source_url.trim(),
+    kind: "media",
+    is_primary: true,
+    published_at: published_at ? new Date(published_at).toISOString() : new Date().toISOString(),
+  });
+  if (citationError) {
+    await supabaseAdmin.from("news").delete().eq("id", data.id);
+    return NextResponse.json({ error: citationError.message }, { status: 500 });
+  }
 
   await shareToAll({ title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null, image: image_url || null });
 
@@ -93,7 +120,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from("news")
-    .select("*, submitted_by_writer:writers!submitted_by(name)")
+    .select("*, submitted_by_writer:writers!submitted_by(name), news_citations(*)")
     .eq("status", status)
     .order("published_at", { ascending: false })
     .limit(100);
