@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import Parser from "rss-parser";
-import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NEWS_SOURCES } from "@/types";
 import { scoreNewsPriority } from "@/lib/news-priority";
+import { classifyNewsBatch, type Classification } from "@/lib/ai/workflows";
 
 const parser = new Parser({
   customFields: { item: ["media:content", "media:thumbnail", "enclosure"] },
 });
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,63 +27,17 @@ function stripHtml(html: string): string {
 }
 
 // ── AI batch classification ───────────────────────────────────────────────────
-// ONE Haiku call per cron run, all new articles in a single batch.
-// ~$0.003 per call, ~$0.36/month at 4 runs/day.
-
-interface Classification {
-  geo: "tunisia" | "arab" | "international" | "general";
-  category: string;
-}
+// One configurable fast-model call per cron run, with all new articles in one batch.
 
 async function classifyBatch(
   articles: { title: string; source: string }[]
 ): Promise<Classification[]> {
   if (articles.length === 0) return [];
 
-  const numbered = articles
-    .map((a, i) => `${i}. "${a.title}" [${a.source}]`)
-    .join("\n");
-
-  const prompt = `أنت مصنِّف أخبار عربية. صنِّف كل خبر حسب موضوعه (وليس مصدره):
-
-geo:
-- "tunisia"       → موضوع الخبر يخصّ تونس مباشرة (سياسة تونسية، قضاء تونسي، اقتصاد تونسي...)
-- "arab"          → موضوعه يخصّ دولة عربية أخرى (فلسطين، مصر، ليبيا، لبنان، السعودية...)
-- "international" → موضوعه دولي لا يخصّ العالم العربي مباشرة (أمريكا، أوروبا، روسيا، الصين...)
-- "general"       → لا يمكن التصنيف
-
-تنبيه مهم: إذا كان الخبر عن غزة أو فلسطين أو إسرائيل أو لبنان أو سوريا فهو "arab" حتى لو صدر من مصدر تونسي.
-إذا كان الخبر عن ترامب أو أوروبا أو روسيا فهو "international".
-
-category (اختر واحدة):
-سياسة | اقتصاد | قضاء | مجتمع | أمن | ثقافة | رياضة | تكنولوجيا | بيئة | صحة | تعليم | عام
-
-أجب بـ JSON فقط، مصفوفة بنفس ترتيب المدخلات:
-[{"geo":"...","category":"..."},...]
-
-الأخبار:
-${numbered}`;
-
   try {
-    const msg = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "[]";
-    const start = text.indexOf("[");
-    const end   = text.lastIndexOf("]");
-    if (start === -1 || end === -1) throw new Error("No JSON array found");
-
-    const parsed: Classification[] = JSON.parse(text.slice(start, end + 1));
-    // Ensure same length as input — pad with fallbacks if needed
-    while (parsed.length < articles.length) {
-      parsed.push({ geo: "general", category: "سياسة" });
-    }
-    return parsed;
-  } catch (err) {
-    console.error("[classify-batch] Haiku error:", err);
+    return await classifyNewsBatch(articles);
+  } catch {
+    console.error(JSON.stringify({ event: "ai_operation_fallback", operation: "rss_classification", route: "/api/cron/fetch-news" }));
     // Fallback: rule-based
     return articles.map(({ title, source }) => ({
       geo: detectGeoFallback(title, source),
@@ -94,11 +46,12 @@ ${numbered}`;
   }
 }
 
-// Fallbacks used when Haiku call fails
+// Deterministic fallbacks used when the configured provider call fails.
 function detectGeoFallback(title: string, source: string): Classification["geo"] {
   const t = title;
   // Content takes priority over source
-  if (/فلسطين|غزة|إسرائيل|أمريكا|أوروبا|روسيا|الصين|ترامب|نتنياهو|لبنان|سوريا|إيران/.test(t)) return "international";
+  if (/فلسطين|غزة|إسرائيل|نتنياهو|لبنان|سوريا|إيران|مصر|ليبيا|السعودية|الأردن|العراق|اليمن|المغرب|الجزائر/.test(t)) return "arab";
+  if (/أمريكا|أوروبا|روسيا|الصين|ترامب|بايدن|بوتين|واشنطن|باريس|لندن|بروكسل/.test(t)) return "international";
   if (/تونس|تونسي|قيس سعيد|الحكومة التونسية|البرلمان التونسي/.test(t)) return "tunisia";
   // Source as tiebreaker only when title gives no signal
   const TUNISIA_SOURCES = ["تيوميديا", "موزاييك FM", "نواة"];
@@ -192,7 +145,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ...results, message: "No new articles" });
   }
 
-  // Step 2: ONE batch Haiku call to classify all new articles
+  // Step 2: one batch AI call to classify all new articles
   results.aiCalled = true;
   const classifications = await classifyBatch(
     toInsert.map((a) => ({ title: a.title, source: a.source }))

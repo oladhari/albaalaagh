@@ -28,6 +28,7 @@ interface Preview {
   published_at:   string;
   tone:           Tone;
   citations:      NewsCitation[];
+  needs_internal_review?: boolean;
   editMode?:      boolean;
 }
 
@@ -114,6 +115,7 @@ export default function AdminNewsPage() {
         published_at:   toDateTimeLocal(),
         tone,
         citations:       data.citations ?? [],
+        needs_internal_review: Boolean(data.needs_internal_review),
       });
     } finally {
       setGenerating(null);
@@ -183,6 +185,7 @@ export default function AdminNewsPage() {
         : toDateTimeLocal(),
       tone:           "accountability" as Tone,
       citations:      news.news_citations ?? [],
+      needs_internal_review: false,
       editMode:       true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -253,6 +256,7 @@ export default function AdminNewsPage() {
         published_at:   toDateTimeLocal(),
         tone:         "accountability",
         citations:    data.citations ?? [],
+        needs_internal_review: Boolean(data.needs_internal_review),
       });
       setUrlInput("");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -353,6 +357,15 @@ export default function AdminNewsPage() {
             </h2>
             <button onClick={() => setPreview(null)} className="text-xs" style={{ color: DIM }}>✕ إلغاء</button>
           </div>
+
+          {preview.needs_internal_review && (
+            <div
+              className="p-3 rounded-lg text-sm"
+              style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.35)", color: RED }}
+            >
+              ⚠️ هذه المسودة تتناول مادة سياسية أو انتخابية أو نزاعاً أو ادعاءات حساسة، وتتطلب تدقيقاً تحريرياً إضافياً قبل النشر.
+            </div>
+          )}
 
           {/* Tone switcher — only for generated (non-edit) previews */}
           {!preview.editMode && (

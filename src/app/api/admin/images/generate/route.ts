@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { generateNewsImage, generateFacebookImage, generateWriterArticleImage } from "@/lib/ai-image";
+import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 120;
 
@@ -29,8 +30,12 @@ export async function POST(req: NextRequest) {
       ({ url, failedPeople } = await generateNewsImage(title, excerpt ?? "", people));
     }
     return NextResponse.json({ url, failedPeople });
-  } catch (err: any) {
-    console.error("[images/generate]", err);
-    return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof AiProviderError) {
+      const response = toAdminAiResponse(err);
+      return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
+    }
+    console.error(JSON.stringify({ event: "image_generation_failed", route: "/api/admin/images/generate" }));
+    return NextResponse.json({ error: "تعذّر إنشاء الصورة." }, { status: 500 });
   }
 }

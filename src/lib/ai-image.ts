@@ -1,24 +1,18 @@
-import Anthropic from "@anthropic-ai/sdk";
 import OpenAI, { toFile } from "openai";
 import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
 import { uploadToR2 } from "@/lib/r2";
+import { generateWriterImagePrompt } from "@/lib/ai/workflows";
 
-let anthropic: Anthropic | null = null;
 let openai: OpenAI | null = null;
 
-function getAnthropic(): Anthropic {
-  if (!anthropic) anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return anthropic;
-}
-
 function getOpenAI(): OpenAI {
-  if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 0, timeout: 120_000 });
   return openai;
 }
 
-const SYSTEM_PROMPT = `You are the official image prompt generator for Albaalaagh (قناة البلاغ).
+export const LEGACY_NEWS_IMAGE_PROMPT = `You are the official image prompt generator for Albaalaagh (قناة البلاغ).
 
 Your task is NOT to generate images.
 
@@ -405,21 +399,6 @@ clean composition,
 mobile readability,
 1280×720 landscape format.`;
 
-async function buildImagePrompt(title: string, excerpt: string): Promise<string> {
-  const msg = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 800,
-    system: SYSTEM_PROMPT,
-    messages: [{
-      role: "user",
-      content: `العنوان: ${title}\nالوصف: ${excerpt || "—"}`,
-    }],
-  });
-  const text = msg.content[0].type === "text" ? msg.content[0].text : "";
-  if (!text.trim()) throw new Error("Empty image prompt from Claude");
-  return text.trim();
-}
-
 const NEWS_16_9_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement_16_9.png");
 
 // ── Reference people ──────────────────────────────────────────────────────────
@@ -452,17 +431,17 @@ async function fetchPersonFiles(people: PersonPhoto[]): Promise<FetchedPersonFil
     try {
       const res = await fetch(p.url);
       if (!res.ok) {
-        console.warn(`[ai-image] person photo fetch failed: name="${p.name}" url="${p.url}" status=${res.status}`);
+        console.warn(JSON.stringify({ event: "ai_image_reference_fetch_failed", status: res.status }));
         failed.push(p);
         continue;
       }
       const buf = Buffer.from(await res.arrayBuffer());
       const contentType = res.headers.get("content-type") ?? "image/png";
-      console.log(`[ai-image] person photo attached: name="${p.name}" url="${p.url}" contentType=${contentType} bytes=${buf.length}`);
+      console.info(JSON.stringify({ event: "ai_image_reference_attached", contentType, bytes: buf.length }));
       files.push(await toFile(buf, `person-${files.length}.png`, { type: contentType }));
       attached.push(p);
-    } catch (e) {
-      console.warn(`[ai-image] person photo fetch threw: name="${p.name}" url="${p.url}"`, e);
+    } catch {
+      console.warn(JSON.stringify({ event: "ai_image_reference_fetch_failed" }));
       failed.push(p);
     }
   }
@@ -1068,18 +1047,7 @@ mobile readability,
 1280×720 landscape format`;
 
 async function buildWriterArticlePrompt(title: string, excerpt: string, writerName: string, hasWriterPhoto: boolean): Promise<string> {
-  const msg = await getAnthropic().messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 800,
-    system: WRITING_ARTICLE_SYSTEM_PROMPT,
-    messages: [{
-      role: "user",
-      content: `العنوان (استخدم هذا النص حرفياً على الصورة، بدون أي تغيير أو تلخيص أو إعادة صياغة): ${title}\nالكاتب: ${writerName}\nصورة الكاتب: ${hasWriterPhoto ? "مرفقة — استخدمها كما هي بدون أي تعديل على الوجه" : "غير متوفرة — لا تنشئ وجهاً، استخدم خلفية رمزية فقط"}\nمحتوى المقال (للسياق والخلفية البصرية فقط — لا تستخرج منه أي عنوان بديل): ${excerpt || "—"}`,
-    }],
-  });
-  const text = msg.content[0].type === "text" ? msg.content[0].text : "";
-  if (!text.trim()) throw new Error("Empty image prompt from Claude");
-  return text.trim();
+  return generateWriterImagePrompt({ title, excerpt, writerName, hasWriterPhoto }, WRITING_ARTICLE_SYSTEM_PROMPT);
 }
 
 export async function generateWriterArticleImage(
