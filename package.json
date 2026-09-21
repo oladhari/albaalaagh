@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ai:smoke": "node --env-file=.env.local smoke/openai.mjs",
     "news:recover-citations": "node scripts/recover-news-citations.mjs",
     "videos:consolidate": "node scripts/consolidate-youtube-r2-pairs.mjs"
   },
@@ -42,6 +45,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

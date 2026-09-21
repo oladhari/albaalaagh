@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { reviewGuests } from "@/lib/ai/workflows";
+import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 60;
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export interface GuestUpdate {
   id: string;
@@ -39,8 +38,6 @@ export interface ReviewResult {
   total: number;
 }
 
-const CATEGORIES = "وزير|برلماني|ناشط|مفكر|صحفي|أكاديمي|رجل دين|رئيس دولة|دبلوماسي|قاضٍ|آخر";
-
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
@@ -60,51 +57,16 @@ export async function POST(req: NextRequest) {
   const chunk = guests.slice(offset, offset + limit);
   const hasMore = offset + limit < guests.length;
 
-  const list = chunk
-    .map((g) => {
-      const cat = Array.isArray(g.category) ? (g.category as string[]).join("، ") : (g.category ?? "");
-      return `[${g.id}] "${g.name}" | صفة: "${g.title ?? ""}" | تصنيف: "${cat}"`;
-    })
-    .join("\n");
-
-  // For duplicates we need full names list even in chunk mode
-  const allNames = guests.map((g) => `[${g.id}] ${g.name}`).join(", ");
-
-  const prompt = `أنت خبير في الشخصيات السياسية والفكرية التونسية والعربية والدولية.
-راجع هؤلاء الضيوف من قناة "البلاغ" التونسية:
-
-التصنيفات المتاحة: ${CATEGORIES}
-
-لكل ضيف في القائمة أدناه:
-1. إذا اسمه مكتوب بالعربية لكنه أجنبي (غربي، إسرائيلي، تركي...) → أعد اسمه بلغته الأصلية
-2. إذا صفته غير دقيقة أو فارغة → صحّح
-3. إذا تصنيفه خاطئ → صحّح من قائمة التصنيفات أعلاه
-4. إذا قد يكون مكرراً مع ضيف آخر (من القائمة الكاملة: ${allNames}) → أشر إليه
-5. إذا لا تعرفه → ضعه في uncertain
-
-أجب بـ JSON فقط:
-{
-  "updates": [{"id":"...","name":"(فقط إذا يختلف)","title":"(فقط إذا يختلف)","category":["تصنيف1","تصنيف2"],"reason":"..."}],
-  "duplicates": [{"ids":["id1","id2"],"names":["اسم1","اسم2"],"reason":"..."}],
-  "uncertain": [{"id":"...","name":"...","reason":"..."}]
-}
-
-الضيوف للمراجعة:
-${list}`;
-
   try {
-    const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 6000,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const text  = msg.content[0].type === "text" ? msg.content[0].text : "";
-    const start = text.indexOf("{");
-    const end   = text.lastIndexOf("}");
-    if (start === -1 || end === -1) throw new Error("No JSON in Sonnet response");
-
-    const raw: ReviewResult = JSON.parse(text.slice(start, end + 1));
+    const raw = await reviewGuests(
+      chunk.map((g) => ({
+        id: g.id,
+        name: g.name,
+        title: g.title ?? "",
+        category: Array.isArray(g.category) ? g.category as string[] : (g.category ? [String(g.category)] : []),
+      })),
+      guests.map((g) => ({ id: g.id, name: g.name })),
+    );
 
     // Enrich updates with current values for UI diff
     const guestMap = new Map(guests.map((g) => [g.id, g]));
@@ -114,19 +76,32 @@ ${list}`;
         const g = guestMap.get(u.id)!;
         const cat = g.category;
         const currentCategory: string[] = Array.isArray(cat) ? cat : (cat ? [cat as unknown as string] : []);
-        return { ...u, current_name: g.name, current_title: g.title ?? "", current_category: currentCategory };
+        return {
+          ...u,
+          name: u.name ?? undefined,
+          title: u.title ?? undefined,
+          current_name: g.name,
+          current_title: g.title ?? "",
+          current_category: currentCategory,
+        };
       });
+
+    const knownIds = new Set(guests.map((g) => g.id));
 
     return NextResponse.json({
       updates,
-      duplicates: raw.duplicates ?? [],
-      uncertain:  raw.uncertain  ?? [],
+      duplicates: raw.duplicates.filter((item) => item.ids.length >= 2 && item.ids.every((id) => knownIds.has(id))),
+      uncertain: raw.uncertain.filter((item) => knownIds.has(item.id)),
       hasMore,
       nextOffset: offset + limit,
       total: guests.length,
     });
-  } catch (err: any) {
-    console.error("[guests/review]", err);
-    return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof AiProviderError) {
+      const response = toAdminAiResponse(err);
+      return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
+    }
+    console.error(JSON.stringify({ event: "guest_review_failed", route: "/api/admin/guests/review" }));
+    return NextResponse.json({ error: "تعذّرت مراجعة الضيوف." }, { status: 500 });
   }
 }

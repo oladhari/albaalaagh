@@ -1,59 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { fetchAllVideosWithDescriptions } from "@/lib/youtube";
+import { extractGuestsFromBatch, type ExtractedGuest } from "@/lib/ai/workflows";
+import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 300; // 5 min — requires Vercel Pro; Hobby gets 60s
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-interface ExtractedGuest {
-  name: string;
-  title: string;
-  category: string;
-}
 
 function normalizeArabicName(name: string): string {
   return name
     .replace(/^(الدكتور|الأستاذ|الشيخ|السيد|المحامي|الأستاذة|الدكتورة|السيدة)\s+/u, "")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-async function extractGuestsFromBatch(
-  videos: { youtube_id: string; title: string; description: string }[]
-): Promise<ExtractedGuest[]> {
-  const numbered = videos
-    .map((v, i) => `${i}. "${v.title}" | ${v.description.slice(0, 150).replace(/\n/g, " ")}`)
-    .join("\n");
-
-  const prompt = `استخرج الضيوف من هذه المقابلات لقناة "البلاغ" التونسية.
-لكل فيديو: اسم الضيف (بدون ألقاب)، صفته، تصنيفه (وزير|برلماني|ناشط|مفكر|صحفي|أكاديمي|آخر).
-إذا لا يوجد ضيف واضح أعد [].
-JSON فقط، مصفوفة بنفس عدد الفيديوهات (${videos.length}):
-[[{"name":"...","title":"...","category":"..."}],[],...]\n\n${numbered}`;
-
-  try {
-    const msg = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 2048,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
-
-    // Extract the outermost JSON array robustly
-    const start = text.indexOf("[");
-    const end   = text.lastIndexOf("]");
-    if (start === -1 || end === -1 || end <= start) return [];
-
-    const parsed: ExtractedGuest[][] = JSON.parse(text.slice(start, end + 1));
-    return parsed.flat().filter((g) => g?.name && g.name.length > 2);
-  } catch (err) {
-    console.error("[guests/import] Haiku error:", err);
-    return [];
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -97,7 +55,7 @@ export async function POST(req: NextRequest) {
       existingMap.set(normalizeArabicName(g.name), { id: g.id, title: g.title ?? "" });
     }
 
-    // 3. Batch Haiku extraction (10 videos per call — keeps prompt short)
+    // 3. Batch AI extraction (10 videos per call — keeps prompt short)
     const BATCH = 10;
     const allExtracted: ExtractedGuest[] = [];
 
@@ -146,8 +104,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(results);
-  } catch (err: any) {
-    console.error("[guests/import]", err);
-    return NextResponse.json({ ...results, error: String(err?.message ?? err) }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof AiProviderError) {
+      const response = toAdminAiResponse(err);
+      return NextResponse.json({ ...results, error: response.error, category: response.category }, { status: response.status });
+    }
+    console.error(JSON.stringify({ event: "guest_import_failed", route: "/api/admin/guests/import" }));
+    return NextResponse.json({ ...results, error: "تعذّر استيراد الضيوف." }, { status: 500 });
   }
 }

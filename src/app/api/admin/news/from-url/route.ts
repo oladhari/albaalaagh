@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { generateUrlDraft, type NewsDraft } from "@/lib/ai/workflows";
+import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 60;
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 function extractMeta(html: string, property: string): string {
   const m =
@@ -80,57 +79,23 @@ export async function POST(req: NextRequest) {
   const sourceTitle = ogTitle || "خبر من رابط خارجي";
   const sourceDesc  = ogDesc  || "";
 
-  // 3. Generate article with Claude
-  const prompt = `أنت محرر أول في قناة "البلاغ" التونسية، وهي منبر صحفي مستقل يتبنّى صحافة المساءلة. أنشئ مسودة عربية موثقة انطلاقاً من المصدر التالي، مع الحفاظ على نسب المعلومات إلى مصدرها وإضافة سياق مفيد فقط عندما تكون متأكداً منه.
-
-المبادئ التحريرية التي يجب أن تعكسها في كتابتك:
-- لا تُروّج للإنجازات الحكومية أو تصفها بـ"التاريخية" أو "الرائدة" ما لم يكن ذلك مؤكداً بأدلة ملموسة
-- استخدم صيغة "تدّعي" أو "تؤكد السلطات" أو "وفق البيان الرسمي" عند نقل تصريحات المسؤولين
-- إن غابت التفاصيل أو الأرقام عن المصدر الأصلي، أشر إلى ذلك صراحةً في التقرير
-- العنوان يصف الحدث ويطرح السؤال الجوهري، لا يمدح القرار
-- تجنّب اللغة الترويجية: لا "إنجاز"، لا "خطوة نوعية"، لا "ريادة" إلا إن كانت موثّقة
-- اذكر اسم المصدر بوضوح عند إسناد المعلومات إليه، ولا توحِ بأن البلاغ تحقق مستقلاً من معلومات لم يتحقق منها
-- إن كانت المادة بلغة غير العربية، ترجمها إلى عربية فصحى طبيعية مع الحفاظ على المعنى
-- لا تخترع تفاصيل أو أرقاماً أو اقتباسات؛ اذكر ما لا يزال غير مؤكد
-
-العنوان الأصلي: ${sourceTitle}
-المصدر الأصلي: ${parsedUrl.hostname.replace("www.", "")}
-رابط المصدر: ${url}
-الوصف: ${sourceDesc}
-محتوى المقال:
-${bodyText.slice(0, 3000)}
-
-اكتب تقريراً يشمل:
-1. عنوان يصف الحدث بدقة ويُلمح للسؤال الذي يطرحه، دون مديح
-2. مقدمة وجيزة (جملتان إلى ثلاث) تلخص الحدث وتضع القارئ في السياق
-3. تقرير كامل (3 إلى 4 فقرات) يعرض الوقائع ويُبرز ما هو غائب أو غير مؤكد
-
-أجب بهذا التنسيق فقط بدون أي نص خارجه:
-<title>العنوان هنا</title>
-<excerpt>المقدمة هنا</excerpt>
-<content><p>فقرة أولى</p><p>فقرة ثانية</p></content>`;
-
-  let generated = { title: sourceTitle, excerpt: sourceDesc, content: "" };
-
+  // 3. Generate and validate the complete draft before any database mutation.
+  let generated: NewsDraft;
   try {
-    const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 3000,
-      messages: [{ role: "user", content: prompt }],
+    generated = await generateUrlDraft({
+      original_title: sourceTitle,
+      source_name: parsedUrl.hostname.replace("www.", ""),
+      source_url: url,
+      description: sourceDesc,
+      article_text: bodyText.slice(0, 12_000),
     });
-
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
-    const extract = (tag: string) => {
-      const m = text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
-      return m ? m[1].trim() : "";
-    };
-
-    const t = extract("title");
-    const e = extract("excerpt");
-    const c = extract("content");
-    if (t && c) generated = { title: t, excerpt: e, content: c };
-  } catch (err) {
-    console.error("[from-url] Claude error:", err);
+  } catch (err: unknown) {
+    if (err instanceof AiProviderError) {
+      const response = toAdminAiResponse(err);
+      return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
+    }
+    console.error(JSON.stringify({ event: "url_news_generation_failed", route: "/api/admin/news/from-url" }));
+    return NextResponse.json({ error: "تعذّر إنشاء مسودة صالحة من الرابط." }, { status: 500 });
   }
 
   // 4. Insert placeholder news row so the publish flow can use its ID
@@ -172,6 +137,7 @@ ${bodyText.slice(0, 3000)}
     title:     generated.title,
     excerpt:   generated.excerpt,
     content:   generated.content,
+    needs_internal_review: generated.needs_internal_review,
     image_url: ogImage || null,
     geo:       "general",
     category:  "عام",

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { reclassifyNewsBatch } from "@/lib/ai/workflows";
+import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 60;
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Fix articles wrongly tagged as "tunisia" when they're about Palestine/Arab world
 export async function POST() {
@@ -37,31 +36,8 @@ export async function POST() {
     return NextResponse.json({ fixed: 0, message: "All Tunisia articles look correct" });
   }
 
-  // Batch reclassify with Haiku
-  const numbered = candidates.map((a, i) => `${i}. "${a.title}" [${a.source}]`).join("\n");
-
-  const prompt = `صنِّف جغرافياً كل خبر (موضوعه وليس مصدره):
-- "arab"          → يخصّ دولة عربية (فلسطين، مصر، لبنان، ليبيا، السعودية...)
-- "international" → دولي غير عربي (أمريكا، أوروبا، روسيا...)
-- "tunisia"       → يخصّ تونس فعلاً
-
-أجب بـ JSON فقط: [{"geo":"..."},...]
-الأخبار:
-${numbered}`;
-
   try {
-    const msg = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const text  = msg.content[0].type === "text" ? msg.content[0].text : "[]";
-    const start = text.indexOf("[");
-    const end   = text.lastIndexOf("]");
-    if (start === -1 || end === -1) throw new Error("No JSON");
-
-    const results: { geo: string }[] = JSON.parse(text.slice(start, end + 1));
+    const results = await reclassifyNewsBatch(candidates);
 
     let fixed = 0;
     for (let i = 0; i < candidates.length; i++) {
@@ -75,7 +51,12 @@ ${numbered}`;
     }
 
     return NextResponse.json({ checked: candidates.length, fixed });
-  } catch (err: any) {
-    return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof AiProviderError) {
+      const response = toAdminAiResponse(err);
+      return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
+    }
+    console.error(JSON.stringify({ event: "news_reclassification_failed", route: "/api/admin/news/reclassify" }));
+    return NextResponse.json({ error: "تعذّر إعادة تصنيف الأخبار." }, { status: 500 });
   }
 }
