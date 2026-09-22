@@ -267,8 +267,19 @@ export default function AdminNewsPage() {
 
   const fetchFresh = async () => {
     setLoading(true);
-    await fetch("/api/cron/fetch-news");
-    await load(filter);
+    try {
+      const res = await fetch("/api/cron/fetch-news", { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error ?? "تعذر جلب الأخبار الجديدة");
+        return;
+      }
+      await load(filter);
+    } catch {
+      alert("تعذر الاتصال بخدمة جلب الأخبار");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const LABELS: Record<Filter, string> = {

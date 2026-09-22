@@ -4,6 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { NEWS_SOURCES } from "@/types";
 import { scoreNewsPriority } from "@/lib/news-priority";
 import { classifyNewsBatch, type Classification } from "@/lib/ai/workflows";
+import { requireAdmin } from "@/lib/admin-auth";
+import { isFreshNewsDate, newsFreshnessCutoff } from "@/lib/news-feed";
 
 const parser = new Parser({
   customFields: { item: ["media:content", "media:thumbnail", "enclosure"] },
@@ -78,23 +80,33 @@ export async function GET(req: NextRequest) {
   const authHeader   = req.headers.get("authorization");
   const isDev = process.env.NODE_ENV === "development";
 
-  const validManual  = headerSecret === cronSecret;
-  const validVercel  = authHeader === `Bearer ${cronSecret}`;
+  const validManual  = Boolean(cronSecret) && headerSecret === cronSecret;
+  const validVercel  = Boolean(cronSecret) && authHeader === `Bearer ${cronSecret}`;
 
   if (!isDev && !validManual && !validVercel) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const unauthed = await requireAdmin();
+    if (unauthed) return unauthed;
   }
 
-  const results = { fetched: 0, inserted: 0, skipped: 0, aiCalled: false, deleted: 0, errors: [] as string[] };
+  const results = {
+    fetched: 0,
+    inserted: 0,
+    skipped: 0,
+    stale: 0,
+    aiCalled: false,
+    dismissed: 0,
+    errors: [] as string[],
+  };
 
-  // Cleanup: delete pending news older than 48 hours — no value in reviewing stale news
-  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-  const { count: deletedCount } = await supabaseAdmin
+  // Keep the URL as a tombstone: deleting it would let the RSS feed suggest it again.
+  const cutoff = newsFreshnessCutoff();
+  const { count: dismissedCount, error: dismissError } = await supabaseAdmin
     .from("news")
-    .delete({ count: "exact" })
+    .update({ status: "rejected" }, { count: "exact" })
     .eq("status", "pending")
-    .lt("created_at", cutoff);
-  results.deleted = deletedCount ?? 0;
+    .lt("published_at", cutoff);
+  results.dismissed = dismissedCount ?? 0;
+  if (dismissError) results.errors.push(`dismiss: ${dismissError.message}`);
 
   // Step 1: collect all new articles from RSS
   const toInsert: {
@@ -115,6 +127,12 @@ export async function GET(req: NextRequest) {
         const url = item.link?.trim() || "";
         if (!url || !title) { results.skipped++; continue; }
 
+        const publishedAt = item.isoDate || item.pubDate;
+        if (!publishedAt || !isFreshNewsDate(publishedAt)) {
+          results.stale++;
+          continue;
+        }
+
         // Skip duplicates
         const { data: existing } = await supabaseAdmin
           .from("news").select("id").eq("url", url).single();
@@ -130,7 +148,7 @@ export async function GET(req: NextRequest) {
           url,
           source: source.name,
           image_url: extractImage(item),
-          published_at: item.isoDate || new Date().toISOString(),
+          published_at: new Date(publishedAt).toISOString(),
           source_language: source.language,
           source_kind: source.kind,
           source_topic: source.topic,

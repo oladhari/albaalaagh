@@ -34,6 +34,8 @@ export interface NewsArticle {
   published_at: string;
   status: "pending" | "approved" | "rejected";
   category?: string;
+  geo?: "tunisia" | "arab" | "international" | "general";
+  priority_score?: number;
   source_language?: "ar" | "en";
   source_kind?: "official" | "agency" | "media" | "emergency" | "science";
   source_topic?: "tunisia" | "arab" | "international" | "technology" | "disaster";
