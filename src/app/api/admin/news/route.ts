@@ -3,25 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
 import { publishedAtOrNow } from "@/lib/utils";
-
-// Priority order for sources — Tunisia first, then Arab regional, then others
-const SOURCE_PRIORITY: Record<string, number> = {
-  "رئاسة الحكومة التونسية": 1,
-  "موزاييك FM": 2,
-  "أخبار الأمم المتحدة": 3,
-  "الجزيرة": 4,
-  "الأناضول": 5,
-  "DW عربية": 6,
-  "فرانس 24 عربي": 7,
-  "USGS": 8,
-  "GDACS": 9,
-  "BBC World": 10,
-  "BBC Technology": 11,
-  "MIT Technology Review": 12,
-  "Ars Technica": 13,
-  "TechCrunch": 14,
-  "NASA": 15,
-};
+import { newsFreshnessCutoff, sortNewsSuggestions } from "@/lib/news-feed";
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -119,25 +101,20 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "pending";
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("news")
     .select("*, submitted_by_writer:writers!submitted_by(name), news_citations(*)")
-    .eq("status", status)
+    .eq("status", status);
+
+  if (status === "pending") {
+    query = query.gte("published_at", newsFreshnessCutoff());
+  }
+
+  const { data, error } = await query
     .order("published_at", { ascending: false })
-    .limit(100);
+    .limit(500);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Sort: priority_score DESC → source priority → date DESC
-  const sorted = (data ?? []).sort((a: any, b: any) => {
-    const scoreA = a.priority_score ?? 0;
-    const scoreB = b.priority_score ?? 0;
-    if (scoreB !== scoreA) return scoreB - scoreA;
-    const pa = SOURCE_PRIORITY[a.source] ?? 99;
-    const pb = SOURCE_PRIORITY[b.source] ?? 99;
-    if (pa !== pb) return pa - pb;
-    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-  });
-
-  return NextResponse.json(sorted);
+  return NextResponse.json(sortNewsSuggestions(data ?? []));
 }
