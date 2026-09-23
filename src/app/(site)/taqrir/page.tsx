@@ -9,6 +9,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "تقارير البلاغ | البلاغ",
   description: "جميع التقارير والمقالات الصحفية الصادرة عن تحرير البلاغ",
+  alternates: { canonical: "/taqrir" },
 };
 
 async function getEditorials() {

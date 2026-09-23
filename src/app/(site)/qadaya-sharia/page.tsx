@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 export const metadata = {
   title: "قضايا شرعية | البلاغ",
   description: "قضايا وتحليلات شرعية من منظور علمي رصين",
+  alternates: { canonical: "/qadaya-sharia" },
 };
 
 export const revalidate = 60;
