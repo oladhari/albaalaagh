@@ -11,6 +11,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "البرامج والحلقات | البلاغ",
   description: "أرشيف كامل لبرامج وحلقات قناة البلاغ",
+  alternates: { canonical: "/interviews" },
 };
 
 const PAGE_SIZE = 24;

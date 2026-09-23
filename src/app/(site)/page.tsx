@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Script from "next/script";
+import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import ArticleCard from "@/components/ui/ArticleCard";
 import NewsCard from "@/components/ui/NewsCard";
@@ -10,6 +12,10 @@ import PlaylistsSection from "@/components/sections/PlaylistsSection";
 import { fetchActiveLiveStream } from "@/lib/youtube";
 
 export const revalidate = 120;
+
+export const metadata = {
+  alternates: { canonical: "/" },
+};
 
 async function getLatestNews() {
   const { data } = await supabaseAdmin
@@ -103,7 +109,7 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream] = await Promise.all([
+  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream, requestHeaders] = await Promise.all([
     getLatestNews(),
     getLatestArticles(),
     getArticlesCount(),
@@ -111,7 +117,9 @@ export default async function HomePage() {
     getPlaylistsCount(),
     getPlaylistsWithVideos(),
     fetchActiveLiveStream(),
+    headers(),
   ]);
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
 
   const tickerItems = news.length > 0
     ? news.map((n: any) => n.title)
@@ -119,6 +127,14 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Keep automatic ads off utility, authentication, error, and thin pages. */}
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4198439711456588"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+        nonce={nonce}
+      />
       {/* News Ticker */}
       <NewsTicker items={tickerItems} />
 

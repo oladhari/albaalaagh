@@ -3,6 +3,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "تواصل معنا | البلاغ",
   description: "تواصل مع فريق قناة البلاغ — للاستفسارات والمقترحات والمشاركة في البرامج",
+  alternates: { canonical: "/contact" },
   openGraph: {
     title: "تواصل معنا | البلاغ",
     description: "تواصل مع فريق قناة البلاغ — للاستفسارات والمقترحات والمشاركة في البرامج",

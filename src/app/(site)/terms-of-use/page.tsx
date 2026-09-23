@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "شروط الاستخدام | البلاغ",
   description: "شروط استخدام موقع البلاغ — القواعد والأحكام التي تحكم استخدام الموقع ومحتواه",
+  alternates: { canonical: "/terms-of-use" },
 };
 
 export default function TermsOfUsePage() {

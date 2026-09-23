@@ -9,6 +9,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "مقاطع وفيديوهات | البلاغ",
   description: "مقاطع قصيرة وفيديوهات من قناة البلاغ",
+  alternates: { canonical: "/shorts" },
 };
 
 async function getVideos() {

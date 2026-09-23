@@ -88,14 +88,6 @@ export default async function RootLayout({
         `}
       </Script>
 
-      {/* Google AdSense */}
-      <Script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4198439711456588"
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-        nonce={nonce}
-      />
       <body className="min-h-full flex flex-col">
         {children}
         <CookieBanner />
