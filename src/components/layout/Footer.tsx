@@ -92,6 +92,7 @@ export default function Footer() {
                 ["/qadaya-sharia", "قضايا شرعية"],
                 ["/guests",        "الضيوف"],
                 ["/about",          "من نحن"],
+                ["/editorial-policy", "السياسة التحريرية"],
                 ["/contact",        "تواصل معنا"],
                 ["/privacy-policy", "سياسة الخصوصية"],
                 ["/terms-of-use",   "شروط الاستخدام"],
