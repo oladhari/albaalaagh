@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "test:ai:smoke": "node --env-file=.env.local smoke/openai.mjs",
     "news:recover-citations": "node scripts/recover-news-citations.mjs",
+    "news:source-review": "node scripts/build-news-source-review-queue.mjs",
+    "news:apply-verified-sources": "node scripts/apply-verified-news-sources.mjs",
     "videos:consolidate": "node scripts/consolidate-youtube-r2-pairs.mjs"
   },
   "dependencies": {

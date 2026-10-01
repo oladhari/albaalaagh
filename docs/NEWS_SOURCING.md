@@ -71,6 +71,34 @@ body to include attributable facts plus Albaalaagh's own context, verification,
 implications, or unanswered questions. Do not use AI to expand a source merely
 to make an article longer, and do not republish source wording as a translation.
 
+### Free manual recovery queue
+
+The old per-request prompts and clicked URLs were not stored. When retained
+source rows do not produce a safe match, generate a resumable browser review
+queue without calling any AI or search API:
+
+```bash
+npm run news:source-review -- --limit=50 --output=/tmp/albaalaagh-news-source-review.html
+```
+
+Open the HTML file locally. Each report includes direct Google, Bing, and
+DuckDuckGo searches. Progress stays in browser local storage. Enter only an
+exact source page that you have opened and verified, write a short attribution
+that accurately limits the claim to what the source establishes, then download
+the verified JSON file.
+
+Validate that export with a database dry run:
+
+```bash
+npm run news:apply-verified-sources -- --input=/path/to/albaalaagh-verified-news-sources.json
+```
+
+Only after reviewing the dry-run list, repeat with `--apply`. The apply tool
+rejects already-cited reports, inserts the citation, adds the written
+attribution to the body, and first saves a backup under `/tmp`. Reports listed
+in `docs/news-source-recovery-audit.md` are excluded from the queue because they
+need correction or stronger evidence rather than a guessed citation.
+
 ## Deployment
 
 Apply `supabase/migrations/20260917070000_news_citations.sql` before deploying
