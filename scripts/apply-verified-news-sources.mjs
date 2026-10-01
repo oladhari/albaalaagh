@@ -38,7 +38,8 @@ const payload = JSON.parse(readFileSync(inputPath, "utf8"));
 const verified = payload.verified;
 if (!Array.isArray(verified) || verified.length === 0) throw new Error("Input has no verified items");
 
-const allowedKinds = new Set(["official", "agency", "media", "emergency", "science"]);
+// Keep this in sync with the news_citations_kind_check database constraint.
+const allowedKinds = new Set(["official", "agency", "media", "emergency"]);
 const seenIds = new Set();
 for (const item of verified) {
   if (!item.id || !item.name?.trim() || !item.attribution?.trim() || !allowedKinds.has(item.kind)) {
