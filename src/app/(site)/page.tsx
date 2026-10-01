@@ -20,7 +20,7 @@ export const metadata = {
 async function getLatestNews() {
   const { data } = await supabaseAdmin
     .from("news")
-    .select("*")
+    .select("*, news_citations!inner(id)")
     .eq("source", "البلاغ")
     .eq("status", "approved")
     .lte("published_at", new Date().toISOString())

@@ -44,7 +44,7 @@ export async function GET() {
   const [{ data: newsItems }, { data: articles }] = await Promise.all([
     supabaseAdmin
       .from("news")
-      .select("id, slug, title, excerpt, image_url, source, published_at, category")
+      .select("id, slug, title, excerpt, image_url, source, published_at, category, news_citations!inner(id)")
       .eq("status", "approved")
       .eq("source", "البلاغ")
       .order("published_at", { ascending: false })

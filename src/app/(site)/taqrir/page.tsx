@@ -15,7 +15,7 @@ export const metadata = {
 async function getEditorials() {
   const { data } = await supabaseAdmin
     .from("news")
-    .select("*")
+    .select("*, news_citations!inner(id)")
     .eq("source", "البلاغ")
     .eq("status", "approved")
     .order("published_at", { ascending: false });
@@ -29,7 +29,7 @@ export default async function TaqrirListPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
         title="تقارير البلاغ"
-        subtitle="جميع التقارير الصحفية الصادرة عن فريق تحرير البلاغ"
+        subtitle="التقارير الصحفية الموثقة بالمصادر من فريق تحرير البلاغ"
       />
 
       {editorials.length === 0 ? (
