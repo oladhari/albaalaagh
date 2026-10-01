@@ -5,6 +5,7 @@ import GuestsGrid from "./GuestsGrid";
 export const metadata = {
   title: "الضيوف | البلاغ",
   description: "الشخصيات التي استضافتها قناة البلاغ",
+  alternates: { canonical: "/guests" },
 };
 
 export const revalidate = 300;

@@ -7,6 +7,7 @@ import { GEO_META } from "./geo-meta";
 export const metadata = {
   title: "أخبار البلاغ | البلاغ",
   description: "أخبار تونس والعالم العربي من تحرير البلاغ",
+  alternates: { canonical: "/news" },
 };
 
 export const revalidate = 120;

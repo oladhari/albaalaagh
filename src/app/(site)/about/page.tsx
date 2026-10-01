@@ -4,6 +4,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase";
 export const metadata = {
   title: "من نحن | البلاغ",
   description: "تعرف على قناة البلاغ ورسالتها ومنهجها",
+  alternates: { canonical: "/about" },
 };
 
 export const dynamic = "force-dynamic";

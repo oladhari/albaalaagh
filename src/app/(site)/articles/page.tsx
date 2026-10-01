@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 export const metadata = {
   title: "المقالات | البلاغ",
   description: "مقالات وتحليلات من أقلام كتّاب ومفكرين متميزين",
+  alternates: { canonical: "/articles" },
 };
 
 export const revalidate = 60;

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "سياسة الخصوصية | البلاغ",
   description: "سياسة الخصوصية لموقع البلاغ — كيف نجمع بياناتك ونستخدمها ونحميها",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 export default function PrivacyPolicyPage() {
