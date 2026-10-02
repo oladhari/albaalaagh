@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import { headers } from "next/headers";
-import Script from "next/script";
 import CookieBanner from "@/components/ui/CookieBanner";
+import GoogleAnalytics from "@/components/ui/GoogleAnalytics";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -70,26 +70,39 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.albaalaagh.com/#organization",
+        name: "البلاغ",
+        alternateName: "Albaalaagh",
+        url: "https://www.albaalaagh.com",
+        logo: "https://www.albaalaagh.com/albaalaagh-logo.png",
+        email: "contact@albaalaagh.com",
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.albaalaagh.com/#website",
+        url: "https://www.albaalaagh.com",
+        name: "البلاغ",
+        inLanguage: "ar-TN",
+        publisher: { "@id": "https://www.albaalaagh.com/#organization" },
+      },
+    ],
+  };
 
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
-      {/* Google Analytics */}
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-NMKWZ1979E"
-        strategy="afterInteractive"
-        nonce={nonce}
-      />
-      <Script id="google-analytics" strategy="afterInteractive" nonce={nonce}>
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-NMKWZ1979E');
-        `}
-      </Script>
-
       <body className="min-h-full flex flex-col">
+        <script
+          nonce={nonce}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
         {children}
+        <GoogleAnalytics nonce={nonce} />
         <CookieBanner />
       </body>
     </html>

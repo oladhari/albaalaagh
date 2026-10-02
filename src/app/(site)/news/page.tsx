@@ -91,12 +91,14 @@ export default async function NewsPage({
             كل الأخبار
           </Link>
           <SectionHeader
+            as="h1"
             title={`${geoMeta!.flag} ${geoMeta!.label}`}
             subtitle={data.mode === "geo" ? `${data.totalCount} خبر — الصفحة ${page} من ${data.totalPages}` : ""}
           />
         </>
       ) : (
         <SectionHeader
+          as="h1"
           title="أخبار البلاغ"
           subtitle={`آخر ${CUTOFF_DAYS} أيام — أخبار تونس والعالم العربي`}
         />

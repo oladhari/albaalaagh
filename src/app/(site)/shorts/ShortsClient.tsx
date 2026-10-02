@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
 import { videoPath } from "@/lib/public-urls";
@@ -16,8 +13,11 @@ interface Video {
 }
 
 interface Props {
-  shorts: Video[];
   videos: Video[];
+  kind: "short" | "video";
+  counts: { short: number; video: number };
+  page: number;
+  totalPages: number;
 }
 
 function PlayIcon() {
@@ -98,18 +98,13 @@ function VideoCard({ video }: { video: Video }) {
   );
 }
 
-export default function ShortsClient({ shorts, videos }: Props) {
-  const hasShorts = shorts.length > 0;
-  const hasVideos = videos.length > 0;
-
+export default function ShortsClient({ videos, kind, counts, page, totalPages }: Props) {
   const tabs = [
-    ...(hasShorts ? [{ key: "short" as const, label: "مقاطع قصيرة", count: shorts.length }] : []),
-    ...(hasVideos ? [{ key: "video" as const, label: "فيديوهات",    count: videos.length }] : []),
+    ...(counts.short > 0 ? [{ key: "short" as const, label: "مقاطع قصيرة", count: counts.short }] : []),
+    ...(counts.video > 0 ? [{ key: "video" as const, label: "فيديوهات", count: counts.video }] : []),
   ];
 
-  const [tab, setTab] = useState<"short" | "video">(tabs[0]?.key ?? "video");
-
-  if (!hasShorts && !hasVideos) {
+  if (counts.short === 0 && counts.video === 0) {
     return (
       <div className="text-center py-20" style={{ color: "#9A9070" }}>
         لا توجد فيديوهات بعد في هذا القسم
@@ -117,38 +112,60 @@ export default function ShortsClient({ shorts, videos }: Props) {
     );
   }
 
-  const activeList = tab === "short" ? shorts : videos;
-
   return (
     <>
       {tabs.length > 1 && (
         <div className="flex gap-3 mb-8">
           {tabs.map(t => (
-            <button
+            <Link
               key={t.key}
-              onClick={() => setTab(t.key)}
+              href={`/shorts?kind=${t.key}`}
               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
               style={{
-                background: tab === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
-                color:      tab === t.key ? "#111008" : "#9A9070",
-                border:     tab === t.key ? "none" : "1px solid #2E2A18",
+                background: kind === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
+                color:      kind === t.key ? "#111008" : "#9A9070",
+                border:     kind === t.key ? "none" : "1px solid #2E2A18",
               }}
             >
               {t.label}
               <span className="mr-2 text-xs opacity-70">({t.count})</span>
-            </button>
+            </Link>
           ))}
         </div>
       )}
 
-      {tab === "short" ? (
+      {kind === "short" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {activeList.map(v => <ShortCard key={v.id} video={v} />)}
+          {videos.map(v => <ShortCard key={v.id} video={v} />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {activeList.map(v => <VideoCard key={v.id} video={v} />)}
+          {videos.map(v => <VideoCard key={v.id} video={v} />)}
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-center gap-3 mt-10" aria-label="صفحات الفيديوهات">
+          {page > 1 && (
+            <Link
+              href={`/shorts?kind=${kind}&page=${page - 1}`}
+              className="px-5 py-2 rounded-full text-sm font-bold"
+              style={{ border: "1px solid #2E2A18", color: "#C9A844" }}
+            >
+              الصفحة السابقة
+            </Link>
+          )}
+          <span className="text-sm" style={{ color: "#9A9070" }}>{page} / {totalPages}</span>
+          {page < totalPages && (
+            <Link
+              href={`/shorts?kind=${kind}&page=${page + 1}`}
+              className="px-5 py-2 rounded-full text-sm font-bold"
+              style={{ border: "1px solid #2E2A18", color: "#C9A844" }}
+            >
+              الصفحة التالية
+            </Link>
+          )}
+        </nav>
       )}
     </>
   );

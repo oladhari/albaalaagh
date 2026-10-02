@@ -6,6 +6,7 @@ const BASE = "https://www.albaalaagh.com";
 const SUPABASE_PAGE_SIZE = 1000;
 
 export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 type SitemapNews = {
   id: string;

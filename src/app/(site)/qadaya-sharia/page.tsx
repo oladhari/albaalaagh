@@ -27,6 +27,7 @@ export default async function QadayaShariaPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
+        as="h1"
         title="قضايا شرعية"
         subtitle="قضايا وتحليلات شرعية من منظور علمي رصين"
       />
@@ -37,7 +38,7 @@ export default async function QadayaShariaPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article: any) => (
+          {articles.map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>

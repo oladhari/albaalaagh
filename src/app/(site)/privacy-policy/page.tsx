@@ -97,8 +97,9 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>4. تحليلات الموقع</h2>
           <p>
-            قد نستخدم أدوات تحليل مجهولة الهوية لفهم كيفية تفاعل الزوار مع المحتوى وتحسين
-            تجربة المستخدم. لا تُشارَك هذه البيانات مع أطراف ثالثة لأغراض تجارية.
+            نستخدم Google Analytics، بعد موافقتك على ملفات الارتباط الاختيارية، لفهم كيفية
+            تفاعل الزوار مع المحتوى وتحسين تجربة المستخدم. يمكنك رفض هذه الملفات ومتابعة
+            التصفح، كما يمكنك حذف اختيارك من إعدادات المتصفح لإظهار خيارات الموافقة مجدداً.
           </p>
         </section>
 
@@ -165,7 +166,15 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>11. التواصل معنا</h2>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>11. المسؤول عن الموقع والبيانات</h2>
+          <p>
+            الناشر والمسؤول عن موقع البلاغ هو أسامة العذاري، مؤسس ومدير قناة البلاغ الرقمية.
+            ويمكن توجيه طلبات الخصوصية والتصحيح عبر بيانات التواصل المبينة أدناه.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>12. التواصل معنا</h2>
           <p>
             لأي استفسار بشأن هذه السياسة، يمكنك التواصل معنا عبر{" "}
             <a href="/contact" style={{ color: "#C9A844", textDecoration: "underline" }}>

@@ -5,6 +5,7 @@ interface SectionHeaderProps {
   subtitle?: string;
   linkHref?: string;
   linkLabel?: string;
+  as?: "h1" | "h2";
 }
 
 export default function SectionHeader({
@@ -12,11 +13,13 @@ export default function SectionHeader({
   subtitle,
   linkHref,
   linkLabel = "عرض الكل",
+  as = "h2",
 }: SectionHeaderProps) {
+  const Heading = as;
   return (
     <div className="flex items-end justify-between mb-8">
       <div>
-        <h2
+        <Heading
           className="text-2xl sm:text-3xl font-black mb-1"
           style={{
             background: "linear-gradient(135deg, #E8D5A3 0%, #C9A844 60%, #9A7B28 100%)",
@@ -26,7 +29,7 @@ export default function SectionHeader({
           }}
         >
           {title}
-        </h2>
+        </Heading>
         {subtitle && (
           <p className="text-sm" style={{ color: "#9A9070" }}>
             {subtitle}

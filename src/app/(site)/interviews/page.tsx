@@ -101,6 +101,7 @@ export default async function InterviewsPage({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
       <SectionHeader
+        as="h1"
         title="البرامج والحلقات"
         subtitle="أرشيف حلقات قناة البلاغ"
       />

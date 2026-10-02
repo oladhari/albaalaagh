@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "السياسة التحريرية والتصحيح | البلاغ",
   description:
     "معايير البلاغ في التحقق من الأخبار، إسناد المصادر، الفصل بين الخبر والرأي، استخدام أدوات الذكاء الاصطناعي، وتصحيح الأخطاء.",
+  alternates: { canonical: "/editorial-policy" },
 };
 
 const sections = [

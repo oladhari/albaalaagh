@@ -27,6 +27,7 @@ export default async function ArticlesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
+        as="h1"
         title="المقالات"
         subtitle="قراءات وتحليلات من أقلام كتّاب ومفكرين متميزين"
       />
@@ -37,7 +38,7 @@ export default async function ArticlesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article: any) => (
+          {articles.map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>

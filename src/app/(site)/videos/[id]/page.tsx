@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import ShareButtons from "@/components/ui/ShareButtons";
@@ -109,15 +110,43 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function VideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const result = await getVideo(id);
   if (!result) notFound();
   const { video, redirected } = result;
   if (redirected || isDashedUuid(id)) permanentRedirect(videoPath(video.id));
 
   const url = `https://www.albaalaagh.com${videoPath(video.id)}`;
+  const ytId = video.video_url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
+  const description = ogSnippet(video.description) || video.title;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: video.title,
+    description,
+    thumbnailUrl: [video.thumbnail_url ?? "https://www.albaalaagh.com/og-image.png"],
+    uploadDate: video.published_at,
+    url,
+    ...(ytId
+      ? { embedUrl: `https://www.youtube.com/embed/${ytId}` }
+      : { contentUrl: video.video_url }),
+    publisher: {
+      "@type": "Organization",
+      name: "البلاغ",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.albaalaagh.com/albaalaagh-logo.png",
+      },
+    },
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
+      <script
+        nonce={nonce}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm mb-6 hover:opacity-70 transition-opacity"

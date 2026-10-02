@@ -83,7 +83,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       "@type": "Organization",
       name: "البلاغ",
       url: base,
-      logo: { "@type": "ImageObject", url: `${base}/icon.ico` },
+      logo: { "@type": "ImageObject", url: `${base}/albaalaagh-logo.png` },
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/articles/${slug}` },
     ...(article.cover_image ? { image: article.cover_image } : {}),
@@ -91,7 +91,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: "#9A9070" }}>

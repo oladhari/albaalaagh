@@ -125,7 +125,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
   return (
     <>
-      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-xs mb-6 flex items-center gap-2" style={{ color: "#9A9070" }}>

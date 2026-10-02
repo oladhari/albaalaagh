@@ -17,7 +17,7 @@ async function getGuests() {
     .eq("is_staff", false)
     .order("name");
   if (error) { console.error(error); return []; }
-  return (data ?? []).map((g: any) => {
+  return (data ?? []).map((g) => {
     if (!g.writer) return g;
     return {
       ...g,
@@ -30,12 +30,13 @@ async function getGuests() {
 
 export default async function GuestsPage() {
   const all = await getGuests();
-  const programs = all.filter((g: any) => g.tier === "program");
-  const guests   = all.filter((g: any) => g.tier !== "program");
+  const programs = all.filter((g) => g.tier === "program");
+  const guests   = all.filter((g) => g.tier !== "program");
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <SectionHeader
+        as="h1"
         title="الضيوف"
         subtitle="الشخصيات التي شاركت في حوارات قناة البلاغ"
       />
