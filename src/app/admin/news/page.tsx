@@ -32,6 +32,9 @@ interface Preview {
   editMode?:      boolean;
 }
 
+const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"];
+const VALID_GEOS = ["tunisia", "arab", "international", "general"];
+
 const GOLD  = "#C9A844";
 const DIM   = "#9A9070";
 const GREEN = "#6BCB77";
@@ -65,6 +68,9 @@ export default function AdminNewsPage() {
   const [deleting, setDeleting]       = useState<string | null>(null);
   const [urlInput, setUrlInput]       = useState("");
   const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [editUrl, setEditUrl] = useState("");
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
@@ -164,10 +170,7 @@ export default function AdminNewsPage() {
     }
   };
 
-  const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"];
-  const VALID_GEOS = ["tunisia", "arab", "international", "general"];
-
-  const openEdit = (news: any) => {
+  const openEdit = useCallback((news: any) => {
     const rawCat = news.category ?? "سياسة";
     const rawGeo = news.geo ?? "general";
     setPersonPhotos([]);
@@ -189,7 +192,36 @@ export default function AdminNewsPage() {
       editMode:       true,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
+
+  const editByLink = useCallback(async (value: string) => {
+    setLoadingEdit(true);
+    setEditError("");
+    try {
+      const url = new URL(value, window.location.origin);
+      if (url.origin !== window.location.origin || !/^\/taqrir\/[^/]+\/?$/.test(url.pathname)) {
+        throw new Error("أدخل رابط تقرير من موقع البلاغ");
+      }
+      const slug = url.pathname.split("/").filter(Boolean).pop()!;
+      const res = await fetch(`/api/admin/news?slug=${encodeURIComponent(slug)}`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "تعذر تحميل التقرير");
+      openEdit(data);
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : "تعذر تحميل التقرير");
+    } finally {
+      setLoadingEdit(false);
+    }
+  }, [openEdit]);
+
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("edit");
+    if (slug) {
+      const value = `${window.location.origin}/taqrir/${encodeURIComponent(slug)}`;
+      setEditUrl(value);
+      void editByLink(value);
+    }
+  }, [editByLink]);
 
   const publish = async () => {
     if (!preview) return;
@@ -313,6 +345,19 @@ export default function AdminNewsPage() {
       </div>
 
       {/* From URL */}
+      <div className="mb-6 p-3 rounded-xl" style={{ background: "#1A1810", border: "1px solid #2E2A18" }}>
+        <label htmlFor="edit-report-url" className="block text-sm font-bold mb-2" style={{ color: GOLD }}>تعديل تقرير بالرابط</label>
+        <div className="flex gap-2">
+          <input id="edit-report-url" value={editUrl} onChange={(e) => setEditUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !loadingEdit && editByLink(editUrl)}
+            placeholder="الصق رابط التقرير المنشور على موقع البلاغ" style={inputStyle} />
+          <button onClick={() => editByLink(editUrl)} disabled={loadingEdit || !editUrl.trim()}
+            className="px-4 py-2 rounded-lg text-sm font-bold shrink-0" style={{ color: GOLD, border: `1px solid ${GOLD}` }}>
+            {loadingEdit ? "جارٍ التحميل..." : "✏️ فتح للتعديل"}
+          </button>
+        </div>
+        {editError && <p role="alert" className="text-sm mt-2" style={{ color: RED }}>{editError}</p>}
+      </div>
       <div
         className="flex gap-2 mb-6 p-3 rounded-xl"
         style={{ background: "#1A1810", border: "1px solid #2E2A18" }}

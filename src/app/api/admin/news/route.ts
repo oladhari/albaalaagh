@@ -99,6 +99,18 @@ export async function GET(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
   const { searchParams } = new URL(req.url);
+  const slug = searchParams.get("slug");
+  if (slug) {
+    const { data, error } = await supabaseAdmin
+      .from("news")
+      .select("*, news_citations(*)")
+      .eq("slug", slug)
+      .eq("source", "البلاغ")
+      .maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: "لم يتم العثور على التقرير" }, { status: 404 });
+    return NextResponse.json(data);
+  }
   const status = searchParams.get("status") || "pending";
 
   let query = supabaseAdmin

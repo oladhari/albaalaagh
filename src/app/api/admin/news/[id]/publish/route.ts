@@ -122,7 +122,7 @@ export async function PATCH(
   if (unauthed) return unauthed;
 
   const { id } = await params;
-  const { title, excerpt, content, image_url, published_at, geo, category, citations: rawCitations } = await req.json();
+  const { title, excerpt, content, image_url, facebook_image, published_at, geo, category, citations: rawCitations } = await req.json();
   const citations = cleanCitations(rawCitations);
   if (citations.length === 0) {
     return NextResponse.json({ error: "يجب إضافة مصدر موثوق واحد على الأقل" }, { status: 400 });
@@ -133,6 +133,7 @@ export async function PATCH(
   if (excerpt      !== undefined) patch.excerpt      = excerpt;
   if (content      !== undefined) patch.content      = content;
   if (image_url    !== undefined) patch.image_url    = image_url || null;
+  if (facebook_image !== undefined) patch.facebook_image = facebook_image || null;
   if (published_at !== undefined) patch.published_at = publishedAtOrNow(published_at);
   if (geo          !== undefined) patch.geo          = geo;
   if (category     !== undefined) patch.category     = category;
