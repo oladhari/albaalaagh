@@ -482,7 +482,15 @@ Do NOT invent faces for anyone else who is not covered by an attached photo — 
 // Spell out the current flag explicitly for the cases most likely to come up
 // in this channel's coverage instead of trusting the model's implicit memory.
 
-const FLAG_ACCURACY_RULES = `
+function buildGeographicAccuracyRules(title: string, excerpt: string): string {
+  const story = `${title} ${excerpt}`;
+  const flags = [
+    { match: /إيران|ايران|\bIran(?:ian)?\b/i, design: "Iran: green-white-red horizontal stripes, red national emblem centered on white, official white Kufic border inscription; no stars." },
+    { match: /تونس|تونسي|\bTunisia(?:n)?\b/i, design: "Tunisia: red field, central white disc containing a red crescent and one red five-pointed star; no stripes." },
+    { match: /اليمن|يمني|\bYemen(?:i)?\b/i, design: "Yemen: red-white-black horizontal stripes; no stars or emblem." },
+    { match: /سوريا|سورية|سوري|\bSyria(?:n)?\b/i, design: "Syria: green-white-black horizontal stripes with three red five-pointed stars on white." },
+  ].filter(({ match }) => match.test(story));
+  return `
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FLAG ACCURACY
@@ -490,9 +498,14 @@ FLAG ACCURACY
 
 If a national flag appears in the image, it MUST be the CURRENT, internationally recognized flag — never an outdated or deposed-regime flag.
 
-Syria (since December 2024): green-white-black horizontal stripes, with THREE red five-pointed stars in a row on the middle white stripe. This is NOT the same as the old flag (red-white-black with TWO green stars and an eagle) — never generate the old flag.
+Use only countries explicitly relevant to the supplied story. Templates provide branding and layout, never the story's country or flag. Do not copy flags from an unrelated reference or template.
+${flags.map(({ design }) => design).join("\n")}
 
-If you are not fully certain of a country's current official flag, do NOT render a detailed, identifiable flag pattern for it — use a generic abstract banner/pennant shape instead of a specific, potentially wrong stripe/star arrangement.`;
+If a flag's identity or exact design is uncertain, omit it entirely. Never substitute another country's flag or an invented banner.
+
+GEOGRAPHIC ACCURACY:
+No verified map reference is supplied. Do not generate maps, coastlines, borders, country outlines, location pins, geographic labels, or cartographic insets. Use story-related ships, port infrastructure, documents, buildings, or abstract objects instead. Never invent spatial relationships. Show only the supplied headline; do not add place names to scenery or signs.`;
+}
 
 // ── No invented humans ───────────────────────────────────────────────────────
 // The narrower "don't invent a named public figure's face" wording left a loophole:
@@ -539,7 +552,7 @@ An authentic reference photo WAS attached above for: ${names}. You MUST include 
 For anyone else mentioned in the story who has no attached reference photo, do not invent a face for them — no invented politicians, officials, journalists, or generic "representative" people. Keep the human presence in the scene limited to the named person(s) whose real photo was attached above.`;
 }
 
-function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
+export function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1280×720 LANDSCAPE
 
 USE THE PROVIDED ALBAALAAGH TEMPLATE (the first attached image) EXACTLY AS THE BASE IMAGE.
@@ -565,13 +578,13 @@ The visual scene occupies the RIGHT side of the image.
 
 When no verified person image is provided:
 * Create a realistic journalistic visual related to the story.
-* Use symbolic imagery: real-world locations, flags, maps, official buildings, courthouses, documents, factories, ports, airports, parliament, hospitals, schools, diplomatic meetings, ships, etc.
+* Use symbolic imagery: story-related objects, accurate flags, official buildings, courthouses, documents, factories, ports, airports, parliament, hospitals, schools, diplomatic meetings, ships, etc.
 
 NEVER:
 * show violence, blood, or graphic content
 ${buildNoInventedHumansRule(people)}
 ${buildPersonPhotoInstructions(people)}
-${FLAG_ACCURACY_RULES}
+${buildGeographicAccuracyRules(title, excerpt)}
 
 NEWS STYLE:
 * modern editorial newsroom graphic
@@ -648,7 +661,7 @@ Even if a person is named in the title, DO NOT show their face.
 Use symbolic and thematic visuals only — no invented human faces.`}
 ${buildNoInventedHumansRule(people)}
 ${buildPersonPhotoInstructions(people)}
-${FLAG_ACCURACY_RULES}
+${buildGeographicAccuracyRules(title, excerpt)}
 
 TEXT RULES:
 * Show ONLY the news title — no other text.
@@ -665,7 +678,7 @@ For court / legal stories:
 * courthouse exterior, courtroom interior, scales of justice, legal documents, gavel, prison bars
 
 For political stories:
-* parliament building, presidential palace, official documents, flags, maps, negotiations
+* parliament building, presidential palace, official documents, accurate flags, negotiations
 
 For economic stories:
 * factories, ports, trade routes, energy infrastructure, charts
@@ -677,7 +690,7 @@ For accidents:
 * accident scene, ambulance, damaged vehicle, road safety symbolism
 
 For international diplomacy:
-* negotiation tables, flags, strategic maps, official buildings
+* negotiation tables, accurate flags, official buildings
 
 NEWS STYLE:
 * modern editorial newsroom graphic
