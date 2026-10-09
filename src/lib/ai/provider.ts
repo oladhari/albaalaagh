@@ -1,7 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 
-export type AiProviderName = "openai" | "anthropic";
+export type AiProviderName = "openai";
 export type AiModelTier = "text" | "fast";
 export type AiErrorCategory =
   | "authentication"
@@ -49,7 +48,6 @@ export class AiProviderError extends Error {
 
 interface ProviderClients {
   openai?: Pick<OpenAI, "responses">;
-  anthropic?: Pick<Anthropic, "messages">;
 }
 
 interface ProviderDependencies {
@@ -99,27 +97,16 @@ export function createAiProvider(dependencies: ProviderDependencies = {}) {
   const logger = dependencies.logger ?? console;
   const sleep = dependencies.sleep ?? ((milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   let openai = dependencies.clients?.openai;
-  let anthropic = dependencies.clients?.anthropic;
 
   const getModel = (tier: AiModelTier): string => {
-    if (provider === "openai") {
-      return tier === "text"
-        ? env.OPENAI_TEXT_MODEL || "gpt-5.4-mini"
-        : env.OPENAI_FAST_MODEL || "gpt-5-mini";
-    }
     return tier === "text"
-      ? env.ANTHROPIC_TEXT_MODEL || "claude-sonnet-4-6"
-      : env.ANTHROPIC_FAST_MODEL || "claude-haiku-4-5-20251001";
+      ? env.OPENAI_TEXT_MODEL || "gpt-5.4-mini"
+      : env.OPENAI_FAST_MODEL || "gpt-5-mini";
   };
 
   const getOpenAI = () => {
     if (!openai) openai = new OpenAI({ apiKey: env.OPENAI_API_KEY, maxRetries: 0, timeout: 60_000 });
     return openai;
-  };
-
-  const getAnthropic = () => {
-    if (!anthropic) anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 0, timeout: 60_000 });
-    return anthropic;
   };
 
   async function request(
@@ -134,9 +121,7 @@ export function createAiProvider(dependencies: ProviderDependencies = {}) {
     while (true) {
       const startedAt = Date.now();
       try {
-        const response = provider === "openai"
-          ? await requestOpenAI(getOpenAI(), model, requestContext.maxOutputTokens, instructions, input, format)
-          : await requestAnthropic(getAnthropic(), model, requestContext.maxOutputTokens, instructions, input, format);
+        const response = await requestOpenAI(getOpenAI(), model, requestContext.maxOutputTokens, instructions, input, format);
 
         logMetadata(logger, "info", {
           provider, model, operation: requestContext.operation, route: requestContext.route,
@@ -201,7 +186,6 @@ export type AiProvider = ReturnType<typeof createAiProvider>;
 
 function parseProvider(value: string | undefined): AiProviderName {
   if (!value || value === "openai") return "openai";
-  if (value === "anthropic") return "anthropic";
   throw new AiProviderError("invalid_request", 500, 0, "Unsupported AI_PROVIDER configuration");
 }
 
@@ -237,29 +221,6 @@ async function requestOpenAI(
     throw new AiProviderError("malformed_output", 502, 0);
   }
   return { text: result.output_text, requestId: result._request_id ?? null, status: 200 };
-}
-
-async function requestAnthropic(
-  client: Pick<Anthropic, "messages">,
-  model: string,
-  maxOutputTokens: number,
-  instructions: string,
-  input: unknown,
-  format?: { name: string; schema: Record<string, unknown> },
-): Promise<ProviderResponse> {
-  const schemaInstruction = format
-    ? `\nReturn JSON only. It must match this JSON Schema exactly:\n${JSON.stringify(format.schema)}`
-    : "\nReturn only the requested final text.";
-  const result = await client.messages.create({
-    model,
-    max_tokens: maxOutputTokens,
-    system: `${instructions}${schemaInstruction}`,
-    messages: [{ role: "user", content: JSON.stringify({ untrusted_source_data: input }) }],
-  });
-  const text = result.content.find((content) => content.type === "text")?.text?.trim() ?? "";
-  if (result.stop_reason === "refusal") throw new AiProviderError("permission_or_policy", 422, 0);
-  if (!text) throw new AiProviderError("malformed_output", 502, 0);
-  return { text, requestId: result._request_id ?? null, status: 200 };
 }
 
 function normalizeProviderError(error: unknown, retryCount: number): AiProviderError {

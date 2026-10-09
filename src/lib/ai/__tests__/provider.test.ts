@@ -124,7 +124,7 @@ describe("OpenAI provider", () => {
     expect(logged).not.toContain("سري");
   });
 
-  it("rejects unknown provider configuration", () => {
-    expect(() => createAiProvider({ env: { AI_PROVIDER: "unknown" } })).toThrow(AiProviderError);
+  it.each(["unknown", "anthropic"])("rejects unsupported provider configuration %s", (provider) => {
+    expect(() => createAiProvider({ env: { AI_PROVIDER: provider } })).toThrow(AiProviderError);
   });
 });

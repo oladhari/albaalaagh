@@ -1,6 +1,6 @@
 # AI provider migration: Anthropic to OpenAI
 
-This document records the pre-migration audit, the implemented provider boundary, and the deployment procedure. No production environment, production database, or deployment was changed as part of this work.
+This document records the original migration audit and the OpenAI-only provider boundary. Production rollout is performed through a feature branch and pull request; no database write or publication is required to verify draft generation.
 
 ## Pre-migration integration audit
 
@@ -17,15 +17,15 @@ Line numbers below are the locations observed before editing. Every active integ
 | `src/lib/ai-image.ts:1071` | `buildWriterArticlePrompt`; reached through `POST /api/admin/images/generate` | `claude-sonnet-4-6` | Article title/excerpt, writer name, photo-presence flag | Plain image-generation prompt | No database write; generated image is uploaded to R2 by the existing image flow | Admin-triggered from writer article create/edit UI | Raw provider/image error was returned to admin | Active |
 | `src/lib/ai-image.ts:409` | `buildImagePrompt` | `claude-sonnet-4-6` | News title and excerpt | Plain image-generation prompt | None | No caller found | Would throw on empty output | Unused legacy helper |
 
-No other active Anthropic import, SDK call, credential reference, retry loop, or model name was found outside these integrations and the dependency/configuration files. Existing OpenAI image generation (`gpt-image-2`) was already active and was not migrated because it was not an Anthropic call.
+The original audit covered tracked application files. The later OpenAI-only audit also found and migrated the ignored local community-guideline checker. Existing OpenAI image generation (`gpt-image-2`) was already active and was not migrated because it was not an Anthropic call.
 
 ## Implemented architecture
 
-- `src/lib/ai/provider.ts` is the provider boundary. `AI_PROVIDER=openai` uses the official OpenAI JavaScript SDK and `client.responses.create`; `AI_PROVIDER=anthropic` is an explicit rollback path. There is no automatic fallback.
+- `src/lib/ai/provider.ts` is the provider boundary. `AI_PROVIDER=openai` uses the official OpenAI JavaScript SDK and `client.responses.create`; OpenAI is the only supported provider. A stale or unsupported `AI_PROVIDER` value fails closed; no Anthropic client or fallback exists.
 - OpenAI requests set `store: false`, define no tools, and keep trusted instructions in `instructions`. Source material is serialized under `untrusted_source_data` in the lower-authority input message.
 - `src/lib/ai/workflows.ts` owns operation prompts, strict JSON Schemas, and application validation.
 - Structured output is used for drafting, URL import, RSS classification, reclassification, guest extraction, and guest review. Writer image prompting uses validated plain text.
-- Provider retries are disabled in both SDK clients. The application retries only rate limits, timeouts, and transient server failures, with delays of 500 ms and 1,500 ms. Authentication, quota/billing, invalid request, permission/policy, refusal, and malformed output errors are not retried.
+- Provider retries are disabled in the OpenAI SDK client. The application retries only rate limits, timeouts, and transient server failures, with delays of 500 ms and 1,500 ms. Authentication, quota/billing, invalid request, permission/policy, refusal, and malformed output errors are not retried.
 - Logs contain provider, model, operation, route, timestamp, HTTP status, request ID, category, retry count, and duration. They do not contain credentials, source text, prompts, drafts, or raw provider responses.
 
 ## Models and tradeoff
@@ -75,12 +75,15 @@ The paid smoke test is opt-in and must not be run without explicit approval:
 RUN_OPENAI_SMOKE=1 npm run test:ai:smoke
 ```
 
-## Deployment procedure (not executed)
+## OpenAI-only rollout and credential retirement
 
-1. Create a restricted OpenAI project API key and configure it only in the deployment platform's secret manager as `OPENAI_API_KEY`.
-2. Configure `AI_PROVIDER=openai`, `OPENAI_TEXT_MODEL=gpt-5.4-mini`, and `OPENAI_FAST_MODEL=gpt-5-mini` in the deployment environment.
-3. Leave Anthropic rollback variables in the secret manager only if rollback is desired. Do not set `AI_PROVIDER=anthropic` during the OpenAI rollout.
-4. With explicit approval, run the single paid smoke test in a non-production environment.
-5. Deploy to a preview/staging environment and manually verify: RSS creates pending rows, generation opens an editable preview, closing the preview does not publish, and the explicit publish button is required.
-6. Review sanitized logs for model, operation, request ID, status, category, retries, and duration.
-7. After approval, deploy the same build and variables to production. Roll back only by explicitly setting `AI_PROVIDER=anthropic` with valid rollback credentials; the application never switches providers automatically.
+- The Anthropic SDK and its unused transitive dependencies have been removed from the manifest and lockfile. The environment template contains only OpenAI AI configuration.
+- All application workflows use OpenAI: news drafting and URL import, RSS classification, reclassification, guest extraction/review, writer-image prompting, and image generation/editing.
+- The ignored local `scripts/community-guideline-checker/check.mjs` also uses OpenAI Responses with strict structured output. Its transcript chunking and escalation rules are preserved. Refused, incomplete, or malformed reviews return `unknown`, never a safe verdict. Local scripts remain outside Git under the repository's existing ignore rule.
+- Anthropic references in financial records, editorial source citations, and tooling instructions are historical or unrelated to the API integration and are preserved.
+
+Validation uses `npm test`, `npx tsc --noEmit`, `npm run build`, and a focused lint check. The opt-in live smoke checks both configured model tiers using strict JSON output without database writes. Its token limit includes reasoning tokens; see [OpenAI reasoning documentation](https://developers.openai.com/api/docs/guides/reasoning).
+
+For each Vercel environment, confirm `OPENAI_API_KEY` is configured and `AI_PROVIDER` is absent or `openai`, then deploy and verify authenticated AI features there. Only afterward remove that environment's `ANTHROPIC_API_KEY`, `ANTHROPIC_TEXT_MODEL`, and `ANTHROPIC_FAST_MODEL`. Existing deployments retain their environment snapshot until redeployed.
+
+Local success does not prove Vercel success. Do not revoke the key formerly configured as this project's `ANTHROPIC_API_KEY` until every environment and any other consumer sharing it have been verified. Identify it by its Anthropic Console key record, never by publishing its secret value. VS Code and global Claude credentials are outside this migration.
