@@ -25,17 +25,17 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
     <div>
       {/* Tab bar */}
       <div
-        className="flex gap-1 mb-8 p-1 rounded-xl"
-        style={{ background: "#1A1810", border: "1px solid #2E2A18", display: "inline-flex" }}
+        className="flex gap-1 mb-8 p-1 rounded-xl bg-bg-card border border-border"
+        style={{ display: "inline-flex" }}
       >
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all${activeTab !== tab.key ? " text-text-muted" : ""}`}
             style={{
               background: activeTab === tab.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
-              color:      activeTab === tab.key ? "#111008" : "#9A9070",
+              color:      activeTab === tab.key ? "#111008" : undefined,
             }}
           >
             <span className={`ml-1.5 ${tab.key === "live" && activeTab === tab.key ? "text-red-800" : ""}`}>
@@ -50,7 +50,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
       {activeTab === "live" && (
         <div>
           {liveStreams.length === 0 ? (
-            <p className="text-center py-16" style={{ color: "#9A9070" }}>لا توجد بثوث مباشرة بعد</p>
+            <p className="text-center py-16 text-text-muted">لا توجد بثوث مباشرة بعد</p>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -78,7 +78,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
       {activeTab === "playlists" && (
         <div>
           {playlists.length === 0 ? (
-            <p className="text-center py-16" style={{ color: "#9A9070" }}>لا توجد قوائم تشغيل</p>
+            <p className="text-center py-16 text-text-muted">لا توجد قوائم تشغيل</p>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -88,8 +88,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
                     href={`https://www.youtube.com/playlist?list=${playlist.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group rounded-2xl overflow-hidden card-hover flex flex-col"
-                    style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+                    className="group rounded-2xl overflow-hidden card-hover flex flex-col bg-bg-card border border-border"
                   >
                     {/* Thumbnail */}
                     <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -117,24 +116,21 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
                     {/* Info */}
                     <div className="p-4 flex flex-col flex-1">
                       <h3
-                        className="font-black text-sm mb-2 group-hover:text-[#C9A844] transition-colors"
-                        style={{ color: "#F0EAD6" }}
+                        className="font-black text-sm mb-2 group-hover:text-[#C9A844] transition-colors text-text"
                       >
                         {playlist.title}
                       </h3>
                       {playlist.description && (
                         <p
-                          className="text-xs leading-relaxed line-clamp-2 flex-1"
-                          style={{ color: "#9A9070", lineHeight: "1.8" }}
+                          className="text-xs leading-relaxed line-clamp-2 flex-1 text-text-muted"
+                          style={{ lineHeight: "1.8" }}
                         >
                           {playlist.description}
                         </p>
                       )}
                       {playlist.latestVideo && (
-                        <div
-                          className="mt-3 pt-3 text-xs"
-                          style={{ borderTop: "1px solid #2E2A18", color: "#9A9070" }}
-                        >
+                        <div className="mt-3 pt-3 text-xs border-t border-border text-text-muted">
+
                           آخر حلقة: <span className="line-clamp-1">{playlist.latestVideo.title}</span>
                         </div>
                       )}
@@ -162,7 +158,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
       {activeTab === "shorts" && (
         <div>
           {shorts.length === 0 ? (
-            <p className="text-center py-16" style={{ color: "#9A9070" }}>لا توجد مقاطع قصيرة</p>
+            <p className="text-center py-16 text-text-muted">لا توجد مقاطع قصيرة</p>
           ) : (
             <>
               {/* Shorts use portrait cards */}
@@ -173,8 +169,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
                     href={`https://www.youtube.com/shorts/${video.youtube_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group block rounded-xl overflow-hidden card-hover"
-                    style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+                    className="group block rounded-xl overflow-hidden card-hover bg-bg-card border border-border"
                   >
                     <div className="relative overflow-hidden" style={{ aspectRatio: "9/16" }}>
                       <img
@@ -187,7 +182,7 @@ export default function InterviewsTabs({ liveStreams, playlists, shorts }: Props
                         style={{ background: "linear-gradient(to top, rgba(17,16,8,0.85) 0%, transparent 50%)" }}
                       />
                       <div className="absolute bottom-2 right-2 left-2">
-                        <p className="text-xs font-semibold line-clamp-2 leading-snug" style={{ color: "#F0EAD6" }}>
+                        <p className="text-xs font-semibold line-clamp-2 leading-snug text-text">
                           {video.title}
                         </p>
                       </div>

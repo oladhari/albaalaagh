@@ -86,15 +86,14 @@ export default function WriterArticleEditor({ writerId, initial }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>
+        <h1 className="text-2xl font-black text-text">
           {initial ? "تعديل المقال" : "كتابة مقال جديد"}
         </h1>
         <div className="flex gap-3">
           <button
             onClick={() => handleSave(false)}
             disabled={saving}
-            className="px-5 py-2 rounded-full text-sm font-bold border"
-            style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+            className="px-5 py-2 rounded-full text-sm font-bold border border-border text-text-muted"
           >
             حفظ كمسودة
           </button>
@@ -114,16 +113,16 @@ export default function WriterArticleEditor({ writerId, initial }: Props) {
 
       {error && (
         <div
-          className="mb-6 p-3 rounded-lg text-sm"
-          style={{ background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.3)", color: "#FF6B6B" }}
+          className="mb-6 p-3 rounded-lg text-sm text-danger"
+          style={{ background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.3)" }}
         >
           {error}
         </div>
       )}
 
       <div
-        className="mb-5 p-3 rounded-lg text-xs"
-        style={{ background: "rgba(201,168,68,0.08)", border: "1px solid rgba(201,168,68,0.2)", color: "#C9A844" }}
+        className="mb-5 p-3 rounded-lg text-xs text-gold"
+        style={{ background: "rgba(201,168,68,0.08)", border: "1px solid rgba(201,168,68,0.2)" }}
       >
         احفظ مقالك كمسودة أثناء الكتابة. عند الانتهاء اضغط "إرسال للمراجعة" وسيصلك إشعار عند نشره.
       </div>
@@ -172,10 +171,7 @@ export default function WriterArticleEditor({ writerId, initial }: Props) {
 
         {/* Sidebar */}
         <div className="space-y-5">
-          <div
-            className="p-4 rounded-xl space-y-4"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
+          <div className="p-4 rounded-xl space-y-4 bg-bg-card border border-border">
             <div>
               <label style={labelStyle}>التصنيف</label>
               <select
@@ -210,18 +206,15 @@ export default function WriterArticleEditor({ writerId, initial }: Props) {
             </div>
           </div>
 
-          <div
-            className="p-4 rounded-xl"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <h3 className="text-xs font-bold mb-3" style={{ color: "#C9A844" }}>تنسيق HTML</h3>
-            <ul className="text-xs space-y-1.5" style={{ color: "#9A9070" }}>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;h2&gt;</code> — عنوان فرعي</li>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;p&gt;</code> — فقرة</li>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;blockquote&gt;</code> — اقتباس</li>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;strong&gt;</code> — نص عريض</li>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;em&gt;</code> — نص مائل</li>
-              <li><code style={{ color: "#E8D5A3" }}>&lt;ul&gt;&lt;li&gt;</code> — قائمة</li>
+          <div className="p-4 rounded-xl bg-bg-card border border-border">
+            <h3 className="text-xs font-bold mb-3 text-gold">تنسيق HTML</h3>
+            <ul className="text-xs space-y-1.5 text-text-muted">
+              <li><code className="text-gold-light">&lt;h2&gt;</code> — عنوان فرعي</li>
+              <li><code className="text-gold-light">&lt;p&gt;</code> — فقرة</li>
+              <li><code className="text-gold-light">&lt;blockquote&gt;</code> — اقتباس</li>
+              <li><code className="text-gold-light">&lt;strong&gt;</code> — نص عريض</li>
+              <li><code className="text-gold-light">&lt;em&gt;</code> — نص مائل</li>
+              <li><code className="text-gold-light">&lt;ul&gt;&lt;li&gt;</code> — قائمة</li>
             </ul>
           </div>
         </div>

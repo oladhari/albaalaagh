@@ -128,60 +128,53 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
       <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
-      <nav className="text-xs mb-6 flex items-center gap-2" style={{ color: "#9A9070" }}>
+      <nav className="text-xs mb-6 flex items-center gap-2 text-text-muted" >
         <Link href="/" style={{ color: "#9A9070" }}>الرئيسية</Link>
         <span>›</span>
         <Link href="/news" style={{ color: "#9A9070" }}>الأخبار</Link>
         <span>›</span>
-        <span style={{ color: "#C9A844" }}>تقرير البلاغ</span>
+        <span className="text-gold">تقرير البلاغ</span>
       </nav>
 
       {/* Category + meta */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         {article.category && (
-          <span
-            className="text-xs px-3 py-1 rounded-full font-medium"
-            style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
-          >
+          <span className="text-xs px-3 py-1 rounded-full font-medium bg-gold/12 text-gold">
             {article.category}
           </span>
         )}
-        <span
-          className="text-xs px-3 py-1 rounded-full font-bold"
-          style={{ background: "rgba(201,168,68,0.2)", color: "#C9A844" }}
-        >
+        <span className="text-xs px-3 py-1 rounded-full font-bold bg-gold/20 text-gold">
           تقرير البلاغ
         </span>
       </div>
 
       {/* Title */}
-      <h1 className="text-2xl sm:text-3xl font-black leading-tight mb-4" style={{ color: "#F0EAD6" }}>
+      <h1 className="text-2xl sm:text-3xl font-black leading-tight mb-4 text-text">
         {article.title}
       </h1>
 
       {/* Excerpt */}
       {article.excerpt && (
-        <p className="text-base leading-relaxed mb-6" style={{ color: "#9A9070" }}>
+        <p className="text-base leading-relaxed mb-6 text-text-muted">
           {article.excerpt}
         </p>
       )}
 
       {/* Author + date */}
       <div
-        className="flex items-center gap-4 p-4 rounded-xl mb-6"
-        style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+        className="flex items-center gap-4 p-4 rounded-xl mb-6 bg-bg-card border border-border"
       >
         <img
           src="/albaalaagh-logo.png"
           alt="البلاغ"
           className="w-10 h-10 rounded-full object-cover shrink-0"
-          style={{ background: "rgba(201,168,68,0.15)" }}
+          style={{ background: "rgba(201, 168, 68, 0.15)" }}
         />
         <div>
-          <p className="text-sm font-semibold" style={{ color: "#F0EAD6" }}>تحرير البلاغ</p>
-          <p className="text-xs" style={{ color: "#9A9070" }}>الفريق التحريري</p>
+          <p className="text-sm font-semibold text-text">تحرير البلاغ</p>
+          <p className="text-xs text-text-muted">الفريق التحريري</p>
         </div>
-        <span className="mr-auto text-xs" style={{ color: "#9A9070" }}>
+        <span className="mr-auto text-xs text-text-muted">
           {formatArabicDate(article.published_at)}
         </span>
       </div>
@@ -204,18 +197,18 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
 
       {/* Content */}
       <div
-        className="prose-ar leading-relaxed"
-        style={{ color: "#D4CCBA", fontSize: 16, lineHeight: 1.9 }}
+        className="prose-ar leading-relaxed text-text-body"
+        style={{ fontSize: 16, lineHeight: 1.9 }}
         dangerouslySetInnerHTML={{ __html: formatContent(article.content ?? "") }}
       />
 
       {article.news_citations?.length > 0 && (
         <section
-          className="mt-10 pt-6"
-          style={{ borderTop: "1px solid #2E2A18" }}
+          className="mt-10 pt-6 border-t border-border"
+          
           aria-labelledby="report-sources"
         >
-          <h2 id="report-sources" className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>
+          <h2 id="report-sources" className="text-base font-bold mb-3 text-gold" >
             المصادر
           </h2>
           <ul className="space-y-2">

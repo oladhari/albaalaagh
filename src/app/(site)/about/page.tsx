@@ -99,7 +99,7 @@ export default async function AboutPage() {
         >
           البلاغ
         </h1>
-        <p className="text-lg" style={{ color: "#9A9070" }}>
+        <p className="text-lg text-text-muted">
           منبر سياسي تونسي مستقل
         </p>
         <hr className="gold-separator mt-6" />
@@ -107,14 +107,13 @@ export default async function AboutPage() {
 
       {/* Content blocks */}
       <div
-        className="space-y-10 text-base leading-loose"
-        style={{ color: "#D4C9A8", lineHeight: "2.2" }}
+        className="space-y-10 text-base leading-loose text-text-body"
+        style={{ lineHeight: "2.2" }}
       >
         <div
-          className="p-6 rounded-2xl"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          className="p-6 rounded-2xl bg-bg-card border border-border"
         >
-          <h2 className="text-xl font-black mb-4" style={{ color: "#C9A844" }}>
+          <h2 className="text-xl font-black mb-4 text-gold">
             من نحن
           </h2>
           <p>
@@ -126,10 +125,9 @@ export default async function AboutPage() {
         </div>
 
         <div
-          className="p-6 rounded-2xl"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          className="p-6 rounded-2xl bg-bg-card border border-border"
         >
-          <h2 className="text-xl font-black mb-4" style={{ color: "#C9A844" }}>
+          <h2 className="text-xl font-black mb-4 text-gold">
             رسالتنا
           </h2>
           <p>
@@ -141,10 +139,9 @@ export default async function AboutPage() {
         </div>
 
         <div
-          className="p-6 rounded-2xl"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          className="p-6 rounded-2xl bg-bg-card border border-border"
         >
-          <h2 className="text-xl font-black mb-4" style={{ color: "#C9A844" }}>
+          <h2 className="text-xl font-black mb-4 text-gold">
             منهجنا
           </h2>
           <ul className="space-y-3">
@@ -157,8 +154,7 @@ export default async function AboutPage() {
             ].map((item, i) => (
               <li key={i} className="flex gap-3 items-start">
                 <span
-                  className="mt-1.5 shrink-0 w-2 h-2 rounded-full"
-                  style={{ background: "#C9A844" }}
+                  className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-gold"
                 />
                 <span>{item}</span>
               </li>
@@ -170,7 +166,7 @@ export default async function AboutPage() {
       {/* Founder */}
       <div className="mt-14">
         <div className="flex items-center gap-4 mb-8">
-          <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>
+          <h2 className="text-xl font-black text-gold">
             المؤسس
           </h2>
           <div
@@ -182,29 +178,19 @@ export default async function AboutPage() {
         </div>
 
         <div
-          className="p-8 rounded-2xl flex flex-col sm:flex-row gap-8 items-center sm:items-start"
-          style={{
-            background: "#1A1810",
-            border: "1px solid #C9A844",
-            boxShadow: "0 0 40px rgba(201,168,68,0.08)",
-          }}
+          className="p-8 rounded-2xl flex flex-col sm:flex-row gap-8 items-center sm:items-start bg-bg-card border border-gold"
+          style={{ boxShadow: "0 0 40px rgba(201,168,68,0.08)" }}
         >
           <div className="shrink-0 flex justify-center">
             {founderImage ? (
               <img
                 src={founderImage}
                 alt="أسامة العذاري"
-                className="w-28 h-28 rounded-full object-cover"
-                style={{ border: "2px solid #C9A844" }}
+                className="w-28 h-28 rounded-full object-cover border-2 border-gold"
               />
             ) : (
               <div
-                className="w-28 h-28 rounded-full flex items-center justify-center font-black text-4xl"
-                style={{
-                  background: "rgba(201,168,68,0.1)",
-                  border: "2px solid #C9A844",
-                  color: "#C9A844",
-                }}
+                className="w-28 h-28 rounded-full flex items-center justify-center font-black text-4xl bg-gold/10 border-2 border-gold text-gold"
               >
                 أ
               </div>
@@ -212,28 +198,19 @@ export default async function AboutPage() {
           </div>
 
           <div className="flex-1 text-center sm:text-right">
-            <h3
-              className="text-2xl font-black mb-1"
-              style={{ color: "#F0EAD6" }}
-            >
+            <h3 className="text-2xl font-black mb-1 text-text">
               أسامة العذاري
             </h3>
-            <p
-              className="text-xs mb-1 font-mono tracking-widest uppercase"
-              style={{ color: "#9A9070" }}
-            >
+            <p className="text-xs mb-1 font-mono tracking-widest uppercase text-text-muted">
               Oussama Ladhari
             </p>
-            <p
-              className="text-sm mb-5 tracking-wide"
-              style={{ color: "#C9A844" }}
-            >
+            <p className="text-sm mb-5 tracking-wide text-gold">
               مؤسس البلاغ ومديره &nbsp;|&nbsp; مهندس برمجيات · Software Engineer
               — اليابان
             </p>
             <div
-              className="space-y-4 text-base"
-              style={{ color: "#D4C9A8", lineHeight: "2.1" }}
+              className="space-y-4 text-base text-text-body"
+              style={{ lineHeight: "2.1" }}
             >
               <p>
                 مهندس برمجيات تونسي مقيم في اليابان، وُلد في 18 فيفري/فبراير
@@ -282,7 +259,7 @@ export default async function AboutPage() {
           return (
             <div className="mt-14">
               <div className="flex items-center gap-4 mb-10">
-                <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>
+                <h2 className="text-xl font-black text-gold">
                   فريق البلاغ
                 </h2>
                 <div
@@ -311,15 +288,9 @@ export default async function AboutPage() {
                         return (
                           <div
                             key={member.id}
-                            className={`rounded-2xl text-center ${cardPad} ${maxW}`}
+                            className={`rounded-2xl text-center bg-bg-card ${cardPad} ${maxW} ${inactive ? "border border-border" : isTop ? "border border-gold" : "border border-border"}`}
                             style={{
-                              background: "#1A1810",
-                              border: `1px solid ${inactive ? "#2E2A18" : isTop ? "#C9A844" : "#2E2A18"}`,
-                              boxShadow: inactive
-                                ? "none"
-                                : isTop
-                                  ? "0 0 30px rgba(201,168,68,0.08)"
-                                  : "none",
+                              boxShadow: inactive ? "none" : isTop ? "0 0 30px rgba(201,168,68,0.08)" : "none",
                               opacity: inactive ? 0.45 : 1,
                             }}
                           >
@@ -329,20 +300,13 @@ export default async function AboutPage() {
                                 <img
                                   src={member.image_url}
                                   alt={member.name}
-                                  className={`${imgSize} rounded-full object-cover`}
-                                  style={{
-                                    border: `2px solid ${inactive ? "#2E2A18" : isTop ? "#C9A844" : "#2E2A18"}`,
-                                    filter: inactive ? "grayscale(1)" : "none",
-                                  }}
+                                  className={`${imgSize} rounded-full object-cover border-2 ${inactive ? "border-border" : isTop ? "border-gold" : "border-border"}`}
+                                  style={{ filter: inactive ? "grayscale(1)" : "none" }}
                                 />
                               ) : (
                                 <div
-                                  className={`${imgSize} rounded-full flex items-center justify-center font-black`}
-                                  style={{
-                                    background: "rgba(201,168,68,0.1)",
-                                    color: "#9A9070",
-                                    fontSize: isTop ? 32 : 22,
-                                  }}
+                                  className={`${imgSize} rounded-full flex items-center justify-center font-black bg-gold/10 text-text-muted`}
+                                  style={{ fontSize: isTop ? 32 : 22 }}
                                 >
                                   {member.name[0]}
                                 </div>
@@ -351,30 +315,20 @@ export default async function AboutPage() {
 
                             {/* Name & title */}
                             <p
-                              className={`font-black ${nameSize} leading-snug`}
-                              style={{
-                                color: inactive ? "#9A9070" : "#F0EAD6",
-                              }}
+                              className={`font-black ${nameSize} leading-snug ${inactive ? "text-text-muted" : "text-text"}`}
                             >
                               {member.name}
                             </p>
                             {inactive && (
                               <span
-                                className="inline-block text-xs px-2 py-0.5 rounded-full mt-1"
-                                style={{
-                                  background: "rgba(100,100,100,0.2)",
-                                  color: "#9A9070",
-                                  border: "1px solid #2E2A18",
-                                }}
+                                className="inline-block text-xs px-2 py-0.5 rounded-full mt-1 text-text-muted border border-border"
+                                style={{ background: "rgba(100,100,100,0.2)" }}
                               >
                                 سابقاً
                               </span>
                             )}
                             {member.title && (
-                              <p
-                                className="text-xs mt-1"
-                                style={{ color: "#9A9070" }}
-                              >
+                              <p className="text-xs mt-1 text-text-muted">
                                 {member.title}
                               </p>
                             )}
@@ -385,13 +339,7 @@ export default async function AboutPage() {
                                 {roles.map((r) => (
                                   <span
                                     key={r}
-                                    className="text-xs px-2 py-0.5 rounded-full"
-                                    style={{
-                                      background: "rgba(107,203,119,0.12)",
-                                      color: "#6BCB77",
-                                      border:
-                                        "1px solid rgba(107,203,119,0.25)",
-                                    }}
+                                    className="text-xs px-2 py-0.5 rounded-full text-success border border-success/25 bg-success/12"
                                   >
                                     {r}
                                   </span>
@@ -401,10 +349,7 @@ export default async function AboutPage() {
 
                             {/* Programs count */}
                             {member.programs_count > 0 && (
-                              <p
-                                className="text-xs mt-2 font-semibold"
-                                style={{ color: "#C9A844" }}
-                              >
+                              <p className="text-xs mt-2 font-semibold text-gold">
                                 {member.programs_count}{" "}
                                 {member.programs_count === 1
                                   ? "برنامج"
@@ -432,8 +377,7 @@ export default async function AboutPage() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="text-center p-5 rounded-xl"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+            className="text-center p-5 rounded-xl bg-bg-card border border-border"
           >
             <p
               className="text-3xl font-black mb-1"
@@ -446,7 +390,7 @@ export default async function AboutPage() {
             >
               {stat.number}
             </p>
-            <p className="text-sm" style={{ color: "#9A9070" }}>
+            <p className="text-sm text-text-muted">
               {stat.label}
             </p>
           </div>

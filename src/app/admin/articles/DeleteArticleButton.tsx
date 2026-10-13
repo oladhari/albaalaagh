@@ -20,15 +20,13 @@ export default function DeleteArticleButton({ id }: { id: string }) {
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: "rgba(255,107,107,0.2)", color: "#FF6B6B" }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-danger/20 text-danger"
         >
           {deleting ? "..." : "تأكيد"}
         </button>
         <button
           onClick={() => setConfirm(false)}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium border"
-          style={{ borderColor: "#2E2A18", color: "#9A9070" }}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-text-muted"
         >
           إلغاء
         </button>
@@ -39,8 +37,7 @@ export default function DeleteArticleButton({ id }: { id: string }) {
   return (
     <button
       onClick={() => setConfirm(true)}
-      className="px-3 py-1.5 rounded-lg text-xs font-medium"
-      style={{ background: "rgba(255,107,107,0.08)", color: "#FF6B6B" }}
+      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-danger/[0.08] text-danger"
     >
       حذف
     </button>

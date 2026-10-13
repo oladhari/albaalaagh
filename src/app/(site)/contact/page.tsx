@@ -57,7 +57,7 @@ export default function ContactPage() {
         >
           تواصل معنا
         </h1>
-        <p style={{ color: "#9A9070" }}>نسعد بتواصلكم واستفساراتكم وطلبات الضيافة</p>
+        <p className="text-text-muted">نسعد بتواصلكم واستفساراتكم وطلبات الضيافة</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -66,27 +66,24 @@ export default function ContactPage() {
         <div>
           {submitted ? (
             <div
-              className="p-8 rounded-2xl text-center"
-              style={{ background: "#1A1810", border: "1px solid #C9A844" }}
+              className="p-8 rounded-2xl text-center bg-bg-card border border-gold"
             >
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"
-                style={{ background: "rgba(201,168,68,0.15)" }}
+                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 bg-gold/[0.15]"
               >
                 ✓
               </div>
-              <h3 className="text-xl font-bold mb-2" style={{ color: "#C9A844" }}>
+              <h3 className="text-xl font-bold mb-2 text-gold">
                 تم إرسال رسالتك
               </h3>
-              <p className="text-sm" style={{ color: "#9A9070" }}>
+              <p className="text-sm text-text-muted">
                 سنتواصل معك في أقرب وقت ممكن
               </p>
             </div>
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="space-y-5 p-6 rounded-2xl"
-              style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+              className="space-y-5 p-6 rounded-2xl bg-bg-card border border-border"
             >
               {/* Type selector */}
               <div className="flex gap-2">
@@ -98,12 +95,7 @@ export default function ContactPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => setType(opt.value as typeof type)}
-                    className="flex-1 py-2 rounded-lg text-sm font-medium border transition-all"
-                    style={{
-                      borderColor: type === opt.value ? "#C9A844" : "#2E2A18",
-                      color: type === opt.value ? "#C9A844" : "#9A9070",
-                      background: type === opt.value ? "rgba(201,168,68,0.08)" : "transparent",
-                    }}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${type === opt.value ? "border-gold text-gold bg-gold/[0.08]" : "border-border text-text-muted"}`}
                   >
                     {opt.label}
                   </button>
@@ -112,36 +104,28 @@ export default function ContactPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                  <label className="block text-xs font-medium mb-1.5 text-text-muted">
                     الاسم الكامل *
                   </label>
                   <input
                     required
                     name="name"
-                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-colors"
-                    style={{
-                      background: "#111008",
-                      border: "1px solid #2E2A18",
-                      color: "#F0EAD6",
-                    }}
+                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-colors bg-bg text-text"
+                    style={{ border: "1px solid #2E2A18" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                     onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                  <label className="block text-xs font-medium mb-1.5 text-text-muted">
                     البريد الإلكتروني *
                   </label>
                   <input
                     required
                     name="email"
                     type="email"
-                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                    style={{
-                      background: "#111008",
-                      border: "1px solid #2E2A18",
-                      color: "#F0EAD6",
-                    }}
+                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
+                    style={{ border: "1px solid #2E2A18" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                     onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                   />
@@ -150,18 +134,14 @@ export default function ContactPage() {
 
               {type === "guest" && (
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                  <label className="block text-xs font-medium mb-1.5 text-text-muted">
                     الصفة / المنصب
                   </label>
                   <input
                     name="role"
-                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
+                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
                     placeholder="مثال: وزير سابق، ناشط حقوقي..."
-                    style={{
-                      background: "#111008",
-                      border: "1px solid #2E2A18",
-                      color: "#F0EAD6",
-                    }}
+                    style={{ border: "1px solid #2E2A18" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                     onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                   />
@@ -175,38 +155,30 @@ export default function ContactPage() {
                 <input
                   required
                   name="subject"
-                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={{
-                    background: "#111008",
-                    border: "1px solid #2E2A18",
-                    color: "#F0EAD6",
-                  }}
+                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
+                  style={{ border: "1px solid #2E2A18" }}
                   onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                   onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                <label className="block text-xs font-medium mb-1.5 text-text-muted">
                   الرسالة *
                 </label>
                 <textarea
                   required
                   name="message"
                   rows={5}
-                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none resize-none"
-                  style={{
-                    background: "#111008",
-                    border: "1px solid #2E2A18",
-                    color: "#F0EAD6",
-                  }}
+                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none resize-none bg-bg text-text"
+                  style={{ border: "1px solid #2E2A18" }}
                   onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
                   onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
                 />
               </div>
 
               {error && (
-                <p className="text-xs text-center" style={{ color: "#e55" }}>{error}</p>
+                <p className="text-xs text-center text-danger">{error}</p>
               )}
 
               <button
@@ -227,23 +199,17 @@ export default function ContactPage() {
 
         {/* Info */}
         <div className="space-y-5">
-          <div
-            className="p-5 rounded-xl"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <h3 className="font-bold text-sm mb-3" style={{ color: "#C9A844" }}>
+          <div className="p-5 rounded-xl bg-bg-card border border-border">
+            <h3 className="font-bold text-sm mb-3 text-gold">
               للتواصل المباشر
             </h3>
-            <p className="text-sm leading-relaxed" style={{ color: "#9A9070" }}>
+            <p className="text-sm leading-relaxed text-text-muted">
               يمكنكم التواصل معنا عبر منصات التواصل الاجتماعي أو إرسال رسالة عبر النموذج أعلاه. نستقبل طلبات الضيافة والتعاون والاستفسارات الإعلامية.
             </p>
           </div>
 
-          <div
-            className="p-5 rounded-xl"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <h3 className="font-bold text-sm mb-4" style={{ color: "#C9A844" }}>
+          <div className="p-5 rounded-xl bg-bg-card border border-border">
+            <h3 className="font-bold text-sm mb-4 text-gold">
               تابعنا
             </h3>
             <div className="space-y-2">
@@ -253,18 +219,17 @@ export default function ContactPage() {
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm"
-                  style={{ color: "#9A9070" }}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-text-muted"
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.color = "#C9A844";
                     (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.06)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "#9A9070";
+                    (e.currentTarget as HTMLElement).style.color = "";
                     (e.currentTarget as HTMLElement).style.background = "transparent";
                   }}
                 >
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#C9A844" }} />
+                  <span className="w-2 h-2 rounded-full shrink-0 bg-gold" />
                   {s.name}
                   <span className="mr-auto text-xs opacity-60">{s.url.replace("https://", "")}</span>
                 </a>

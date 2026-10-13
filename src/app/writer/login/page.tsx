@@ -42,8 +42,7 @@ export default function WriterLoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "#111008" }}
+      className="min-h-screen flex items-center justify-center px-4 bg-bg"
     >
       <div className="w-full max-w-sm">
         {/* Logo */}
@@ -59,20 +58,19 @@ export default function WriterLoginPage() {
           >
             البلاغ
           </h1>
-          <p className="text-sm" style={{ color: "#9A9070" }}>منصة الكتّاب</p>
+          <p className="text-sm text-text-muted">منصة الكتّاب</p>
         </div>
 
         <form
           onSubmit={handleLogin}
-          className="p-6 rounded-2xl space-y-4"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          className="p-6 rounded-2xl space-y-4 bg-bg-card border border-border"
         >
-          <h2 className="text-lg font-bold mb-2" style={{ color: "#F0EAD6" }}>
+          <h2 className="text-lg font-bold mb-2 text-text">
             تسجيل الدخول
           </h2>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+            <label className="block text-xs font-medium mb-1.5 text-text-muted">
               البريد الإلكتروني
             </label>
             <input
@@ -87,7 +85,7 @@ export default function WriterLoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+            <label className="block text-xs font-medium mb-1.5 text-text-muted">
               كلمة المرور
             </label>
             <input
@@ -102,7 +100,7 @@ export default function WriterLoginPage() {
           </div>
 
           {error && (
-            <p className="text-xs" style={{ color: "#FF6B6B" }}>{error}</p>
+            <p className="text-xs text-danger">{error}</p>
           )}
 
           <button

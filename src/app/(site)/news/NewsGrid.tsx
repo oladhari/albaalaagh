@@ -57,7 +57,7 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
   return (
     <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
       {page > 1 && (
-        <Link href={`/news?geo=${geo}&page=${page - 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80" style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
+        <Link href={`/news?geo=${geo}&page=${page - 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "#2E2A18" }}>
           السابق
         </Link>
       )}
@@ -69,11 +69,7 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
             <Link
               href={`/news?geo=${geo}&page=${p}`}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold border transition-all"
-              style={{
-                borderColor: p === page ? "#C9A844" : "#2E2A18",
-                color:       p === page ? "#C9A844" : "#9A9070",
-                background:  p === page ? "rgba(201,168,68,0.08)" : "transparent",
-              }}
+              style={{ borderColor: p === page ? "#C9A844" : "#2E2A18", color:       p === page ? "#C9A844" : "#9A9070", background:  p === page ? "rgba(201, 168, 68, 0.08)" : "transparent",  }}
             >
               {p}
             </Link>
@@ -81,7 +77,7 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
         );
       })}
       {page < totalPages && (
-        <Link href={`/news?geo=${geo}&page=${page + 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80" style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
+        <Link href={`/news?geo=${geo}&page=${page + 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "#2E2A18" }}>
           التالي
         </Link>
       )}
@@ -103,7 +99,7 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
   const visibleSections = GEO_ORDER.filter(g => byGeo[g].length > 0 || (totalByGeo[g] ?? 0) > 0);
 
   if (articles.length === 0) {
-    return <div className="text-center py-20" style={{ color: "#9A9070" }}>لا توجد أخبار منشورة بعد</div>;
+    return <div className="text-center py-20 text-text-muted" >لا توجد أخبار منشورة بعد</div>;
   }
 
   return (
@@ -111,7 +107,7 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
       <CategoryFilter active={cat} onChange={setCat} />
 
       {visibleSections.length === 0 ? (
-        <div className="text-center py-16" style={{ color: "#9A9070" }}>لا توجد أخبار في هذا التصنيف</div>
+        <div className="text-center py-16 text-text-muted" >لا توجد أخبار في هذا التصنيف</div>
       ) : (
         <div className="space-y-12">
           {visibleSections.map(geoKey => {
@@ -125,15 +121,15 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
                 {/* Section header */}
                 <div className="flex items-center gap-3 mb-5">
                   <span className="text-lg">{meta.flag}</span>
-                  <h2 className="text-xl font-black" style={{ color: "#C9A844" }}>{meta.label}</h2>
+                  <h2 className="text-xl font-black text-gold" >{meta.label}</h2>
                   <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
-                  <span className="text-xs" style={{ color: "#9A9070" }}>
+                  <span className="text-xs text-text-muted" >
                     {items.length} خبر — آخر {cutoffDays} أيام
                   </span>
                 </div>
 
                 {items.length === 0 ? (
-                  <p className="text-sm py-4" style={{ color: "#9A9070" }}>لا توجد أخبار حديثة في هذا القسم</p>
+                  <p className="text-sm py-4 text-text-muted" >لا توجد أخبار حديثة في هذا القسم</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map((a: any) => <NewsCard key={a.id} article={a} />)}
@@ -144,14 +140,14 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
                 {totalForGeo > 0 && (
                   <div className="mt-5 flex items-center justify-between">
                     {olderCount > 0 && (
-                      <p className="text-sm" style={{ color: "#9A9070" }}>
+                      <p className="text-sm text-text-muted" >
                         و <span style={{ color: "#C9A844" }}>{olderCount}</span> خبراً في الأرشيف
                       </p>
                     )}
                     <Link
                       href={`/news?geo=${geoKey}`}
-                      className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
-                      style={{ background: "rgba(201,168,68,0.1)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+                      className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80 text-gold"
+                      style={{ background: "rgba(201, 168, 68, 0.1)", border: "1px solid rgba(201, 168, 68, 0.3)" }}
                     >
                       عرض جميع {meta.label}
                       <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current rotate-180"><path d="M10 19l-7-7 7-7v4h11v6H10v4z"/></svg>
@@ -177,7 +173,7 @@ function GeoView({ geo, articles, page, totalPages }: GeoProps) {
       <CategoryFilter active={cat} onChange={setCat} />
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16" style={{ color: "#9A9070" }}>لا توجد أخبار في هذا التصنيف</div>
+        <div className="text-center py-16 text-text-muted" >لا توجد أخبار في هذا التصنيف</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((a: any) => <NewsCard key={a.id} article={a} />)}

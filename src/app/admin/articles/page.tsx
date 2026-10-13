@@ -37,7 +37,7 @@ export default async function AdminArticlesPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>المقالات</h1>
+        <h1 className="text-2xl font-black text-text">المقالات</h1>
         <Link
           href="/admin/articles/new"
           className="px-5 py-2 rounded-full text-sm font-bold"
@@ -53,12 +53,7 @@ export default async function AdminArticlesPage({
           <Link
             key={t.key}
             href={`/admin/articles?tab=${t.key}`}
-            className="px-4 py-2 rounded-full text-sm font-medium border transition-all"
-            style={{
-              borderColor: tab === t.key ? "#C9A844" : "#2E2A18",
-              color: tab === t.key ? "#C9A844" : "#9A9070",
-              background: tab === t.key ? "rgba(201,168,68,0.08)" : "transparent",
-            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-all${tab === t.key ? " border-gold text-gold bg-gold/[0.08]" : " border-border text-text-muted"}`}
           >
             {t.label}
           </Link>
@@ -67,7 +62,7 @@ export default async function AdminArticlesPage({
 
       {articles.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-sm" style={{ color: "#9A9070" }}>
+          <p className="text-sm text-text-muted">
             {tab === "pending" ? "لا توجد مقالات بانتظار النشر" : "لا توجد مقالات"}
           </p>
         </div>
@@ -76,8 +71,7 @@ export default async function AdminArticlesPage({
           {articles.map((article: any) => (
             <div
               key={article.id}
-              className="flex items-center gap-4 p-4 rounded-xl"
-              style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+              className="flex items-center gap-4 p-4 rounded-xl bg-bg-card border border-border"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">

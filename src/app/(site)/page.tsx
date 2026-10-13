@@ -148,11 +148,8 @@ export default async function HomePage() {
           {/* Site summary hero */}
           <div className="lg:col-span-2">
             <div
-              className="rounded-2xl overflow-hidden relative flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[280px] sm:min-h-[340px]"
-              style={{
-                background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",
-                border: "1px solid #2E2A18",
-              }}
+              className="rounded-2xl overflow-hidden relative flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[280px] sm:min-h-[340px] border border-border"
+              style={{ background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",  }}
             >
               {/* Decorative corner */}
               <div
@@ -172,7 +169,7 @@ export default async function HomePage() {
                 >
                   البلاغ
                 </h1>
-                <p className="text-sm sm:text-base leading-relaxed mb-5 sm:mb-6" style={{ color: "#9A9070", maxWidth: "480px" }}>
+                <p className="text-sm sm:text-base leading-relaxed mb-5 sm:mb-6 text-text-muted" style={{ maxWidth: "480px" }}>
                   منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة — نُجري حوارات معمقة مع شخصيات سياسية وفكرية بارزة، ونواكب الحدث التونسي والعربي والدولي.
                 </p>
 
@@ -203,8 +200,8 @@ export default async function HomePage() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80"
-                      style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all hover:opacity-80 text-gold"
+                      style={{ background: "rgba(201, 168, 68, 0.12)", border: "1px solid rgba(201, 168, 68, 0.3)" }}
                     >
                       {item.icon}
                       {item.label}
@@ -214,15 +211,15 @@ export default async function HomePage() {
               </div>
 
               {/* Stats row */}
-              <div className="relative flex flex-wrap gap-6 sm:gap-8 mt-6 sm:mt-8 pt-6" style={{ borderTop: "1px solid #2E2A18" }}>
+              <div className="relative flex flex-wrap gap-6 sm:gap-8 mt-6 sm:mt-8 pt-6 border-t border-border" >
                 {[
                   { label: "حلقة",    value: interviewsCount > 0 ? formatCount(interviewsCount) + "+" : "قريباً" },
                   { label: "برنامج",  value: playlistsCount  > 0 ? String(playlistsCount)               : "قريباً" },
                   { label: "مقال",    value: articlesCount   > 0 ? articlesCount + "+"                  : "قريباً" },
                 ].map((stat) => (
                   <div key={stat.label}>
-                    <p className="text-xl sm:text-2xl font-black" style={{ color: "#C9A844" }}>{stat.value}</p>
-                    <p className="text-xs" style={{ color: "#9A9070" }}>{stat.label}</p>
+                    <p className="text-xl sm:text-2xl font-black text-gold" >{stat.value}</p>
+                    <p className="text-xs text-text-muted" >{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -232,18 +229,15 @@ export default async function HomePage() {
           {/* Latest news sidebar */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold" style={{ color: "#C9A844" }}>آخر الأخبار</h3>
-              <Link href="/news" className="text-xs" style={{ color: "#9A9070" }}>عرض الكل ←</Link>
+              <h3 className="text-sm font-bold text-gold">آخر الأخبار</h3>
+              <Link href="/news" className="text-xs text-text-muted">عرض الكل ←</Link>
             </div>
             {news.length > 0 ? (
               news.slice(0, 4).map((article: any) => (
                 <NewsCard key={article.id} article={article} />
               ))
             ) : (
-              <div
-                className="rounded-xl p-4 text-center text-sm"
-                style={{ background: "#1A1810", border: "1px solid #2E2A18", color: "#9A9070" }}
-              >
+              <div className="rounded-xl p-4 text-center text-sm bg-bg-card border border-border text-text-muted">
                 لا توجد أخبار منشورة بعد
               </div>
             )}
@@ -275,33 +269,22 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <div
-            className="rounded-xl p-8 text-center"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
-          >
-            <p className="text-sm" style={{ color: "#9A9070" }}>لا توجد مقالات منشورة بعد</p>
+          <div className="rounded-xl p-8 text-center bg-bg-card border border-border">
+            <p className="text-sm text-text-muted">لا توجد مقالات منشورة بعد</p>
           </div>
         )}
       </section>
 
       {/* ── About banner ── */}
-      <section
-        className="py-12"
-        style={{ background: "#1A1810", borderTop: "1px solid #2E2A18", borderBottom: "1px solid #2E2A18" }}
-      >
+      <section className="py-12 bg-bg-card border-t border-border border-b border-border">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2
             className="text-3xl font-black mb-4"
-            style={{
-              background: "linear-gradient(135deg, #E8D5A3, #C9A844)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
+            style={{ background: "linear-gradient(135deg, #E8D5A3, #C9A844)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",  }}
           >
             البلاغ
           </h2>
-          <p className="text-base leading-loose mb-6" style={{ color: "#9A9070" }}>
+          <p className="text-base leading-loose mb-6 text-text-muted">
             منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة وقيم الإسلام الوسطي. نُجري حوارات معمقة مع شخصيات سياسية وفكرية متنوعة، ساعين إلى تقديم محتوى راقٍ يخدم المواطن التونسي والعربي.
           </p>
           <Link href="/about" className="btn-gold-outline inline-block px-6 py-2.5 rounded-full text-sm font-bold">

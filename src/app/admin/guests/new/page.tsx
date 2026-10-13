@@ -91,11 +91,11 @@ export default function NewGuestPage() {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-2xl font-black" style={{ color: "#F0EAD6" }}>إضافة ضيف جديد</h1>
+        <h1 className="text-2xl font-black text-text">إضافة ضيف جديد</h1>
       </div>
 
       {error && (
-        <div className="mb-6 p-3 rounded-lg text-sm" style={{ background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.3)", color: "#FF6B6B" }}>
+        <div className="mb-6 p-3 rounded-lg text-sm text-danger" style={{ background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.3)" }}>
           {error}
         </div>
       )}
@@ -106,7 +106,7 @@ export default function NewGuestPage() {
             <label style={labelStyle}>الاسم الكامل *</label>
             <input style={{ ...inputStyle, borderColor: isDuplicate ? "#FF6B6B" : "#2E2A18" }} value={form.name} onChange={(e) => set("name", e.target.value)}
               onFocus={(e) => (e.target.style.borderColor = isDuplicate ? "#FF6B6B" : "#C9A844")} onBlur={(e) => (e.target.style.borderColor = isDuplicate ? "#FF6B6B" : "#2E2A18")} />
-            {isDuplicate && <p className="text-xs mt-1" style={{ color: "#FF6B6B" }}>يوجد ضيف بهذا الاسم مسبقاً</p>}
+            {isDuplicate && <p className="text-xs mt-1 text-danger">يوجد ضيف بهذا الاسم مسبقاً</p>}
           </div>
           <div>
             <label style={labelStyle}>الصفة / المنصب *</label>
@@ -138,7 +138,7 @@ export default function NewGuestPage() {
           <label style={labelStyle}>النوع</label>
           <div className="flex gap-4 mt-1">
             {(["guest", "program"] as const).map((t) => (
-              <label key={t} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#F0EAD6" }}>
+              <label key={t} className="flex items-center gap-2 text-sm cursor-pointer text-text">
                 <input type="radio" name="tier" checked={form.tier === t} onChange={() => setForm((p) => ({ ...p, tier: t }))} />
                 {t === "guest" ? "ضيف حلقة" : "برنامج دوري"}
               </label>
@@ -167,7 +167,7 @@ export default function NewGuestPage() {
 
         {/* Staff section */}
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#9A9070" }}>
+          <label className="flex items-center gap-2 text-sm cursor-pointer text-text-muted">
             <input type="checkbox" checked={form.is_staff}
               onChange={(e) => setForm((p) => ({ ...p, is_staff: e.target.checked }))} />
             طاقم البلاغ (مخفي عن الجمهور)
@@ -224,8 +224,7 @@ export default function NewGuestPage() {
             {saving ? "جارٍ الحفظ..." : "إضافة الضيف"}
           </button>
           <button type="button" onClick={() => router.push("/admin/guests")}
-            className="px-6 py-2.5 rounded-full text-sm font-medium border"
-            style={{ borderColor: "#2E2A18", color: "#9A9070" }}>
+            className="px-6 py-2.5 rounded-full text-sm font-medium border border-border text-text-muted">
             إلغاء
           </button>
         </div>

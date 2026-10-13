@@ -23,15 +23,13 @@ export default function UnpublishButton({ articleId }: { articleId: string }) {
       <div className="flex gap-1 shrink-0">
         <button
           onClick={unpublish}
-          className="px-2 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}
+          className="px-2 py-1.5 rounded-lg text-xs font-bold bg-danger/15 text-danger"
         >
           تأكيد
         </button>
         <button
           onClick={() => setState("idle")}
-          className="px-2 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: "#1A1810", color: "#9A9070", border: "1px solid #2E2A18" }}
+          className="px-2 py-1.5 rounded-lg text-xs font-bold bg-bg-card text-text-muted border border-border"
         >
           إلغاء
         </button>
@@ -43,8 +41,7 @@ export default function UnpublishButton({ articleId }: { articleId: string }) {
     <button
       onClick={() => setState("confirm")}
       disabled={state === "loading"}
-      className="px-3 py-1.5 rounded-lg text-xs font-medium border shrink-0"
-      style={{ borderColor: "rgba(255,107,107,0.3)", color: "#FF6B6B" }}
+      className="px-3 py-1.5 rounded-lg text-xs font-medium border border-danger/30 text-danger shrink-0"
     >
       {state === "loading" ? "..." : "إلغاء النشر"}
     </button>
