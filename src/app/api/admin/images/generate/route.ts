@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { generateNewsImage, generateFacebookImage, generateWriterArticleImage } from "@/lib/ai-image";
-import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
+import { generateNewsImage, generateFacebookImage, generateWriterArticleImage, type PersonPhoto } from "@/lib/ai-image";
+import { normalizeAiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 
 export const maxDuration = 120;
 
@@ -15,7 +15,11 @@ export async function POST(req: NextRequest) {
   }
 
   const people = Array.isArray(personPhotos)
-    ? personPhotos.filter((p: any) => p && typeof p.name === "string" && typeof p.url === "string")
+    ? personPhotos.filter((p: unknown): p is PersonPhoto => (
+        typeof p === "object" && p !== null
+        && "name" in p && typeof p.name === "string"
+        && "url" in p && typeof p.url === "string"
+      ))
     : [];
 
   try {
@@ -31,11 +35,15 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ url, failedPeople });
   } catch (err: unknown) {
-    if (err instanceof AiProviderError) {
-      const response = toAdminAiResponse(err);
-      return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
-    }
-    console.error(JSON.stringify({ event: "image_generation_failed", route: "/api/admin/images/generate" }));
-    return NextResponse.json({ error: "تعذّر إنشاء الصورة." }, { status: 500 });
+    const normalized = normalizeAiProviderError(err);
+    const response = toAdminAiResponse(normalized);
+    console.error(JSON.stringify({
+      event: "image_generation_failed",
+      route: "/api/admin/images/generate",
+      target: target ?? "news",
+      httpStatus: normalized.status,
+      errorCategory: normalized.category,
+    }));
+    return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
   }
 }

@@ -131,7 +131,7 @@ export function createAiProvider(dependencies: ProviderDependencies = {}) {
         });
         return response;
       } catch (error) {
-        const normalized = normalizeProviderError(error, retryCount);
+        const normalized = normalizeAiProviderError(error, retryCount);
         const willRetry = RETRYABLE.has(normalized.category) && retryCount < RETRY_DELAYS_MS.length;
         logMetadata(logger, "error", {
           provider, model, operation: requestContext.operation, route: requestContext.route,
@@ -223,7 +223,7 @@ async function requestOpenAI(
   return { text: result.output_text, requestId: result._request_id ?? null, status: 200 };
 }
 
-function normalizeProviderError(error: unknown, retryCount: number): AiProviderError {
+export function normalizeAiProviderError(error: unknown, retryCount = 0): AiProviderError {
   if (error instanceof AiProviderError) {
     return new AiProviderError(error.category, error.status, retryCount, error.message);
   }
@@ -234,6 +234,7 @@ function normalizeProviderError(error: unknown, retryCount: number): AiProviderE
   if (status === 402) return new AiProviderError("billing_or_quota", 402, retryCount);
   if (status === 429 && /(quota|billing|credit|insufficient)/.test(code)) return new AiProviderError("billing_or_quota", 429, retryCount);
   if (status === 429) return new AiProviderError("rate_limit", 429, retryCount);
+  if (/(moderation|safety|policy|content_filter)/.test(code)) return new AiProviderError("permission_or_policy", status, retryCount);
   if (status === 403) return new AiProviderError("permission_or_policy", 403, retryCount);
   if (status === 400 || status === 404 || status === 409 || status === 422) return new AiProviderError("invalid_request", status, retryCount);
   if (candidate?.name === "APIConnectionTimeoutError" || /(timeout|timed_out)/.test(code)) return new AiProviderError("timeout", 504, retryCount);

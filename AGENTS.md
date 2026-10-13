@@ -4,6 +4,13 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Albaalaagh multi-root workspace
+
+Also read the canonical cross-project workstation instructions at
+`/home/oladhari/Documents/albaalaagh-workstation/AGENTS.md`. The rules in this
+repository remain authoritative for website, secrets, storage, and publishing
+work if the two instruction sets overlap.
+
 # Never leak secrets into tracked files
 
 Never write a real API key, token, JWT, service_role key, or any other `.env*` value into README.md, code comments, docs, scripts, or any other file that gets committed/pushed — even temporarily, even in an example. This happened once (a live Supabase `service_role` JWT hardcoded in a README curl example, sitting in a public repo) and must never happen again.
@@ -16,9 +23,26 @@ Never write a real API key, token, JWT, service_role key, or any other `.env*` v
 
 There are two R2 buckets. `albaalaagh` is **public** (`media.albaalaagh.com` is bound to the whole bucket, so every prefix in it is public). `albaalaagh-private-archive` is **private** (no custom domain, no `r2.dev`).
 
-- Anything that must stay hidden (videos deleted from YouTube but kept, videos kept secret, content rated medium/high by `scripts/community-guideline-checker/`) goes **only** in the private bucket. Never put it in the public bucket, not even under an obscure prefix.
+## YouTube migration visibility rule (user-approved)
+
+This rule is authoritative and must not be inferred from a checker rating:
+
+- A video that is **public on YouTube** migrates to the **public** `albaalaagh`
+  R2 bucket and may remain visible on albaalaagh.com when migration is
+  explicitly requested.
+- A video that is **private on YouTube** migrates only to
+  `albaalaagh-private-archive` and must not be exposed on the website.
+- `medium`/`high` checker results set the urgency for removing a video from
+  YouTube. They do **not** change a formerly public video's destination to the
+  private archive.
+- Preserve the original title, full description, publication date, thumbnail,
+  and named playlist membership when replacing the YouTube source with R2.
+- Verify the complete R2 object and the albaalaagh.com database record before
+  the corresponding YouTube video is deleted.
+
 - Credentials are `R2_ARCHIVE_ACCESS_KEY_ID`, `R2_ARCHIVE_SECRET_ACCESS_KEY` and `R2_ARCHIVE_BUCKET` in `.env.local` (same rules as above: never inline the values anywhere). The token is scoped to the archive bucket only.
 - Never enable public access, a custom domain or `r2.dev` on the archive bucket.
 - Upload with `node --env-file=.env.local scripts/archive-to-private-r2.mjs <dir>` (`/scripts` is git-ignored, so this script exists locally only).
-- Videos rated `high` are never published to the site, Facebook or Instagram. Anything from the archive must be re-checked before it is published.
+- Anything from the private archive must still be re-checked and explicitly
+  approved before publication.
 - Full procedure, batch list, retrieval with signed links and rotation: `docs/private-r2-archive.md`.
