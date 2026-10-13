@@ -205,7 +205,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
       {article.news_citations?.length > 0 && (
         <section
           className="mt-10 pt-6 border-t border-border"
-          
+
           aria-labelledby="report-sources"
         >
           <h2 id="report-sources" className="text-base font-bold mb-3 text-gold" >

@@ -186,7 +186,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       {article.writer && (
         <div
           className="p-6 rounded-xl bg-bg-card border border-border"
-          
+
         >
           <h3 className="text-sm font-bold mb-3 text-gold" >عن الكاتب</h3>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">

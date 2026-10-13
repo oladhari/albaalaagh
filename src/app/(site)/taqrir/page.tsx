@@ -100,7 +100,7 @@ export default async function TaqrirListPage({
             <Link
               href={`/taqrir?page=${page - 1}`}
               className="px-5 py-2 rounded-full text-sm font-bold border border-border text-gold"
-              
+
             >
               الصفحة السابقة
             </Link>
@@ -112,7 +112,7 @@ export default async function TaqrirListPage({
             <Link
               href={`/taqrir?page=${page + 1}`}
               className="px-5 py-2 rounded-full text-sm font-bold border border-border text-gold"
-              
+
             >
               الصفحة التالية
             </Link>
