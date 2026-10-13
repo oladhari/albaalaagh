@@ -37,6 +37,14 @@ describe("Landscape reference policy", () => {
     expect(prompt).not.toContain("diplomatic meetings");
     expect(prompt).toContain("Template people are never authorized person references");
   });
+  it("requires a supplied portrait as the main subject even for court news", () => {
+    const prompt = buildNews16_9Prompt("المحكمة تنظر في قضية رياض بن فضل", "قضية فساد مالي", [{ name: "رياض بن فضل", url: "https://example.com/portrait.png" }]);
+    expect(prompt).toContain("Their inclusion is REQUIRED, not optional");
+    expect(prompt).toContain("Image 2: reference labeled رياض بن فضل");
+    expect(prompt).toContain("do not need to recognize or independently verify a single-person portrait");
+    expect(prompt).not.toContain("NO PERSON REFERENCE ATTACHED");
+    expect(prompt).not.toContain("often preferable");
+  });
   it("prohibits invented people when no reference was supplied", () => {
     expect(buildNews16_9Prompt("زراعة الحبوب", "")).toContain("NO INVENTED HUMANS");
   });

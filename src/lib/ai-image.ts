@@ -462,7 +462,7 @@ Reference image(s) are attached, labeled as: ${names}.
 FIRST, determine what each attached reference image actually is:
 
 CASE A — it is an authentic photograph of a real human being's face:
-* Use ONLY that attached photo for this person's face.
+* You MUST visibly include this person, using ONLY that attached photo for their face. This is an editorial portrait, not a reconstruction of the event.
 * Do not modify, beautify, age, rejuvenate, or alter their facial features or ethnicity.
 * Do not invent an alternative face for them.
 * Preserve their identity exactly as shown in the attached photo.
@@ -547,7 +547,7 @@ function buildNoInventedHumansRule(people: PersonPhoto[]): string {
 REFERENCE CONTENT POLICY — MOST IMPORTANT RULE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Reference image(s) were attached with labels: ${names}. A label is descriptive text, NOT proof that the image depicts a person. Inspect the actual image first. Include a named person only if their reference is an authentic, unambiguous human photograph (CASE A). If it depicts fields, buildings, objects, a logo, an emblem, or any other non-human content (CASE B), use only that content and include ZERO people unless another supplied reference independently qualifies under CASE A. Never invent a presenter, official, farmer, or portrait to represent a non-human reference.
+Reference image(s) were attached with labels: ${names}. A label is descriptive text, NOT proof that the image depicts a person. Inspect the actual image first. CASE A — If a reference is an authentic, unambiguous human photograph, you MUST include that exact supplied person prominently on the RIGHT side as the main editorial subject. Their inclusion is REQUIRED, not optional. Preserve their face and identity from the attached photograph. Do not replace them with buildings, legal symbols, flags, or a symbolic-only scene, even for political, court, detention, or financial stories. The label identifies the supplied portrait; you do not need to recognize or independently verify a single-person portrait to use it. Use the photo as an editorial portrait, without depicting guilt or inventing actions. If it depicts fields, buildings, objects, a logo, an emblem, or any other non-human content (CASE B), use only that content and include ZERO people unless another supplied reference independently qualifies under CASE A. Never invent a presenter, official, farmer, or portrait to represent a non-human reference.
 
 For anyone else mentioned in the story who has no attached reference photo, do not invent a face for them — no invented politicians, officials, journalists, or generic "representative" people. Keep the human presence in the scene limited to the named person(s) whose reference actually qualifies under CASE A. If none qualifies, show no humans, faces, bodies, crowds, silhouettes, or human-like figures.`;
 }
@@ -576,9 +576,11 @@ TEXT RULES:
 VISUAL RULES:
 The visual scene occupies the RIGHT side of the image.
 
-When no verified person image is provided:
-* Create a realistic journalistic visual related to the story.
-* Use unpopulated story-related objects, accurate flags, buildings, documents, fields, crops, agricultural equipment, factories, ports, or ships. No meetings, crowds, portraits, or human silhouettes.
+${people.length ? `ATTACHED REFERENCES TAKE PRIORITY:
+Inspect the reference image(s) AFTER the first template image. For each single-person portrait, prominently include the supplied person on the RIGHT, with the headline on the LEFT. Keep story-related objects secondary. A portrait remains required for a court or political story; do not infer guilt or invent actions. If a reference contains only non-human content, use that content as an object and do not invent a person. Only a request with no actual human portrait may use a symbolic-only composition.
+REFERENCE ORDER:
+${people.map((person, index) => `Image ${index + 2}: reference labeled ${person.name}`).join("\n")}` : `NO PERSON REFERENCE ATTACHED:
+Create a realistic journalistic visual related to the story using unpopulated objects, accurate flags, buildings, documents, fields, crops, agricultural equipment, factories, ports, or ships. No meetings, crowds, portraits, or human silhouettes.`}
 
 NEVER:
 * show violence, blood, or graphic content
