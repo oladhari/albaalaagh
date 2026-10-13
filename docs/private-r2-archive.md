@@ -16,9 +16,11 @@ private bucket, never in the public one.
 - Videos removed from YouTube (for example private videos deleted because
   private videos can still be reported) that should be kept.
 - Videos kept secret on purpose, never shown on the channel or site.
-- Anything the community-guideline checker rates `medium` or `high` that is
-  worth keeping. Videos rated `high` must never go to the site, Facebook or
-  Instagram; Meta's Dangerous Organizations policy is as strict as YouTube's.
+- Public YouTube videos do not move here merely because the community-guideline
+  checker rates them `medium` or `high`; when the user explicitly requests a
+  public migration, they remain public in the normal R2/site workflow. This
+  private archive is for videos that were private on YouTube or otherwise must
+  remain hidden.
 
 Publishing an archived video means re-checking it first
 (`scripts/community-guideline-checker/`), then copying it to the public bucket

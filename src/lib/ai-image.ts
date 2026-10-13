@@ -544,12 +544,12 @@ function buildNoInventedHumansRule(people: PersonPhoto[]): string {
   return `
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REAL PEOPLE MUST APPEAR — MOST IMPORTANT RULE
+REFERENCE CONTENT POLICY — MOST IMPORTANT RULE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-An authentic reference photo WAS attached above for: ${names}. You MUST include this exact person in the image, using their attached photo as the face reference exactly as instructed below (see CASE A). Do NOT omit them and do NOT fall back to a people-less/symbolic-only composition — that fallback only applies when NO reference photo was provided for a person, which is not the case here.
+Reference image(s) were attached with labels: ${names}. A label is descriptive text, NOT proof that the image depicts a person. Inspect the actual image first. Include a named person only if their reference is an authentic, unambiguous human photograph (CASE A). If it depicts fields, buildings, objects, a logo, an emblem, or any other non-human content (CASE B), use only that content and include ZERO people unless another supplied reference independently qualifies under CASE A. Never invent a presenter, official, farmer, or portrait to represent a non-human reference.
 
-For anyone else mentioned in the story who has no attached reference photo, do not invent a face for them — no invented politicians, officials, journalists, or generic "representative" people. Keep the human presence in the scene limited to the named person(s) whose real photo was attached above.`;
+For anyone else mentioned in the story who has no attached reference photo, do not invent a face for them — no invented politicians, officials, journalists, or generic "representative" people. Keep the human presence in the scene limited to the named person(s) whose reference actually qualifies under CASE A. If none qualifies, show no humans, faces, bodies, crowds, silhouettes, or human-like figures.`;
 }
 
 export function buildNews16_9Prompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
@@ -578,7 +578,7 @@ The visual scene occupies the RIGHT side of the image.
 
 When no verified person image is provided:
 * Create a realistic journalistic visual related to the story.
-* Use symbolic imagery: story-related objects, accurate flags, official buildings, courthouses, documents, factories, ports, airports, parliament, hospitals, schools, diplomatic meetings, ships, etc.
+* Use unpopulated story-related objects, accurate flags, buildings, documents, fields, crops, agricultural equipment, factories, ports, or ships. No meetings, crowds, portraits, or human silhouettes.
 
 NEVER:
 * show violence, blood, or graphic content
@@ -602,7 +602,7 @@ DESCRIPTION:
 ${excerpt || "—"}
 
 TEMPLATE:
-first attached image — preserve it exactly as the base, only fill the content area`;
+first attached image — use only its branding and frame. Replace sample headline and all sample editorial imagery in the content area, including any sample people or portraits. Template people are never authorized person references. Fill the content area using only the supplied story and qualifying references.`;
 }
 
 export interface GeneratedImageResult {
@@ -637,68 +637,25 @@ export async function generateNewsImage(title: string, excerpt: string, people: 
 
 const FACEBOOK_TEMPLATE_PATH = path.join(process.cwd(), "public", "news_announcement.png");
 
-function buildFacebookPrompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
+export function buildFacebookPrompt(title: string, excerpt: string, people: PersonPhoto[] = []): string {
   return `ALBAALAAGH NEWS CARD — 1080×1080 SQUARE
 
 USE THE PROVIDED ALBAALAAGH TEMPLATE (the first attached image) EXACTLY AS THE BASE IMAGE.
 
-DO NOT:
-* change, move, or modify the logo or branding in any corner
-* redesign the template borders or frame
-* invent a new logo or corner design
-* add "عاجل"
-* add article summaries or paragraphs
-* add bullet points or quotes
+Preserve the existing logo, branding, borders, and frame. Do not add "عاجل", summaries, paragraphs, bullet points, quotes, dates, or URLs.
 
-${people.length ? `⚠️ CRITICAL — FACES:
-Reference image(s) are attached below, labeled: ${people.map(p => p.name).join("، ")}.
-See the mandatory rules below — an attached image is used as a face ONLY if it is actually an authentic photograph of a human being.
-DO NOT invent a face for anyone else not covered by an attached photo — symbolic visuals only for them.` : `⚠️ CRITICAL — NO FACES:
-No reference image of any person is attached to this request.
-DO NOT generate or invent any person's face.
-DO NOT attempt to depict any named individual whose photo was not attached.
-Even if a person is named in the title, DO NOT show their face.
-Use symbolic and thematic visuals only — no invented human faces.`}
-${buildNoInventedHumansRule(people)}
-${buildPersonPhotoInstructions(people)}
-${buildGeographicAccuracyRules(title, excerpt)}
+${people.length ? `REFERENCE PHOTOS:
+The attached reference photo(s) after the template are labeled: ${people.map(p => p.name).join("، ")}.
+Use a reference as a face only when it is an authentic human photograph, preserve that person's identity exactly, and do not invent or add any other person. If a reference is a logo or emblem, reproduce it only as that object.` : `NO PEOPLE:
+No authentic person photo is attached. Do not generate any human, face, figure, or depiction of a named person. Use objects and abstract symbolic imagery only.`}
 
 TEXT RULES:
-* Show ONLY the news title — no other text.
-* Keep title compact: maximum 2 to 4 lines.
-* Large bold Arabic typography.
-* Do not fill the canvas with text — let the image carry the story.
-* Mobile readability is the priority.
+Show only the supplied news title, unchanged, in large bold Arabic typography, maximum 2 to 4 lines, with strong mobile readability.
 
 VISUAL RULES:
-The visual scene is the primary storytelling element.
-Use realistic journalistic imagery related to the story — no faces.
-
-For court / legal stories:
-* courthouse exterior, courtroom interior, scales of justice, legal documents, gavel, prison bars
-
-For political stories:
-* parliament building, presidential palace, official documents, accurate flags, negotiations
-
-For economic stories:
-* factories, ports, trade routes, energy infrastructure, charts
-
-For security stories:
-* police vehicles, checkpoints, security operations, confiscated items
-
-For accidents:
-* accident scene, ambulance, damaged vehicle, road safety symbolism
-
-For international diplomacy:
-* negotiation tables, accurate flags, official buildings
-
-NEWS STYLE:
-* modern editorial newsroom graphic
-* realistic documentary style
-* cinematic lighting
-* clean composition with strong focal point
-* professional newspaper design
-* high contrast
+Create one restrained, non-actionable editorial metaphor based only on the supplied story. For an AI-safety or cybersecurity story, prefer an abstract interface, lock, shield, warning symbol, or redacted report. Do not depict or explain harmful materials, construction, biological processes, technical mechanisms, or operational steps.
+${buildGeographicAccuracyRules(title, excerpt)}
+Use a modern premium newsroom style, realistic documentary lighting, clean composition, strong focal point, and high contrast.
 
 TITLE:
 ${title}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { AiProviderError, createAiProvider } from "@/lib/ai/provider";
+import { AiProviderError, createAiProvider, normalizeAiProviderError } from "@/lib/ai/provider";
 
 function completed(outputText: string) {
   return {
@@ -37,6 +37,14 @@ const request = {
 };
 
 describe("OpenAI provider", () => {
+  it("classifies image safety blocks as policy errors even when OpenAI returns 400", () => {
+    expect(normalizeAiProviderError({
+      status: 400,
+      code: "moderation_blocked",
+      type: "image_generation_user_error",
+    })).toMatchObject({ category: "permission_or_policy", status: 400 });
+  });
+
   it("uses the Responses API, strict schema, no tools, and preserves Arabic Unicode", async () => {
     const create = vi.fn(async (body: Record<string, unknown>) => {
       expect(body).toBeDefined();
