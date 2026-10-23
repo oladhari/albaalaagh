@@ -1,16 +1,18 @@
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase";
-import { REPORT_CATEGORIES } from "@/lib/reports";
+import { REPORT_CATEGORIES, reportPath } from "@/lib/reports";
+import { expandCompactUuid, isDashedUuid } from "@/lib/public-urls";
 import ReportBody from "@/components/reports/ReportBody";
 
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> };
 const getReport = cache(async (slug: string, preview: boolean) => {
   const authorized = preview && (await cookies()).get("admin_authed")?.value === "1";
-  let query = supabaseAdmin.from("articles").select("id,slug,title,excerpt,content,cover_image,category,published_at,published,status").eq("slug", slug).in("category", [...REPORT_CATEGORIES]);
+  let query = supabaseAdmin.from("articles").select("id,slug,title,excerpt,content,cover_image,category,published_at,published,status").in("category", [...REPORT_CATEGORIES]);
+  query = /^[0-9a-f]{32}$/i.test(slug) || isDashedUuid(slug) ? query.eq("id", expandCompactUuid(slug)) : query.eq("slug", slug);
   if (!authorized) query = query.eq("published", true).eq("status", "published");
   const { data, error } = await query.single();
   if (error || !data) return null;
@@ -22,7 +24,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!result) return { title: "تقرير غير متاح", robots: { index: false, follow: false } };
   const { report, preview } = result;
   if (preview) return { title: `معاينة مسودة | ${report.title}`, robots: { index: false, follow: false }, openGraph: { images: [] } };
-  const url = `https://www.albaalaagh.com/reports/${slug}`;
+  const url = `https://www.albaalaagh.com${reportPath(report)}`;
   const images = report.cover_image ? [{ url: report.cover_image, width: 1280, height: 720, alt: report.title }] : [];
   return {
     title: `${report.title} | البلاغ`, description: report.excerpt,
@@ -37,7 +39,9 @@ export default async function ReportPage({ params, searchParams }: Props) {
   const result = await getReport(slug, (await searchParams).preview === "1");
   if (!result) notFound();
   const { report, preview } = result;
+  const canonicalPath = reportPath(report);
+  if (`/reports/${slug}` !== canonicalPath) redirect(`${canonicalPath}${preview ? "?preview=1" : ""}`);
   const nonce = (await headers()).get("x-nonce") ?? undefined;
-  const jsonLd = { "@context": "https://schema.org", "@type": "Article", headline: report.title, description: report.excerpt, image: report.cover_image, datePublished: report.published_at, author: { "@type": "Organization", name: "قناة البلاغ الرقمية" }, publisher: { "@type": "Organization", name: "قناة البلاغ الرقمية" }, mainEntityOfPage: `https://www.albaalaagh.com/reports/${slug}` };
+  const jsonLd = { "@context": "https://schema.org", "@type": "Article", headline: report.title, description: report.excerpt, image: report.cover_image, datePublished: report.published_at, author: { "@type": "Organization", name: "قناة البلاغ الرقمية" }, publisher: { "@type": "Organization", name: "قناة البلاغ الرقمية" }, mainEntityOfPage: `https://www.albaalaagh.com${canonicalPath}` };
   return <>{!preview && <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}<ReportBody report={report} preview={preview} /></>;
 }

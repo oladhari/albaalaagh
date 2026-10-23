@@ -1,0 +1,4 @@
+interface:
+  display_name: "تقارير البلاغ"
+  short_description: "Research and prepare sourced Arabic reports for Albaalaagh"
+  default_prompt: "Use $taqrir to investigate this material and prepare an Arabic Albaalaagh report draft with sources, inline figures, a cover and a preview."

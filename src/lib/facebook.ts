@@ -1,3 +1,4 @@
+import { shareUrl, type ShareContentType } from "./share-options";
 const PAGE_ID    = process.env.FB_PAGE_ID    ?? process.env.FB_PAGE2_ID;
 const PAGE_TOKEN = process.env.FB_PAGE_TOKEN ?? process.env.FB_PAGE2_TOKEN;
 
@@ -6,7 +7,7 @@ interface PostOptions {
   excerpt?: string;
   slug: string;
   writerName?: string;
-  type?: "article" | "news";
+  type?: ShareContentType;
   facebook_image?: string | null;
 }
 
@@ -44,9 +45,7 @@ async function postPhotoWithComment(
 export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
   if (!PAGE_ID || !PAGE_TOKEN) return;
 
-  const url = opts.type === "news"
-    ? `https://www.albaalaagh.com/taqrir/${opts.slug}`
-    : `https://www.albaalaagh.com/articles/${opts.slug}`;
+  const url = shareUrl(opts);
 
   if (opts.facebook_image) {
     const caption = [

@@ -17,6 +17,7 @@ type SitemapNews = {
 };
 
 type SitemapArticle = {
+  id: string;
   category: string;
   slug: string;
   published_at: string;
@@ -69,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order("published_at", { ascending: false }),
     supabaseAdmin
       .from("articles")
-      .select("slug, published_at, category")
+      .select("id, slug, published_at, category")
       .eq("published", true)
       .order("published_at", { ascending: false }),
     getAllPublishedVideos(),

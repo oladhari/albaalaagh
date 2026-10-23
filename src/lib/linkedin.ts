@@ -1,11 +1,11 @@
-const BASE_URL = "https://www.albaalaagh.com";
+import { shareUrl, type ShareContentType } from "./share-options";
 
 interface PostOptions {
   title: string;
   excerpt?: string;
   slug: string;
   writerName?: string;
-  type: "article" | "news";
+  type: ShareContentType;
 }
 
 export async function postToLinkedIn(opts: PostOptions): Promise<void> {
@@ -22,9 +22,7 @@ export async function postToLinkedIn(opts: PostOptions): Promise<void> {
     : null;
   if (!author) { console.error("LinkedIn: missing person/org ID"); return; }
 
-  const url = opts.type === "article"
-    ? `${BASE_URL}/articles/${opts.slug}`
-    : `${BASE_URL}/taqrir/${opts.slug}`;
+  const url = shareUrl(opts);
 
   const commentary = [
     opts.title,
@@ -74,7 +72,7 @@ export async function postToLinkedIn(opts: PostOptions): Promise<void> {
       const data = await res.json();
       console.error("LinkedIn post succeeded:", data.id);
     }
-  } catch (err: any) {
-    console.error("LinkedIn fetch error:", err.message);
+  } catch (err: unknown) {
+    console.error("LinkedIn fetch error:", err instanceof Error ? err.message : "Unknown error");
   }
 }

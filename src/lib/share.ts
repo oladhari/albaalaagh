@@ -5,15 +5,8 @@ import { postToX } from "@/lib/twitter";
 import { postToLinkedIn } from "@/lib/linkedin";
 // Add new SNS imports here ↑
 
-export interface ShareOptions {
-  title: string;
-  excerpt?: string;
-  slug: string;
-  writerName?: string;
-  type: "article" | "news";
-  facebook_image?: string | null; // Facebook + Instagram (news: 1:1 square; articles: cover)
-  image?: string | null;          // Telegram/X (news: image_url; articles: cover_image)
-}
+import type { ShareOptions } from "./share-options";
+export type { ShareOptions } from "./share-options";
 
 export async function shareToAll(opts: ShareOptions): Promise<void> {
   await Promise.allSettled([

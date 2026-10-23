@@ -18,8 +18,8 @@ describe("report content boundaries", () => {
     expect(html).not.toMatch(/evil\.example|javascript:|onerror|<script/);
   });
   it("uses stable report URLs for written and video reports", () => {
-    expect(articlePath({ slug: "budget", category: "تقارير" })).toBe("/reports/budget");
-    expect(articlePath({ slug: "film", category: "تقارير فيديو" })).toBe("/reports/film");
-    expect(articlePath({ slug: "essay", category: "سياسة" })).toBe("/articles/essay");
+    expect(articlePath({ id: "c8306fdb-205c-42a6-b071-ce859edcbaac", slug: "budget", category: "تقارير" })).toBe("/reports/budget");
+    expect(articlePath({ id: "c8306fdb-205c-42a6-b071-ce859edcbaac", slug: "film", category: "تقارير فيديو" })).toBe("/reports/film");
+    expect(articlePath({ id: "c8306fdb-205c-42a6-b071-ce859edcbaac", slug: "essay", category: "سياسة" })).toBe("/articles/essay");
   });
 });

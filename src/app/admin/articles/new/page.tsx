@@ -11,6 +11,7 @@ export default function NewArticlePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [writers, setWriters] = useState<{ id: string; name: string; image_url?: string | null }[]>([]);
+  const [thumbnailHeadline, setThumbnailHeadline] = useState<string[]>([]);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -47,13 +48,13 @@ export default function NewArticlePage() {
           title: form.title,
           excerpt: form.excerpt,
           target: "writer",
-          writerName: writer.name,
-          writerImageUrl: writer.image_url ?? null,
+          writerId: writer.id,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("cover_image", data.url);
+      setThumbnailHeadline(data.headlineLines ?? []);
     } finally {
       setGeneratingImage(false);
     }
@@ -243,6 +244,8 @@ export default function NewArticlePage() {
                   {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء بالذكاء الاصطناعي"}
                 </button>
               </div>
+              {thumbnailHeadline.length > 0 && <p className="text-xs text-gold mb-2">نص الغلاف للمراجعة: {thumbnailHeadline.join(" / ")}</p>}
+              <p className="text-xs text-text-muted mb-2">قالب المقالات: شعار يسارًا، صورة الكاتب الأصلية يمينًا، واسمه بالأحمر فوق العنوان.</p>
               <CoverUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}
