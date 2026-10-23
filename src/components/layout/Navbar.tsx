@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/interviews",    label: "المقابلات"    },
   { href: "/shorts",        label: "مقاطع"        },
   { href: "/news",          label: "الأخبار"      },
+  { href: "/reports", label: "تقارير" },
   { href: "/articles",      label: "المقالات"     },
   { href: "/qadaya-sharia", label: "قضايا شرعية"  },
   { href: "/guests",      label: "الضيوف"   },
@@ -40,7 +41,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href;
               return (
@@ -68,7 +69,7 @@ export default function Navbar() {
           {/* Support button — desktop */}
           <a
             href="/support"
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+            className="hidden xl:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
             style={{
               background: "linear-gradient(135deg, #C9A844, #9A7B28)",
               color: "#111008",
@@ -82,7 +83,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-md text-gold"
+            className="xl:hidden p-2 rounded-md text-gold"
             onClick={() => setOpen(!open)}
             aria-label="القائمة"
           >
@@ -93,7 +94,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden px-4 pb-4 space-y-1 border-t border-border">
+        <div className="xl:hidden px-4 pb-4 space-y-1 border-t border-border">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (

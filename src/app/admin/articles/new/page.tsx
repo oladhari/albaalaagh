@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
+import BodyMediaInserter from "@/components/admin/BodyMediaInserter";
 import CoverUpload from "@/components/admin/CoverUpload";
 
 export default function NewArticlePage() {
@@ -10,6 +11,7 @@ export default function NewArticlePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [writers, setWriters] = useState<{ id: string; name: string; image_url?: string | null }[]>([]);
+  const [thumbnailHeadline, setThumbnailHeadline] = useState<string[]>([]);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -22,6 +24,7 @@ export default function NewArticlePage() {
   });
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("category") === "report") setForm(prev => ({ ...prev, category: "تقارير" }));
     fetch("/api/admin/writers")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setWriters(data); })
@@ -45,13 +48,13 @@ export default function NewArticlePage() {
           title: form.title,
           excerpt: form.excerpt,
           target: "writer",
-          writerName: writer.name,
-          writerImageUrl: writer.image_url ?? null,
+          writerId: writer.id,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("cover_image", data.url);
+      setThumbnailHeadline(data.headlineLines ?? []);
     } finally {
       setGeneratingImage(false);
     }
@@ -169,6 +172,7 @@ export default function NewArticlePage() {
           </div>
 
           <div>
+            <BodyMediaInserter reports={form.category.startsWith("تقارير")} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
               rows={20}
@@ -240,6 +244,8 @@ export default function NewArticlePage() {
                   {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء بالذكاء الاصطناعي"}
                 </button>
               </div>
+              {thumbnailHeadline.length > 0 && <p className="text-xs text-gold mb-2">نص الغلاف للمراجعة: {thumbnailHeadline.join(" / ")}</p>}
+              <p className="text-xs text-text-muted mb-2">قالب المقالات: شعار يسارًا، صورة الكاتب الأصلية يمينًا، واسمه بالأحمر فوق العنوان.</p>
               <CoverUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}

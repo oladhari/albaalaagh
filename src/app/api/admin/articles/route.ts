@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
+import { articleShareOptions } from "@/lib/share-options";
 import { shareToAll } from "@/lib/share";
 
 export async function POST(req: NextRequest) {
@@ -42,14 +43,8 @@ export async function POST(req: NextRequest) {
     const writerRes = writer_id
       ? await supabaseAdmin.from("writers").select("name").eq("id", writer_id).single()
       : null;
-    const postOpts = {
-      title,
-      excerpt,
-      slug: data.slug,
-      writerName: writerRes?.data?.name,
-      type: "article" as const,
-    };
-    await shareToAll(postOpts);
+    const postOpts = articleShareOptions({ ...data, writer: writerRes?.data });
+    after(() => shareToAll(postOpts).catch(console.error));
   }
 
   return NextResponse.json(data, { status: 201 });

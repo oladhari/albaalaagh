@@ -1,17 +1,17 @@
+import { shareUrl, type ShareContentType } from "./share-options";
 import crypto from "crypto";
 
 const API_KEY            = process.env.X_API_KEY;
 const API_SECRET         = process.env.X_API_SECRET;
 const ACCESS_TOKEN       = process.env.X_ACCESS_TOKEN;
 const ACCESS_TOKEN_SECRET = process.env.X_ACCESS_TOKEN_SECRET;
-const BASE_URL           = "https://www.albaalaagh.com";
 
 interface PostOptions {
   title: string;
   excerpt?: string;
   slug: string;
   writerName?: string;
-  type: "article" | "news";
+  type: ShareContentType;
 }
 
 function buildAuthHeader(method: string, url: string): string {
@@ -48,9 +48,7 @@ function buildAuthHeader(method: string, url: string): string {
 export async function postToX(opts: PostOptions): Promise<void> {
   if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) return;
 
-  const url = opts.type === "article"
-    ? `${BASE_URL}/articles/${opts.slug}`
-    : `${BASE_URL}/taqrir/${opts.slug}`;
+  const url = shareUrl(opts);
 
   // X counts URLs as 23 chars regardless of length, and has a 280 char limit
   const excerpt = opts.excerpt ? opts.excerpt.slice(0, 100) : null;

@@ -1,13 +1,13 @@
+import { shareUrl, type ShareContentType } from "./share-options";
 const BOT_TOKEN  = process.env.TELEGRAM_BOT_TOKEN;
 const CHANNEL_ID = "@albaalaagh";
-const BASE_URL   = "https://www.albaalaagh.com";
 
 interface PostOptions {
   title: string;
   excerpt?: string;
   slug: string;
   writerName?: string;
-  type: "article" | "news";
+  type: ShareContentType;
   image?: string | null; // article cover / news image_url (not the 1:1 Facebook-only image)
 }
 
@@ -18,9 +18,7 @@ function esc(str: string): string {
 export async function postToTelegram(opts: PostOptions): Promise<void> {
   if (!BOT_TOKEN) return;
 
-  const url = opts.type === "article"
-    ? `${BASE_URL}/articles/${opts.slug}`
-    : `${BASE_URL}/taqrir/${opts.slug}`;
+  const url = shareUrl(opts);
 
   const caption = [
     `📰 <b>${esc(opts.title)}</b>`,

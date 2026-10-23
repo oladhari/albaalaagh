@@ -1,3 +1,4 @@
+import { shareUrl, type ShareContentType } from "./share-options";
 const PAGE_ID    = process.env.FB_PAGE_ID    ?? process.env.FB_PAGE2_ID;
 const PAGE_TOKEN = process.env.FB_PAGE_TOKEN ?? process.env.FB_PAGE2_TOKEN;
 const FB_API = "https://graph.facebook.com/v19.0";
@@ -7,7 +8,7 @@ interface PostOptions {
   excerpt?: string;
   slug: string;
   writerName?: string;
-  type?: "article" | "news";
+  type?: ShareContentType;
   facebook_image?: string | null;
 }
 
@@ -52,9 +53,7 @@ export async function postArticleToInstagram(opts: PostOptions): Promise<void> {
   const igUserId = await resolveIgUserId();
   if (!igUserId) return;
 
-  const url = opts.type === "news"
-    ? `https://www.albaalaagh.com/taqrir/${opts.slug}`
-    : `https://www.albaalaagh.com/articles/${opts.slug}`;
+  const url = shareUrl(opts);
 
   // No "link in comment" trick here (unlike Facebook) — Instagram doesn't
   // render links as clickable in captions or comments either way, and the

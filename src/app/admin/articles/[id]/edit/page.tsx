@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
+import BodyMediaInserter from "@/components/admin/BodyMediaInserter";
 import CoverUpload from "@/components/admin/CoverUpload";
 
 export default function EditArticlePage() {
@@ -12,6 +13,7 @@ export default function EditArticlePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [writers, setWriters] = useState<{ id: string; name: string; image_url?: string | null }[]>([]);
+  const [thumbnailHeadline, setThumbnailHeadline] = useState<string[]>([]);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>("draft");
   const [form, setForm] = useState({
@@ -65,13 +67,13 @@ export default function EditArticlePage() {
           title: form.title,
           excerpt: form.excerpt,
           target: "writer",
-          writerName: writer.name,
-          writerImageUrl: writer.image_url ?? null,
+          writerId: writer.id,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "خطأ في إنشاء الصورة"); return; }
       set("cover_image", data.url);
+      setThumbnailHeadline(data.headlineLines ?? []);
     } finally {
       setGeneratingImage(false);
     }
@@ -219,6 +221,7 @@ export default function EditArticlePage() {
           </div>
 
           <div>
+            <BodyMediaInserter reports={form.category.startsWith("تقارير")} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
               rows={20}
@@ -290,6 +293,8 @@ export default function EditArticlePage() {
                   {generatingImage ? "⏳ جاري الإنشاء..." : "🎨 إنشاء بالذكاء الاصطناعي"}
                 </button>
               </div>
+              {thumbnailHeadline.length > 0 && <p className="text-xs text-gold mb-2">نص الغلاف للمراجعة: {thumbnailHeadline.join(" / ")}</p>}
+              <p className="text-xs text-text-muted mb-2">قالب المقالات: شعار يسارًا، صورة الكاتب الأصلية يمينًا، واسمه بالأحمر فوق العنوان.</p>
               <CoverUpload currentUrl={form.cover_image} onUploaded={(url) => set("cover_image", url)} />
               <input
                 style={{ ...inputStyle, marginTop: 8, fontSize: 12 }}

@@ -334,3 +334,23 @@ function boundedString(value: unknown, min: number, max: number): string {
   if (trimmed.length < min || trimmed.length > max) throw new Error("Invalid string length");
   return trimmed;
 }
+
+export async function generateWriterThumbnailPlan(
+  input: { title: string; excerpt: string; writerName: string },
+  ai: AiProvider = createAiProvider(),
+): Promise<{ headlineLines: string[]; backgroundPrompt: string }> {
+  return ai.structured({
+    operation: "writer_thumbnail_plan", route: "/api/admin/images/generate", modelTier: "text", maxOutputTokens: 900,
+    instructions: `Prepare a thumbnail plan for an Arabic Albaalaagh writer article. Return 1–3 short, faithful Arabic headline lines, normally 2–3, each at most 38 characters. Preserve negation, attribution and uncertainty; never turn an allegation into a fact. Keep related words and number/unit pairs together. Do not change the article title. Use Western digits 0–9. backgroundPrompt describes ONE concrete, topic-specific cinematic editorial background with enough detail to explain the subject. Its image must contain NO text, lettering, logo, numbers, charts, maps, people or faces: authentic writer photograph, exact gold logo, burgundy nameplate and Arabic headline are composited separately. No invented evidence, verdicts, documents or meetings. Use charcoal, burgundy and gold where suitable; vary accents with the topic. ${UNTRUSTED_DATA_RULE}`,
+    input,
+    schemaName: "writer_thumbnail_plan",
+    schema: { type: "object", additionalProperties: false, required: ["headlineLines", "backgroundPrompt"], properties: { headlineLines: { type: "array", minItems: 1, maxItems: 3, items: { type: "string", minLength: 1, maxLength: 38 } }, backgroundPrompt: { type: "string", minLength: 20, maxLength: 2500 } } },
+    validate: value => {
+      const row = objectValue(value);
+      if (!Array.isArray(row.headlineLines) || row.headlineLines.length < 1 || row.headlineLines.length > 3) throw new Error("Invalid headline lines");
+      const headlineLines = row.headlineLines.map(line => boundedString(line, 1, 38));
+      if (headlineLines.some(line => /[<>\n\r]/.test(line))) throw new Error("Invalid headline markup");
+      return { headlineLines, backgroundPrompt: boundedString(row.backgroundPrompt, 20, 2500) };
+    },
+  });
+}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { generateNewsImage, generateFacebookImage, generateWriterArticleImage, type PersonPhoto } from "@/lib/ai-image";
 import { normalizeAiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
   if (unauthed) return unauthed;
 
-  const { title, excerpt, target, writerName, writerImageUrl, personPhotos } = await req.json().catch(() => ({}));
+  const { title, excerpt, target, writerId, personPhotos } = await req.json().catch(() => ({}));
   if (!title) {
     return NextResponse.json({ error: "العنوان مطلوب" }, { status: 400 });
   }
@@ -25,15 +26,18 @@ export async function POST(req: NextRequest) {
   try {
     let url: string;
     let failedPeople: string[] = [];
+    let headlineLines: string[] | undefined;
     if (target === "facebook") {
       ({ url, failedPeople } = await generateFacebookImage(title, excerpt ?? "", people));
     } else if (target === "writer") {
-      if (!writerName) return NextResponse.json({ error: "اسم الكاتب مطلوب" }, { status: 400 });
-      url = await generateWriterArticleImage(title, excerpt ?? "", writerName, writerImageUrl ?? null);
+      if (!writerId) return NextResponse.json({ error: "اختر الكاتب أولًا" }, { status: 400 });
+      const { data: writer } = await supabaseAdmin.from("writers").select("name,image_url").eq("id", writerId).single();
+      if (!writer?.image_url) return NextResponse.json({ error: "أضف صورة الكاتب إلى ملفه أولًا" }, { status: 400 });
+      ({ url, headlineLines } = await generateWriterArticleImage(title, excerpt ?? "", writer.name, writer.image_url));
     } else {
       ({ url, failedPeople } = await generateNewsImage(title, excerpt ?? "", people));
     }
-    return NextResponse.json({ url, failedPeople });
+    return NextResponse.json({ url, failedPeople, ...(headlineLines ? { headlineLines } : {}) });
   } catch (err: unknown) {
     const normalized = normalizeAiProviderError(err);
     const response = toAdminAiResponse(normalized);

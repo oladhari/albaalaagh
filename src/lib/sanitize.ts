@@ -51,3 +51,28 @@ export function formatAndSanitize(content: string): string {
   }
   return sanitizeHtml(html);
 }
+
+// Reports may embed videos only from YouTube's privacy-enhanced player.
+// Other article content retains the existing, stricter media policy.
+export function formatReportContent(content: string): string {
+  return sanitizeHtmlLib(content.replace(AI_ARTIFACT_RE, ""), {
+    allowedTags: [...ALLOWED_TAGS, "iframe"],
+    allowedAttributes: {
+      "*": ["class", "id", "dir", "lang", "role", "tabindex", "aria-label"],
+      a: ["href", "target", "rel", "title"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
+      td: ["colspan", "rowspan"], th: ["colspan", "rowspan", "scope"],
+      iframe: ["src", "title", "width", "height", "allowfullscreen", "loading", "referrerpolicy"],
+    },
+    allowedSchemes: ["https", "mailto"],
+    allowedIframeHostnames: ["www.youtube-nocookie.com"],
+    allowIframeRelativeUrls: false,
+    transformTags: {
+      a: (tagName, attribs) => ({ tagName, attribs: { ...attribs, ...(attribs.target === "_blank" ? { rel: "noopener noreferrer" } : {}) } }),
+      iframe: (_tagName, attribs) => {
+        const valid = /^https:\/\/www\.youtube-nocookie\.com\/embed\/[A-Za-z0-9_-]{11}(?:\?.*)?$/.test(attribs.src ?? "");
+        return valid ? { tagName: "iframe", attribs: { ...attribs, loading: "lazy", referrerpolicy: "strict-origin-when-cross-origin", allowfullscreen: "" } } : { tagName: "span", attribs: {} };
+      },
+    },
+  });
+}
