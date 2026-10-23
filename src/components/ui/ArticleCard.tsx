@@ -1,3 +1,4 @@
+import { articlePath, isReport } from "@/lib/reports";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
 import type { Article } from "@/types";
@@ -5,7 +6,7 @@ import type { Article } from "@/types";
 export default function ArticleCard({ article }: { article: Article }) {
   return (
     <Link
-      href={`/articles/${article.slug}`}
+      href={articlePath(article)}
       className="group block rounded-xl overflow-hidden card-hover bg-bg-card border border-border"
     >
       {/* Cover image */}
@@ -47,7 +48,7 @@ export default function ArticleCard({ article }: { article: Article }) {
           )}
           <div>
             <p className="text-xs font-medium text-gold-light" >
-              {article.writer ? article.writer.name : "البلاغ - فريق التحرير"}
+              {article.writer ? article.writer.name : isReport(article.category) ? "قناة البلاغ الرقمية" : "البلاغ - فريق التحرير"}
             </p>
             <p className="text-xs text-text-muted" >
               {formatArabicDate(article.published_at)}

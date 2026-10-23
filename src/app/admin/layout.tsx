@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 const NAV = [
   { href: "/admin",          label: "لوحة التحكم"   },
   { href: "/admin/news",     label: "قائمة الأخبار" },
+  { href: "/admin/reports", label: "التقارير" },
   { href: "/admin/articles", label: "المقالات"       },
   { href: "/admin/videos",    label: "الفيديوهات"     },
   { href: "/admin/playlists", label: "البرامج"         },

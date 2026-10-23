@@ -158,3 +158,25 @@ body {
 .article-prose ol { list-style: decimal; padding-right: 1.5rem; margin-bottom: 1.5rem; }
 .article-prose li { margin-bottom: 0.5rem; }
 .article-prose a { color: #C9A844; text-decoration: underline; }
+
+/* Reports retain the site's gold palette while keeping documents readable. */
+.report-page { min-width: 0; overflow-wrap: anywhere; }
+.report-draft { padding: 1rem; margin-bottom: 2rem; border: 1px solid #C9A844; border-radius: .75rem; background: #C9A84418; }
+.report-draft a { text-decoration: underline; }
+.report-prose { font-size: 1.12rem; line-height: 2; }
+.report-prose h2 { margin-top: 3rem; padding-bottom: .65rem; border-bottom: 1px solid var(--color-border); }
+.report-prose figure { margin: 2rem 0; }
+.report-prose figure img { display: block; width: 100%; height: auto; border-radius: .75rem; background: #fff; }
+.report-prose figcaption { font-size: .88rem; line-height: 1.8; color: var(--color-text-muted); margin-top: .75rem; }
+.report-prose .report-table { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--color-border); border-radius: .65rem; }
+.report-prose table { border-collapse: collapse; width: 100%; font-size: .92rem; line-height: 1.7; min-width: 480px; }
+.report-prose caption { text-align: right; font-weight: 700; padding: .85rem; color: var(--color-gold); }
+.report-prose th, .report-prose td { padding: .7rem .85rem; text-align: right; border-bottom: 1px solid var(--color-border); }
+.report-prose th { background: #C9A84418; }
+.report-prose td[dir="ltr"] { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.report-prose .report-download { display: inline-block; padding: .9rem 1.3rem; border-radius: .65rem; color: #111008; background: #C9A844; font-weight: 800; text-decoration: none; }
+.report-prose .report-note { border-right: 3px solid #C9A844; padding: 1rem; background: #C9A8440c; margin: 1.5rem 0; }
+.report-prose iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: .75rem; }
+.report-prose #sources li { margin-bottom: 1rem; font-size: .92rem; }
+@media (max-width: 640px) { .report-prose { font-size: 1rem; } .report-prose h2 { font-size: 1.4rem; } }
+.report-prose h2, .report-prose [id^="source-"] { scroll-margin-top: 6rem; }

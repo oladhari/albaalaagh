@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { articlePath } from "@/lib/reports";
 import { newsPath, videoPath } from "@/lib/public-urls";
 import { MetadataRoute } from "next";
 
@@ -16,6 +17,7 @@ type SitemapNews = {
 };
 
 type SitemapArticle = {
+  category: string;
   slug: string;
   published_at: string;
 };
@@ -67,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order("published_at", { ascending: false }),
     supabaseAdmin
       .from("articles")
-      .select("slug, published_at")
+      .select("slug, published_at, category")
       .eq("published", true)
       .order("published_at", { ascending: false }),
     getAllPublishedVideos(),
@@ -87,6 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE,                         ...(latestSiteContent ? { lastModified: latestSiteContent } : {}), changeFrequency: "daily",   priority: 1.0 },
     { url: `${BASE}/news`,               ...(latestNews ? { lastModified: latestNews } : {}),               changeFrequency: "daily",   priority: 0.9 },
     { url: `${BASE}/interviews`,         ...(latestVideo ? { lastModified: latestVideo } : {}),             changeFrequency: "daily",   priority: 0.9 },
+    { url: `${BASE}/reports`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/articles`,           ...(latestArticle ? { lastModified: latestArticle } : {}),         changeFrequency: "weekly",  priority: 0.8 },
     { url: `${BASE}/taqrir`,             ...(latestNews ? { lastModified: latestNews } : {}),               changeFrequency: "daily",   priority: 0.8 },
     { url: `${BASE}/qadaya-sharia`,      ...(latestArticle ? { lastModified: latestArticle } : {}),         changeFrequency: "weekly",  priority: 0.7 },
@@ -106,7 +109,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const articlePages: MetadataRoute.Sitemap = articles.map((a) => ({
-    url:             `${BASE}/articles/${a.slug}`,
+    url:             `${BASE}${articlePath(a)}`,
     lastModified:    new Date(a.published_at),
     changeFrequency: "never",
     priority:        0.8,

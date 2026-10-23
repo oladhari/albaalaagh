@@ -88,6 +88,7 @@ export default function Footer() {
               {[
                 ["/interviews",    "المقابلات"],
                 ["/news",          "الأخبار"],
+                ["/reports", "تقارير"],
                 ["/articles",      "المقالات"],
                 ["/qadaya-sharia", "قضايا شرعية"],
                 ["/guests",        "الضيوف"],

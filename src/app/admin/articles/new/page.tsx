@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ARTICLE_CATEGORIES } from "@/types";
+import BodyMediaInserter from "@/components/admin/BodyMediaInserter";
 import CoverUpload from "@/components/admin/CoverUpload";
 
 export default function NewArticlePage() {
@@ -22,6 +23,7 @@ export default function NewArticlePage() {
   });
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("category") === "report") setForm(prev => ({ ...prev, category: "تقارير" }));
     fetch("/api/admin/writers")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setWriters(data); })
@@ -169,6 +171,7 @@ export default function NewArticlePage() {
           </div>
 
           <div>
+            <BodyMediaInserter reports={form.category.startsWith("تقارير")} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
               rows={20}

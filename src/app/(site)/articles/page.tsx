@@ -16,6 +16,7 @@ async function getArticles() {
     .select("*, writer:writers(*)")
     .eq("status", "published")
     .neq("category", "دين")
+    .not("category", "in", '("تقارير","تقارير فيديو")')
     .order("published_at", { ascending: false })
     .limit(60);
   return data ?? [];
