@@ -1,3 +1,4 @@
+import { isProgrammeArticle } from "@/lib/programme-articles";
 import { articlePath, isReport } from "@/lib/reports";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
@@ -48,7 +49,7 @@ export default function ArticleCard({ article }: { article: Article }) {
           )}
           <div>
             <p className="text-xs font-medium text-gold-light" >
-              {article.writer ? article.writer.name : isReport(article.category) ? "قناة البلاغ الرقمية" : "البلاغ - فريق التحرير"}
+              {article.writer ? article.writer.name : isReport(article.category) || isProgrammeArticle(article.category) ? "قناة البلاغ الرقمية" : "البلاغ - فريق التحرير"}
             </p>
             <p className="text-xs text-text-muted" >
               {formatArabicDate(article.published_at)}

@@ -1,3 +1,4 @@
+import { isProgrammeArticle } from "@/lib/programme-articles";
 import { isReport, articlePath } from "@/lib/reports";
 import { redirect, notFound } from "next/navigation";
 import { headers } from "next/headers";
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const article = await getArticle(slug);
   if (!article) return {};
-  if (isReport(article.category)) return { alternates: { canonical: `https://www.albaalaagh.com${articlePath(article)}` } };
+  if (isReport(article.category) || isProgrammeArticle(article.category)) return { alternates: { canonical: `https://www.albaalaagh.com${articlePath(article)}` } };
 
   const base = "https://www.albaalaagh.com";
   const ogImage = article.cover_image
@@ -68,7 +69,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const article = await getArticle(slug);
 
   if (!article) notFound();
-  if (isReport(article.category)) redirect(articlePath(article));
+  if (isReport(article.category) || isProgrammeArticle(article.category)) redirect(articlePath(article));
 
   const base = "https://www.albaalaagh.com";
   const jsonLd = {

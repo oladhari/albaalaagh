@@ -102,7 +102,7 @@ export const SOCIAL_LINKS = [
 ] as const;
 
 export const ARTICLE_CATEGORIES = [
-  "سياسة", "دين", "فكر وفلسفة", "اقتصاد", "مجتمع", "ثقافة", "دولي", "تقارير", "تقارير فيديو"
+  "سياسة", "دين", "فكر وفلسفة", "اقتصاد", "مجتمع", "ثقافة", "دولي", "تقارير", "تقارير فيديو", "من برامجنا"
 ] as const;
 
 export const NEWS_CATEGORIES = [

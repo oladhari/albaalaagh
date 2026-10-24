@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/shorts",        label: "مقاطع"        },
   { href: "/news",          label: "الأخبار"      },
   { href: "/reports", label: "تقارير" },
+  { href: "/from-programmes", label: "من برامجنا" },
   { href: "/articles",      label: "المقالات"     },
   { href: "/qadaya-sharia", label: "قضايا شرعية"  },
   { href: "/guests",      label: "الضيوف"   },

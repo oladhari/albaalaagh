@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ProgrammeSourceInserter from "@/components/admin/ProgrammeSourceInserter";
+import { isProgrammeArticle } from "@/lib/programme-articles";
 import { ARTICLE_CATEGORIES } from "@/types";
 import BodyMediaInserter from "@/components/admin/BodyMediaInserter";
 import CoverUpload from "@/components/admin/CoverUpload";
@@ -221,7 +223,8 @@ export default function EditArticlePage() {
           </div>
 
           <div>
-            <BodyMediaInserter reports={form.category.startsWith("تقارير")} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
+            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter onInsert={html => setForm(prev => ({ ...prev, content: html + "\n" + prev.content }))} />}
+            <BodyMediaInserter reports={form.category.startsWith("تقارير") || isProgrammeArticle(form.category)} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
               rows={20}
