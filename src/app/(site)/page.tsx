@@ -1,3 +1,4 @@
+import { getHomePlaylists } from "@/lib/home-playlists";
 import { getHomeEditorialSections } from "@/lib/home-editorial";
 import Link from "next/link";
 import Script from "next/script";
@@ -28,45 +29,6 @@ async function getLatestNews() {
     .order("published_at", { ascending: false })
     .limit(6);
   return data ?? [];
-}
-
-async function getPlaylistsWithVideos() {
-  const [{ data: playlists }, { data: videos }] = await Promise.all([
-    supabaseAdmin.from("playlists").select("id, name").order("display_order", { ascending: true }),
-    supabaseAdmin
-      .from("site_videos")
-      .select("id, playlist_id, thumbnail_url, published_at")
-      .eq("published", true)
-      .not("playlist_id", "is", null)
-      .order("published_at", { ascending: false, nullsFirst: false }),
-  ]);
-
-  if (!playlists || !videos) return [];
-
-  // Group videos by playlist_id — videos are already newest-first so first hit = latest
-  const byPlaylist = new Map<string, { thumbnail: string | null; count: number; latestDate: string | null }>();
-  for (const v of videos) {
-    if (!v.playlist_id) continue;
-    if (!byPlaylist.has(v.playlist_id)) {
-      byPlaylist.set(v.playlist_id, { thumbnail: v.thumbnail_url, count: 0, latestDate: v.published_at });
-    }
-    byPlaylist.get(v.playlist_id)!.count++;
-  }
-
-  return playlists
-    .filter(p => byPlaylist.has(p.id))
-    .map(p => ({
-      id: p.id,
-      name: p.name,
-      thumbnail: byPlaylist.get(p.id)!.thumbnail,
-      count: byPlaylist.get(p.id)!.count,
-      latestDate: byPlaylist.get(p.id)!.latestDate,
-    }))
-    .sort((a, b) => {
-      if (!a.latestDate) return 1;
-      if (!b.latestDate) return -1;
-      return b.latestDate.localeCompare(a.latestDate);
-    });
 }
 
 async function getArticlesCount() {
@@ -106,7 +68,7 @@ export default async function HomePage() {
     getArticlesCount(),
     getInterviewsCount(),
     getPlaylistsCount(),
-    getPlaylistsWithVideos(),
+    getHomePlaylists(),
     fetchActiveLiveStream(),
     headers(),
   ]);

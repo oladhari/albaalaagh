@@ -1,3 +1,4 @@
+import { deduplicatePlaylistEpisodes } from "@/lib/playlist-episodes";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -32,7 +33,7 @@ async function getData(
   const playlists = (allPlaylists ?? []).filter(p => !SHORTS_PLAYLIST_IDS.includes(p.id));
 
   if (playlistId) {
-    // When filtering by playlist, load all matching episodes in that playlist (usually < 24)
+    // Selected programmes show their complete available archive.
     let plQuery = supabaseAdmin
       .from("site_videos")
       .select("id, title, description, video_url, thumbnail_url, published_at, playlist_id", { count: "exact" })
@@ -42,11 +43,17 @@ async function getData(
     if (dateFrom) plQuery = plQuery.gte("published_at", dateFrom);
     if (dateTo) plQuery = plQuery.lte("published_at", `${dateTo}T23:59:59`);
 
-    const { data: videos, count } = await plQuery
-      .order("published_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false });
-
-    return { playlists, videos: videos ?? [], totalCount: count ?? 0, page: 1, totalPages: 1 };
+    const ordered = plQuery.order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false }).order("id", { ascending: true });
+    const rows = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await ordered.range(from, from + 999);
+      if (error) throw new Error("تعذّر تحميل حلقات البرنامج");
+      rows.push(...(data ?? []));
+      if ((data?.length ?? 0) < 1000) break;
+    }
+    const videos = deduplicatePlaylistEpisodes(rows);
+    return { playlists, videos, totalCount: videos.length, page: 1, totalPages: 1 };
   }
 
   const from = (page - 1) * PAGE_SIZE;
