@@ -10,9 +10,12 @@ back to the UUID without hyphens.
 Create a draft through `/admin/from-programmes` or
 `/admin/articles/new?category=programme`. The existing editor provides a source
 card helper: programme, participants, broadcast date and full YouTube URL.
-It inserts escaped HTML plus the privacy-enhanced player into the article body.
-Source details remain editable in the body, so the existing table/API remains
-compatible. When replacing a card, edit/remove its previous HTML first.
+It stores the source fields in an encoded HTML comment around the source card
+and privacy-enhanced player inside the article body. The existing table/API
+remains compatible. Opening an article restores these fields; saving the article
+updates the existing card and player without duplication. Unchanged source
+fields preserve the original card wording and its location in the article.
+Source comments are removed by the public renderer’s sanitizer.
 
 The source broadcast date is independent of the article's publication date.
 Do not backdate a newly written article to the episode's date. Preserve each

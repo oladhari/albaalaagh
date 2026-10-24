@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { emptyProgrammeSource, readProgrammeSource, updateProgrammeSource } from "@/lib/programme-source";
 import ProgrammeSourceInserter from "@/components/admin/ProgrammeSourceInserter";
 import { isProgrammeArticle } from "@/lib/programme-articles";
 import { ARTICLE_CATEGORIES } from "@/types";
@@ -18,6 +19,7 @@ export default function EditArticlePage() {
   const [thumbnailHeadline, setThumbnailHeadline] = useState<string[]>([]);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>("draft");
+  const [programmeSource, setProgrammeSource] = useState(emptyProgrammeSource);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -45,6 +47,7 @@ export default function EditArticlePage() {
             ? article.published_at.slice(0, 16)
             : new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
         });
+        setProgrammeSource(readProgrammeSource(article.content ?? "") ?? emptyProgrammeSource());
         setCurrentStatus(article.status ?? "draft");
       }
       if (Array.isArray(writersList)) setWriters(writersList);
@@ -89,12 +92,14 @@ export default function EditArticlePage() {
     setSaving(true);
     setError(null);
     try {
+      const content = isProgrammeArticle(form.category) ? updateProgrammeSource(form.content, programmeSource) : form.content;
       const res = await fetch(`/api/admin/articles/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           ...form,
+          content,
           published: publish,
           status: publish ? "published" : "draft",
           published_at: publish
@@ -108,8 +113,8 @@ export default function EditArticlePage() {
         return;
       }
       router.push("/admin/articles");
-    } catch {
-      setError("تعذّر الاتصال بالخادم");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذّر الاتصال بالخادم");
     } finally {
       setSaving(false);
     }
@@ -223,7 +228,7 @@ export default function EditArticlePage() {
           </div>
 
           <div>
-            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter onInsert={html => setForm(prev => ({ ...prev, content: html + "\n" + prev.content }))} />}
+            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter source={programmeSource} onChange={setProgrammeSource} onInsert={() => setForm(prev => ({ ...prev, content: updateProgrammeSource(prev.content, programmeSource) }))} />}
             <BodyMediaInserter reports={form.category.startsWith("تقارير") || isProgrammeArticle(form.category)} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea

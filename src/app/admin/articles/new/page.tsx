@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { emptyProgrammeSource, updateProgrammeSource } from "@/lib/programme-source";
 import ProgrammeSourceInserter from "@/components/admin/ProgrammeSourceInserter";
 import { isProgrammeArticle } from "@/lib/programme-articles";
 import { ARTICLE_CATEGORIES } from "@/types";
@@ -15,6 +16,7 @@ export default function NewArticlePage() {
   const [writers, setWriters] = useState<{ id: string; name: string; image_url?: string | null }[]>([]);
   const [thumbnailHeadline, setThumbnailHeadline] = useState<string[]>([]);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [programmeSource, setProgrammeSource] = useState(emptyProgrammeSource);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -71,11 +73,12 @@ export default function NewArticlePage() {
     setSaving(true);
     setError(null);
     try {
+      const content = isProgrammeArticle(form.category) ? updateProgrammeSource(form.content, programmeSource) : form.content;
       const res = await fetch("/api/admin/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...form, published: publish }),
+        body: JSON.stringify({ ...form, content, published: publish }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,8 +86,8 @@ export default function NewArticlePage() {
         return;
       }
       router.push("/admin/articles");
-    } catch {
-      setError("تعذّر الاتصال بالخادم");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذّر الاتصال بالخادم");
     } finally {
       setSaving(false);
     }
@@ -175,7 +178,7 @@ export default function NewArticlePage() {
           </div>
 
           <div>
-            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter onInsert={html => setForm(prev => ({ ...prev, content: html + "\n" + prev.content }))} />}
+            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter source={programmeSource} onChange={setProgrammeSource} onInsert={() => setForm(prev => ({ ...prev, content: updateProgrammeSource(prev.content, programmeSource) }))} />}
             <BodyMediaInserter reports={form.category.startsWith("تقارير") || isProgrammeArticle(form.category)} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
