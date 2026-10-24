@@ -1,3 +1,4 @@
+import { articlePath } from "@/lib/reports";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
 
@@ -113,7 +114,7 @@ export default async function AdminArticlesPage({
                 {article.status === "published" && (
                   <>
                     <Link
-                      href={`/articles/${article.slug}`}
+                      href={articlePath(article)}
                       target="_blank"
                       className="px-3 py-1.5 rounded-lg text-xs font-medium border"
                       style={{ borderColor: "#2E2A18", color: "#9A9070" }}

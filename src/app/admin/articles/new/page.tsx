@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ProgrammeSourceInserter from "@/components/admin/ProgrammeSourceInserter";
+import { isProgrammeArticle } from "@/lib/programme-articles";
 import { ARTICLE_CATEGORIES } from "@/types";
 import BodyMediaInserter from "@/components/admin/BodyMediaInserter";
 import CoverUpload from "@/components/admin/CoverUpload";
@@ -24,7 +26,8 @@ export default function NewArticlePage() {
   });
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("category") === "report") setForm(prev => ({ ...prev, category: "تقارير" }));
+    const category = new URLSearchParams(window.location.search).get("category");
+    if (category === "report" || category === "programme") setForm(prev => ({ ...prev, category: category === "programme" ? "من برامجنا" : "تقارير" }));
     fetch("/api/admin/writers")
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setWriters(data); })
@@ -172,7 +175,8 @@ export default function NewArticlePage() {
           </div>
 
           <div>
-            <BodyMediaInserter reports={form.category.startsWith("تقارير")} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
+            {isProgrammeArticle(form.category) && <ProgrammeSourceInserter onInsert={html => setForm(prev => ({ ...prev, content: html + "\n" + prev.content }))} />}
+            <BodyMediaInserter reports={form.category.startsWith("تقارير") || isProgrammeArticle(form.category)} onInsert={(html) => setForm(prev => ({ ...prev, content: prev.content + html }))} />
             <label style={labelStyle}>محتوى المقال (HTML مدعوم) *</label>
             <textarea
               rows={20}

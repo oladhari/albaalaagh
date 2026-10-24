@@ -22,6 +22,13 @@ describe("publication dispatch boundaries", () => {
     await mocks.callbacks[0]();
     expect(mocks.share).toHaveBeenCalledWith(expect.objectContaining({ type: "report", slug: row.id.replaceAll("-", ""), facebook_image: row.cover_image, image: row.cover_image }));
   });
+  it("dispatches programme articles through the publication transition using their main cover", async () => {
+    const programme = { ...row, category: "من برامجنا", slug: "schoolTime202610" };
+    mocks.queue.push(result({ ...programme, published: false, status: "draft" }), result(programme));
+    await PATCH(req({ status: "published", published: true }, "PATCH"), { params: Promise.resolve({ id: row.id }) });
+    await mocks.callbacks[0]();
+    expect(mocks.share).toHaveBeenCalledWith(expect.objectContaining({ type: "programme", slug: "schoolTime202610", image: row.cover_image, facebook_image: row.cover_image }));
+  });
   it("never shares draft creation or published-content edits", async () => {
     mocks.queue.push(result({ ...row, published: false, status: "draft" }));
     await POST(req({ ...row, published: false, writer_id: null }));

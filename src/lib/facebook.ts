@@ -14,7 +14,8 @@ interface PostOptions {
 async function postPhotoWithComment(
   imageUrl: string,
   caption: string,
-  articleUrl: string
+  articleUrl: string,
+  programme = false
 ): Promise<void> {
   const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
     method: "POST",
@@ -34,7 +35,7 @@ async function postPhotoWithComment(
   const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: `🔗 اقرأ التقرير كاملاً:\n${articleUrl}`, access_token: PAGE_TOKEN }),
+    body: JSON.stringify({ message: `🔗 اقرأ ${programme ? "المقال" : "التقرير"} كاملاً:\n${articleUrl}`, access_token: PAGE_TOKEN }),
   });
   if (!commentRes.ok) {
     const err = await commentRes.json();
@@ -53,10 +54,10 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
       opts.type === "news" ? "\nللمزيد، رابط التقرير كاملاً في أول تعليق 👇" : null,
-      "\n#البلاغ #سياسة #تونس",
+      opts.type === "programme" ? "\n#البلاغ #من_برامجنا #تونس" : "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
-    await postPhotoWithComment(opts.facebook_image, caption, url);
+    await postPhotoWithComment(opts.facebook_image, caption, url, opts.type === "programme");
   } else {
     const message = [
       opts.title,

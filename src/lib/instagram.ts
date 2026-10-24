@@ -64,7 +64,7 @@ export async function postArticleToInstagram(opts: PostOptions): Promise<void> {
     opts.writerName ? `✍️ ${opts.writerName}` : null,
     opts.excerpt ? `\n${opts.excerpt}` : null,
     `\n🔗 ${url}`,
-    "\n#البلاغ #سياسة #تونس",
+    opts.type === "programme" ? "\n#البلاغ #من_برامجنا #تونس" : "\n#البلاغ #سياسة #تونس",
   ].filter(Boolean).join("\n").slice(0, 2200);
 
   const initRes = await fetch(`${FB_API}/${igUserId}/media`, {

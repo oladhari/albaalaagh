@@ -1,6 +1,7 @@
+import { isProgrammeArticle, programmeArticlePublicId } from "./programme-articles";
 import { isReport, reportPublicId } from "./reports";
 
-export type ShareContentType = "article" | "news" | "report";
+export type ShareContentType = "article" | "news" | "report" | "programme";
 export interface ShareOptions {
   title: string;
   excerpt?: string;
@@ -11,7 +12,7 @@ export interface ShareOptions {
   image?: string | null;
 }
 export function shareUrl(opts: { type?: ShareContentType; slug: string }): string {
-  const section = opts.type === "news" ? "taqrir" : opts.type === "report" ? "reports" : "articles";
+  const section = opts.type === "news" ? "taqrir" : opts.type === "report" ? "reports" : opts.type === "programme" ? "from-programmes" : "articles";
   return `https://www.albaalaagh.com/${section}/${opts.slug}`;
 }
 export interface ArticleShareRecord {
@@ -25,13 +26,14 @@ export interface ArticleShareRecord {
 }
 export function articleShareOptions(article: ArticleShareRecord): ShareOptions {
   const report = isReport(article.category);
+  const programme = isProgrammeArticle(article.category);
   return {
     title: article.title,
     excerpt: article.excerpt ?? "",
-    slug: report ? reportPublicId(article) : article.slug,
-    type: report ? "report" : "article",
-    writerName: article.writer?.name ?? (report ? "قناة البلاغ الرقمية" : undefined),
-    // Articles and reports share the main landscape cover. News keeps its own square asset.
+    slug: programme ? programmeArticlePublicId(article) : report ? reportPublicId(article) : article.slug,
+    type: programme ? "programme" : report ? "report" : "article",
+    writerName: article.writer?.name ?? (report || programme ? "قناة البلاغ الرقمية" : undefined),
+    // Editorial sections share their main landscape cover. News keeps its own square asset.
     facebook_image: article.cover_image || null,
     image: article.cover_image || null,
   };
