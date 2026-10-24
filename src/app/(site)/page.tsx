@@ -1,3 +1,4 @@
+import { getHomeEditorialSections } from "@/lib/home-editorial";
 import Link from "next/link";
 import Script from "next/script";
 import { headers } from "next/headers";
@@ -26,16 +27,6 @@ async function getLatestNews() {
     .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(6);
-  return data ?? [];
-}
-
-async function getLatestArticles() {
-  const { data } = await supabaseAdmin
-    .from("articles")
-    .select("*, writer:writers(*)")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(3);
   return data ?? [];
 }
 
@@ -109,9 +100,9 @@ function formatCount(n: number): string {
 }
 
 export default async function HomePage() {
-  const [news, articles, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream, requestHeaders] = await Promise.all([
+  const [news, editorialSections, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream, requestHeaders] = await Promise.all([
     getLatestNews(),
-    getLatestArticles(),
+    getHomeEditorialSections(),
     getArticlesCount(),
     getInterviewsCount(),
     getPlaylistsCount(),
@@ -255,25 +246,23 @@ export default async function HomePage() {
         <hr className="gold-separator" />
       </div>
 
-      {/* ── Latest Articles ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SectionHeader
-          title="أحدث المقالات"
-          subtitle="قراءات وتحليلات من أقلام متميزة"
-          linkHref="/articles"
-        />
-        {articles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {articles.map((article: any) => (
-              <ArticleCard key={article.id} article={article} />
-            ))}
+      {/* ── Editorial sections ── */}
+      {editorialSections.map(section => (
+        <section key={section.key} aria-labelledby={`editorial-${section.key}`} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div id={`editorial-${section.key}`}>
+            <SectionHeader title={section.title} subtitle={section.subtitle} linkHref={section.href} />
           </div>
-        ) : (
-          <div className="rounded-xl p-8 text-center bg-bg-card border border-border">
-            <p className="text-sm text-text-muted">لا توجد مقالات منشورة بعد</p>
-          </div>
-        )}
-      </section>
+          {section.articles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {section.articles.map(article => <ArticleCard key={article.id} article={article} />)}
+            </div>
+          ) : (
+            <div className="rounded-xl p-8 text-center bg-bg-card border border-border">
+              <p className="text-sm text-text-muted">لا توجد مواد منشورة في هذا القسم بعد</p>
+            </div>
+          )}
+        </section>
+      ))}
 
       {/* ── About banner ── */}
       <section className="py-12 bg-bg-card border-t border-border border-b border-border">
