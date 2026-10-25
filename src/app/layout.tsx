@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import CookieBanner from "@/components/ui/CookieBanner";
 import GoogleAnalytics from "@/components/ui/GoogleAnalytics";
 import "./globals.css";
+import { themeBootstrap } from "@/lib/theme";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -94,7 +95,8 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`} suppressHydrationWarning>
+      <head><script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
       <body className="min-h-full flex flex-col">
         <script
           nonce={nonce}

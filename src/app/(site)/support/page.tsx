@@ -55,7 +55,7 @@ export default function SupportPage() {
   }
 
   return (
-    <main className="min-h-screen" style={{ background: "#0D0B06" }} dir="rtl">
+    <main className="min-h-screen" style={{ background: "#111008" }} dir="rtl">
       {/* Hero */}
       <section className="max-w-4xl mx-auto px-4 pt-16 pb-10 text-center">
         <h1
@@ -80,22 +80,22 @@ export default function SupportPage() {
       {/* Costs transparency */}
       <section
         className="max-w-2xl mx-auto mx-4 sm:mx-auto px-4 mb-12 rounded-2xl p-6"
-        style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+        style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
       >
-        <h2 className="text-base font-bold mb-4" style={{ color: "#C9A844" }}>
+        <h2 className="text-base font-bold mb-4" style={{ color: "var(--color-gold)" }}>
           تكاليفنا الشهرية — بشفافية كاملة
         </h2>
         <div className="space-y-2">
           {COSTS.map((c) => (
             <div key={c.label} className="flex justify-between text-sm">
               <span style={{ color: "var(--color-text-muted)" }}>{c.label}</span>
-              <span className="font-bold" style={{ color: "#E8D5A3" }}>{c.amount}</span>
+              <span className="font-bold" style={{ color: "var(--color-gold-light)" }}>{c.amount}</span>
             </div>
           ))}
         </div>
         <div
           className="mt-4 pt-4 text-sm font-bold flex justify-between"
-          style={{ borderTop: "1px solid #2E2A18", color: "#C9A844" }}
+          style={{ borderTop: "1px solid var(--color-border)", color: "var(--color-gold)" }}
         >
           <span>المجموع التقني فقط</span>
           <span>~$173/شهر</span>
@@ -107,15 +107,15 @@ export default function SupportPage() {
 
       {/* Currency toggle */}
       <div className="flex justify-center mb-8">
-        <div className="flex rounded-full overflow-hidden" style={{ border: "1px solid #2E2A18" }}>
+        <div className="flex rounded-full overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
           {(["eur", "usd"] as Currency[]).map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
               className="px-5 py-2 text-sm font-bold transition-all"
               style={{
-                background: currency === c ? "#C9A844" : "#1A1810",
-                color:      currency === c ? "#0D0B06"  : "var(--color-text-muted)",
+                background: currency === c ? "#C9A844" : "var(--color-bg-card)",
+                color:      currency === c ? "#111008"  : "var(--color-text-muted)",
               }}
             >
               {c === "eur" ? "€ يورو" : "$ دولار"}
@@ -126,7 +126,7 @@ export default function SupportPage() {
 
       {/* Monthly plans */}
       <section className="max-w-4xl mx-auto px-4 mb-12">
-        <h2 className="text-center text-xl font-bold mb-6" style={{ color: "#E8D5A3" }}>
+        <h2 className="text-center text-xl font-bold mb-6" style={{ color: "var(--color-gold-light)" }}>
           اشتراك شهري
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -138,22 +138,22 @@ export default function SupportPage() {
                 key={key}
                 className="rounded-2xl p-6 flex flex-col"
                 style={{
-                  background: isPopular ? "linear-gradient(135deg, #1E1A0E, #2A2410)" : "#1A1810",
-                  border: isPopular ? "1px solid #C9A844" : "1px solid #2E2A18",
+                  background: isPopular ? "var(--color-bg-elevated)" : "var(--color-bg-card)",
+                  border: isPopular ? "1px solid #C9A844" : "1px solid var(--color-border)",
                   position: "relative",
                 }}
               >
                 {isPopular && (
                   <span
                     className="absolute -top-3 right-4 text-xs font-bold px-3 py-1 rounded-full"
-                    style={{ background: "#C9A844", color: "#0D0B06" }}
+                    style={{ background: "#C9A844", color: "#111008" }}
                   >
                     الأكثر اختياراً
                   </span>
                 )}
                 <div className="mb-4">
-                  <p className="text-lg font-black" style={{ color: "#C9A844" }}>{plan.nameAr}</p>
-                  <p className="text-3xl font-black mt-1" style={{ color: "#E8D5A3" }}>
+                  <p className="text-lg font-black" style={{ color: "var(--color-gold)" }}>{plan.nameAr}</p>
+                  <p className="text-3xl font-black mt-1" style={{ color: "var(--color-gold-light)" }}>
                     {symbol}{price}
                     <span className="text-sm font-normal" style={{ color: "var(--color-text-muted)" }}>/شهر</span>
                   </p>
@@ -161,7 +161,7 @@ export default function SupportPage() {
                 <ul className="space-y-2 flex-1 mb-6">
                   {plan.perks.map((perk) => (
                     <li key={perk} className="text-sm flex gap-2 items-start" style={{ color: "var(--color-text-muted)" }}>
-                      <span style={{ color: "#C9A844" }}>✓</span>
+                      <span style={{ color: "var(--color-gold)" }}>✓</span>
                       {perk}
                     </li>
                   ))}
@@ -172,7 +172,7 @@ export default function SupportPage() {
                   className="w-full py-3 rounded-xl font-bold text-sm transition-all"
                   style={{
                     background: isPopular ? "#C9A844" : "rgba(201,168,68,0.12)",
-                    color: isPopular ? "#0D0B06" : "#C9A844",
+                    color: isPopular ? "#111008" : "var(--color-gold)",
                     border: isPopular ? "none" : "1px solid rgba(201,168,68,0.3)",
                     opacity: loading === key ? 0.6 : 1,
                   }}
@@ -189,9 +189,9 @@ export default function SupportPage() {
       <section className="max-w-md mx-auto px-4 mb-16">
         <div
           className="rounded-2xl p-6"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
         >
-          <h2 className="text-xl font-bold mb-2" style={{ color: "#E8D5A3" }}>تبرع لمرة واحدة</h2>
+          <h2 className="text-xl font-bold mb-2" style={{ color: "var(--color-gold-light)" }}>تبرع لمرة واحدة</h2>
           <p className="text-sm mb-5" style={{ color: "var(--color-text-muted)" }}>بدون التزام شهري — مبلغ من اختيارك</p>
           <div className="mb-4">
             <label className="text-sm mb-2 block" style={{ color: "var(--color-text-muted)" }}>اختر المبلغ</label>
@@ -200,9 +200,9 @@ export default function SupportPage() {
               onChange={(e) => setOneTimeAmount(Number(e.target.value))}
               className="w-full rounded-xl px-4 py-3 text-sm font-bold"
               style={{
-                background: "#0D0B06",
-                border: "1px solid #2E2A18",
-                color: "#E8D5A3",
+                background: "#111008",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-gold-light)",
               }}
             >
               {ONE_TIME_AMOUNTS.map((a) => (
@@ -216,7 +216,7 @@ export default function SupportPage() {
             className="w-full py-3 rounded-xl font-bold text-sm transition-all"
             style={{
               background: "rgba(201,168,68,0.12)",
-              color: "#C9A844",
+              color: "var(--color-gold)",
               border: "1px solid rgba(201,168,68,0.3)",
               opacity: loading === "one_time" ? 0.6 : 1,
             }}
@@ -227,7 +227,7 @@ export default function SupportPage() {
       </section>
 
       {/* Footer note */}
-      <p className="text-center text-xs pb-12" style={{ color: "#3D3820" }}>
+      <p className="text-center text-xs pb-12" style={{ color: "var(--color-text-muted)" }}>
         المدفوعات مؤمّنة عبر Stripe · يمكنك إلغاء الاشتراك في أي وقت
       </p>
     </main>

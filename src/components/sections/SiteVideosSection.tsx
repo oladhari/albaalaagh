@@ -46,7 +46,7 @@ export default function SiteVideosSection({ videos, playlists }: Props) {
               className="px-4 py-1.5 rounded-full text-sm font-bold shrink-0 transition-all"
               style={{
                 background: activePlaylist === null ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "rgba(201,168,68,0.08)",
-                color: activePlaylist === null ? "#111008" : "#C9A844",
+                color: activePlaylist === null ? "#111008" : "var(--color-gold)",
                 border: "1px solid rgba(201,168,68,0.3)",
               }}
             >
@@ -59,7 +59,7 @@ export default function SiteVideosSection({ videos, playlists }: Props) {
                 className="px-4 py-1.5 rounded-full text-sm font-bold shrink-0 transition-all"
                 style={{
                   background: activePlaylist === p.id ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "rgba(201,168,68,0.08)",
-                  color: activePlaylist === p.id ? "#111008" : "#C9A844",
+                  color: activePlaylist === p.id ? "#111008" : "var(--color-gold)",
                   border: "1px solid rgba(201,168,68,0.3)",
                 }}
               >

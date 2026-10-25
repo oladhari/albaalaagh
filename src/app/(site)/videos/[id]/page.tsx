@@ -211,7 +211,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
       })()}
 
       {video.hashtags && (
-        <p className="text-sm mb-4" style={{ color: "#C9A844" }}>{video.hashtags}</p>
+        <p className="text-sm mb-4" style={{ color: "var(--color-gold)" }}>{video.hashtags}</p>
       )}
 
       <ShareButtons title={video.title} url={url} />

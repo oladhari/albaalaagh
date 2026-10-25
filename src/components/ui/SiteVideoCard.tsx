@@ -49,7 +49,7 @@ const innerContent = (title: string, description: string | null | undefined, thu
     <div className="p-4 flex flex-col flex-1">
       <h3
         className="font-black text-sm leading-snug mb-1 group-hover:text-[#C9A844] transition-colors line-clamp-2"
-        style={{ color: "#F0EAD6" }}
+        style={{ color: "var(--color-text)" }}
       >
         {title}
       </h3>
@@ -73,7 +73,7 @@ export default function SiteVideoCard({ id, title, description, video_url, thumb
   return (
     <div
       className="group text-right w-full rounded-2xl overflow-hidden flex flex-col card-hover relative"
-      style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
     >
       {/* Share link — appears on hover */}
       <Link

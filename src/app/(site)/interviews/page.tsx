@@ -116,7 +116,7 @@ export default async function InterviewsPage({
       {limited ? (
         <div
           className="rounded-2xl p-12 text-center"
-          style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+          style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
         >
           <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
             عدد كبير من الطلبات، الرجاء المحاولة بعد قليل.

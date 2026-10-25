@@ -82,7 +82,7 @@ export default function ShareButtons({ title, url }: ShareButtonsProps) {
         onClick={copyLink}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all"
         style={{
-          borderColor: copied ? "#6BCB77" : "#2E2A18",
+          borderColor: copied ? "#6BCB77" : "var(--color-border)",
           color: copied ? "#6BCB77" : "var(--color-text-muted)",
         }}
       >

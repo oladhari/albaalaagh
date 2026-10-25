@@ -46,7 +46,7 @@ export default function PlaylistsSection({ playlists }: Props) {
             key={pl.id}
             href={`/interviews?playlist=${pl.id}`}
             className="group block rounded-2xl overflow-hidden card-hover"
-            style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+            style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
           >
             {/* Thumbnail */}
             <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
@@ -70,7 +70,7 @@ export default function PlaylistsSection({ playlists }: Props) {
               {/* Episode count badge */}
               <span
                 className="absolute bottom-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ background: "rgba(17,16,8,0.85)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+                style={{ background: "rgba(17,16,8,0.85)", color: "#E8D5A3", border: "1px solid rgba(201,168,68,0.3)" }}
               >
                 {pl.count} حلقة
               </span>
@@ -80,7 +80,7 @@ export default function PlaylistsSection({ playlists }: Props) {
             <div className="px-3 py-2.5">
               <h3
                 className="text-sm font-black leading-snug line-clamp-2 transition-colors group-hover:text-[#C9A844]"
-                style={{ color: "#F0EAD6" }}
+                style={{ color: "var(--color-text)" }}
               >
                 {pl.name}
               </h3>
@@ -92,7 +92,7 @@ export default function PlaylistsSection({ playlists }: Props) {
         <Link
           href="/interviews"
           className="group block rounded-2xl overflow-hidden card-hover"
-          style={{ background: "#1A1810", border: "1px solid rgba(201,168,68,0.2)" }}
+          style={{ background: "var(--color-bg-card)", border: "1px solid rgba(201,168,68,0.2)" }}
         >
           <div className="relative overflow-hidden flex items-center justify-center" style={{ aspectRatio: "16/9", background: "rgba(201,168,68,0.05)" }}>
             <svg viewBox="0 0 24 24" className="w-10 h-10 transition-transform duration-200 group-hover:scale-110" fill="#C9A844" opacity="0.5">
@@ -100,7 +100,7 @@ export default function PlaylistsSection({ playlists }: Props) {
             </svg>
           </div>
           <div className="px-3 py-2.5">
-            <h3 className="text-sm font-black" style={{ color: "#C9A844" }}>عرض الكل</h3>
+            <h3 className="text-sm font-black" style={{ color: "var(--color-gold)" }}>عرض الكل</h3>
           </div>
         </Link>
       </div>

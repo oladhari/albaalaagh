@@ -21,7 +21,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-base font-bold mb-3 text-gold">1. مقدمة</h2>
           <p>
-            يلتزم موقع <strong style={{ color: "#F0EAD6" }}>البلاغ</strong> (
+            يلتزم موقع <strong style={{ color: "var(--color-text)" }}>البلاغ</strong> (
             <span className="text-text-muted">albaalaagh.com</span>) بحماية خصوصية زواره.
             تُوضّح هذه السياسة أنواع المعلومات التي نجمعها، وكيفية استخدامها،
             والخيارات المتاحة لك بشأنها. باستخدامك للموقع فأنت توافق على الشروط الواردة أدناه.
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
         <section>
           <h2 className="text-base font-bold mb-3 text-gold">3. الإعلانات — Google AdSense</h2>
           <p className="mb-3">
-            يستخدم الموقع <strong style={{ color: "#F0EAD6" }}>Google AdSense</strong> لعرض الإعلانات.
+            يستخدم الموقع <strong style={{ color: "var(--color-text)" }}>Google AdSense</strong> لعرض الإعلانات.
             قد تستخدم Google ملفات الارتباط لعرض إعلانات مبنية على زياراتك السابقة لهذا الموقع
             ومواقع أخرى على الإنترنت.
           </p>
@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p className="mt-3">
             لممارسة هذه الحقوق، تواصل معنا عبر{" "}
-            <a href="/contact" style={{ color: "#C9A844", textDecoration: "underline" }}>
+            <a href="/contact" style={{ color: "var(--color-gold)", textDecoration: "underline" }}>
               صفحة الاتصال
             </a>
             .
@@ -174,11 +174,11 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-base font-bold mb-3 text-gold" >12. التواصل معنا</h2>
           <p>
             لأي استفسار بشأن هذه السياسة، يمكنك التواصل معنا عبر{" "}
-            <a href="/contact" style={{ color: "#C9A844", textDecoration: "underline" }}>
+            <a href="/contact" style={{ color: "var(--color-gold)", textDecoration: "underline" }}>
               صفحة الاتصال
             </a>
             {" "}أو مباشرةً عبر البريد الإلكتروني:{" "}
-            <a href="mailto:contact@albaalaagh.com" style={{ color: "#C9A844", textDecoration: "underline" }}>
+            <a href="mailto:contact@albaalaagh.com" style={{ color: "var(--color-gold)", textDecoration: "underline" }}>
               contact@albaalaagh.com
             </a>
             .

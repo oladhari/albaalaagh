@@ -32,14 +32,14 @@ export default function SocialBar() {
               className="flex flex-col items-center gap-2 px-3 sm:px-4 py-3 rounded-xl transition-all duration-200 min-w-[60px] sm:min-w-[72px] bg-bg-card border border-border text-text-muted"
               style={{  }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#C9A844";
+                (e.currentTarget as HTMLElement).style.color = "var(--color-gold)";
                 (e.currentTarget as HTMLElement).style.borderColor = "#C9A844";
                 (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.06)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
-                (e.currentTarget as HTMLElement).style.borderColor = "#2E2A18";
-                (e.currentTarget as HTMLElement).style.background = "#1A1810";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
+                (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
               }}
             >
               {iconSvgs[s.icon]}

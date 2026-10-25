@@ -62,7 +62,7 @@ export default function Footer() {
   return (
     <footer
       className="mt-auto pt-12 pb-6 border-t border-border"
-      style={{ background: "#0D0C06" }}
+      style={{ background: "var(--site-footer)" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -103,7 +103,7 @@ export default function Footer() {
                   <Link
                     href={href}
                     className="text-sm transition-colors duration-200 text-text-muted"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#C9A844")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-gold)")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
                   >
                     {label}
@@ -115,7 +115,7 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>
+            <h3 className="text-sm font-bold mb-2" style={{ color: "var(--color-gold)" }}>
               النشرة البريدية
             </h3>
             <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>
@@ -139,12 +139,12 @@ export default function Footer() {
                   title={s.name}
                   className="p-2 rounded-lg transition-all duration-200 text-text-muted bg-bg-card"
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "#C9A844";
+                    (e.currentTarget as HTMLElement).style.color = "var(--color-gold)";
                     (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.1)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
-                    (e.currentTarget as HTMLElement).style.background = "#1A1810";
+                    (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
                   }}
                 >
                   <SocialIcon icon={s.icon} name={s.name} />
@@ -161,7 +161,7 @@ export default function Footer() {
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
-                  (e.currentTarget as HTMLElement).style.background = "#1A1810";
+                  (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
                 }}
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">

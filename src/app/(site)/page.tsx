@@ -102,7 +102,7 @@ export default async function HomePage() {
           <div className="lg:col-span-2">
             <div
               className="rounded-2xl overflow-hidden relative flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[280px] sm:min-h-[340px] border border-border"
-              style={{ background: "linear-gradient(135deg, #1A1810 0%, #111008 100%)",  }}
+              style={{ background: "linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg) 100%)",  }}
             >
               {/* Decorative corner */}
               <div
