@@ -51,9 +51,9 @@ function ShortCard({ video }: { video: Video }) {
           <PlayIcon />
         </div>
         <div className="absolute bottom-0 right-0 left-0 p-3">
-          <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: "var(--color-text)" }}>{video.title}</p>
+          <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: "#F2F0EB", textShadow: "0 1px 3px rgba(0,0,0,.8)" }}>{video.title}</p>
           {video.hashtags && (
-            <p className="text-xs mt-1 truncate" style={{ color: "var(--color-gold)" }}>{video.hashtags}</p>
+            <p className="text-xs mt-1 truncate" style={{ color: "#E8D5A3" }}>{video.hashtags}</p>
           )}
         </div>
       </div>
