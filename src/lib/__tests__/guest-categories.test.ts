@@ -11,7 +11,7 @@ it("finds the same guest under each of their professions", () => {
   expect(filterGuestCategory([], [guest], "دبلوماسي")).toEqual([]);
 });
 it("unifies programme and occasional guests in the unfiltered view and handles legacy categories", () => {
-  const programme = { category: ["وزير"] };
+  const programme: { category: string | string[] } = { category: ["وزير"] };
   const guest = { category: "محامٍ" };
   expect(filterGuestCategory([programme], [guest], null)).toEqual([programme, guest]);
   expect(guestCategories(guest)).toEqual(["محامٍ"]);
