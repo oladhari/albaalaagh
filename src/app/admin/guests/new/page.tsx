@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AvatarUpload from "@/components/admin/AvatarUpload";
 import { STAFF_ROLES } from "@/lib/staff-roles";
 
-const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "آخر"] as const;
+const CATEGORIES = ["وزير", "برلماني", "ناشط", "مفكر", "صحفي", "أكاديمي", "رجل دين", "رئيس دولة", "دبلوماسي", "قاضٍ", "محامٍ", "آخر"] as const;
 
 export default function NewGuestPage() {
   const router = useRouter();
