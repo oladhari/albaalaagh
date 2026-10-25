@@ -4,21 +4,21 @@
   --color-gold:         #C9A844;
   --color-gold-light:   #E8D5A3;
   --color-gold-dark:    #9A7B28;
-  --color-bg:           #111008;
-  --color-bg-card:      #1A1810;
-  --color-bg-elevated:  #221F12;
-  --color-border:       #2E2A18;
-  --color-text:         #F0EAD6;
-  --color-text-muted:   #9A9070;
-  --color-text-body:    #D4C9A8;
+  --color-bg:           #181818;
+  --color-bg-card:      #202020;
+  --color-bg-elevated:  #292929;
+  --color-border:       #383838;
+  --color-text:         #F2F0EB;
+  --color-text-muted:   #B8B5AE;
+  --color-text-body:    #E8E6E1;
   --color-success:      #6BCB77;
   --color-danger:       #FF6B6B;
   --font-arabic:        var(--font-cairo);
 }
 
 :root {
-  --background: #111008;
-  --foreground: #F0EAD6;
+  --background: #181818;
+  --foreground: #F2F0EB;
 }
 
 * {
@@ -93,8 +93,8 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #111008; }
-::-webkit-scrollbar-thumb { background: #2E2A18; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #181818; }
+::-webkit-scrollbar-thumb { background: #383838; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #C9A844; }
 
 /* Line clamp utilities */
@@ -150,10 +150,10 @@ body {
   border-right: 3px solid #C9A844;
   padding-right: 1.25rem;
   margin: 1.5rem 0;
-  color: #9A9070;
+  color: #B8B5AE;
   font-style: italic;
 }
-.article-prose strong { color: #E8D5A3; }
+.article-prose strong { color: var(--color-text); }
 .article-prose ul { list-style: disc; padding-right: 1.5rem; margin-bottom: 1.5rem; }
 .article-prose ol { list-style: decimal; padding-right: 1.5rem; margin-bottom: 1.5rem; }
 .article-prose li { margin-bottom: 0.5rem; }
@@ -174,7 +174,7 @@ body {
 .report-prose th, .report-prose td { padding: .7rem .85rem; text-align: right; border-bottom: 1px solid var(--color-border); }
 .report-prose th { background: #C9A84418; }
 .report-prose td[dir="ltr"] { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.report-prose .report-download { display: inline-block; padding: .9rem 1.3rem; border-radius: .65rem; color: #111008; background: #C9A844; font-weight: 800; text-decoration: none; }
+.report-prose .report-download { display: inline-block; padding: .9rem 1.3rem; border-radius: .65rem; color: #181818; background: #C9A844; font-weight: 800; text-decoration: none; }
 .report-prose .report-note { border-right: 3px solid #C9A844; padding: 1rem; background: #C9A8440c; margin: 1.5rem 0; }
 .report-prose iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: .75rem; }
 .report-prose #sources li { margin-bottom: 1rem; font-size: .92rem; }

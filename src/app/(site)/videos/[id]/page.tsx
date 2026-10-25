@@ -150,7 +150,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-sm mb-6 hover:opacity-70 transition-opacity"
-        style={{ color: "#9A9070" }}
+        style={{ color: "var(--color-text-muted)" }}
       >
         → العودة إلى الرئيسية
       </Link>
@@ -158,7 +158,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
       <div
         className="rounded-2xl overflow-hidden mb-6 mx-auto"
         style={{
-          background: "#111008",
+          background: "var(--color-bg)",
           maxWidth: video.video_type === "short" ? 400 : "100%",
         }}
       >
@@ -187,13 +187,13 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
 
       <h1
         className="text-xl sm:text-2xl font-black leading-snug mb-3"
-        style={{ color: "#F0EAD6" }}
+        style={{ color: "var(--color-text)" }}
       >
         {video.title}
       </h1>
 
       {video.published_at && (
-        <p className="text-xs mb-3" style={{ color: "#6B6448" }}>
+        <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>
           {formatArabicDate(video.published_at)}
         </p>
       )}
@@ -203,7 +203,7 @@ export default async function VideoPage({ params }: { params: Promise<{ id: stri
         return clean ? (
           <div
             className="text-sm leading-loose mb-3 whitespace-pre-wrap"
-            style={{ color: "#9A9070" }}
+            style={{ color: "var(--color-text-body)" }}
           >
             {clean}
           </div>
