@@ -107,7 +107,7 @@ export default async function AboutPage() {
 
       {/* Content blocks */}
       <div
-        className="space-y-10 text-base leading-loose text-text-body"
+        className="reading-paragraphs space-y-10 text-base leading-loose text-text-body"
         style={{ lineHeight: "2.2" }}
       >
         <div

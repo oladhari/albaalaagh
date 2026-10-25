@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
         آخر تحديث: يونيو 2026
       </p>
 
-      <div className="space-y-10 text-sm leading-loose text-text-body">
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose text-text-body">
 
         <section>
           <h2 className="text-base font-bold mb-3 text-gold">1. مقدمة</h2>

@@ -63,7 +63,7 @@ export default function EditorialPolicyPage() {
         آخر تحديث: أكتوبر 2026
       </p>
 
-      <div className="space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
         <section>
           <p>
             تشرح هذه الصفحة كيف يجمع فريق البلاغ المعلومات ويتحقق منها وينسبها إلى

@@ -16,7 +16,7 @@ export default function TermsOfUsePage() {
         آخر تحديث: يونيو 2026
       </p>
 
-      <div className="space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
 
         <section>
           <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>1. القبول بالشروط</h2>

@@ -180,3 +180,9 @@ body {
 .report-prose #sources li { margin-bottom: 1rem; font-size: .92rem; }
 @media (max-width: 640px) { .report-prose { font-size: 1rem; } .report-prose h2 { font-size: 1.4rem; } }
 .report-prose h2, .report-prose [id^="source-"] { scroll-margin-top: 6rem; }
+
+/* Justify reading paragraphs only; headings, lists and captions keep their alignment. */
+:where(.article-prose, .prose-ar, .reading-paragraphs) p {
+  text-align: justify;
+  text-align-last: start;
+}
