@@ -24,9 +24,6 @@ interface Guest {
   title?: string;
   image_url?: string;
   category: string | string[];
-  tier?: string;
-  program_name?: string;
-  program_names?: string[];
 }
 
 const isArabic = (name: string) => /[؀-ۿ]/.test(name[0] ?? "");
@@ -43,8 +40,6 @@ function sortGuests(list: Guest[]): Guest[] {
 
 function GuestCard({ guest }: { guest: Guest }) {
   const cats = getCategories(guest);
-  const programNames = guest.program_names?.filter(Boolean) ?? [];
-
 
   return (
     <div
@@ -67,7 +62,6 @@ function GuestCard({ guest }: { guest: Guest }) {
             {guest.name[0]}
           </div>
         )}
-
       </div>
       <p className="text-sm font-bold mt-3 leading-snug" style={{ color: "var(--color-text)" }}>
         {guest.name}
@@ -86,19 +80,6 @@ function GuestCard({ guest }: { guest: Guest }) {
         <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>
           {guest.title}
         </p>
-      )}
-      {programNames.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-1 mt-2">
-          {programNames.map((name) => (
-            <span
-              key={name}
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(201,168,68,0.12)", color: "var(--color-gold)", border: "1px solid rgba(201,168,68,0.3)" }}
-            >
-              {name}
-            </span>
-          ))}
-        </div>
       )}
     </div>
   );
