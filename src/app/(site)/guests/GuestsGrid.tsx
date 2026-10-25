@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { guestCategories as getCategories, filterGuestCategory } from "@/lib/guest-categories";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "رئيس دولة": "رؤساء دول",
   "وزير":      "وزراء",
   "برلماني":   "برلمانيون",
   "قاضٍ":      "قضاة",
+  "محامٍ":     "محامون",
   "دبلوماسي":  "دبلوماسيون",
   "ناشط":      "ناشطون",
   "مفكر":      "مفكرون",
@@ -27,12 +29,6 @@ interface Guest {
   program_names?: string[];
 }
 
-function getCategories(guest: Guest): string[] {
-  if (Array.isArray(guest.category)) return guest.category;
-  if (guest.category) return [guest.category];
-  return [];
-}
-
 const isArabic = (name: string) => /[؀-ۿ]/.test(name[0] ?? "");
 
 function sortGuests(list: Guest[]): Guest[] {
@@ -45,10 +41,10 @@ function sortGuests(list: Guest[]): Guest[] {
   });
 }
 
-function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) {
+function GuestCard({ guest }: { guest: Guest }) {
   const cats = getCategories(guest);
   const programNames = guest.program_names?.filter(Boolean) ?? [];
-  const badge = isProgram ? null : cats[0];
+
 
   return (
     <div
@@ -71,24 +67,27 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
             {guest.name[0]}
           </div>
         )}
-        {badge && (
-          <span
-            className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap font-medium"
-            style={{ background: "rgba(201,168,68,0.9)", color: "#111008" }}
-          >
-            {badge}
-          </span>
-        )}
+
       </div>
       <p className="text-sm font-bold mt-3 leading-snug" style={{ color: "var(--color-text)" }}>
         {guest.name}
       </p>
+      {cats.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1 mt-2" aria-label="تصنيفات الضيف">
+          {cats.map((category) => (
+            <span key={category} className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: "rgba(201,168,68,0.15)", color: "var(--color-gold)", border: "1px solid var(--color-border)" }}>
+              {category}
+            </span>
+          ))}
+        </div>
+      )}
       {guest.title && (
         <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>
           {guest.title}
         </p>
       )}
-      {isProgram && programNames.length > 0 && (
+      {programNames.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1 mt-2">
           {programNames.map((name) => (
             <span
@@ -109,38 +108,13 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
   const [active, setActive] = useState<string | null>(null);
 
   const filtered = sortGuests(
-    active ? guests.filter((g) => getCategories(g).includes(active)) : guests
+    filterGuestCategory(programs, guests, active)
   );
 
   return (
     <>
-      {/* ── برامج دورية ── */}
-      {programs.length > 0 && (
-        <section className="mb-14">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="text-lg font-black" style={{ color: "var(--color-gold)" }}>برامج دورية</h2>
-            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, var(--color-border))" }} />
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-            {[...programs]
-              .sort((a, b) => (b.program_names?.length ?? 0) - (a.program_names?.length ?? 0))
-              .map((guest) => (
-                <GuestCard key={guest.id} guest={guest} isProgram />
-              ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── ضيوف الحلقات ── */}
-      {guests.length > 0 && (
+      {(guests.length > 0 || programs.length > 0) && (
         <section>
-          {programs.length > 0 && (
-            <div className="flex items-center gap-4 mb-6">
-              <h2 className="text-lg font-black" style={{ color: "var(--color-gold)" }}>ضيوف الحلقات</h2>
-              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, var(--color-border))" }} />
-            </div>
-          )}
-
           {/* Category filter */}
           <div className="flex flex-wrap gap-2 mb-8">
             <button
@@ -148,7 +122,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
               style={{
                 borderColor: active === null ? "#C9A844" : "var(--color-border)",
-                color:       active === null ? "#C9A844" : "var(--color-text-muted)",
+                color:       active === null ? "var(--color-gold)" : "var(--color-text-muted)",
                 background:  active === null ? "rgba(201,168,68,0.08)" : "transparent",
               }}
             >
@@ -161,7 +135,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
                 style={{
                   borderColor: active === key ? "#C9A844" : "var(--color-border)",
-                  color:       active === key ? "#C9A844" : "var(--color-text-muted)",
+                  color:       active === key ? "var(--color-gold)" : "var(--color-text-muted)",
                   background:  active === key ? "rgba(201,168,68,0.08)" : "transparent",
                 }}
               >
