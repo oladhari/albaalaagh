@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
@@ -27,7 +28,7 @@ export default function Navbar() {
     <header
       className="sticky top-0 z-50 w-full border-b border-border"
       style={{
-        background: "rgba(17,16,8,0.92)",
+        background: "var(--site-header)",
         backdropFilter: "blur(12px)",
       }}
     >
@@ -55,10 +56,10 @@ export default function Navbar() {
                       : "text-text-muted border-b border-transparent"
                   }`}
                   onMouseEnter={(e) => {
-                    if (!active) (e.currentTarget as HTMLElement).style.color = "#E8D5A3";
+                    if (!active) (e.currentTarget as HTMLElement).style.color = "var(--color-gold-light)";
                   }}
                   onMouseLeave={(e) => {
-                    if (!active) (e.currentTarget as HTMLElement).style.color = "#9A9070";
+                    if (!active) (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
                   }}
                 >
                   {link.label}
@@ -66,6 +67,8 @@ export default function Navbar() {
               );
             })}
           </nav>
+
+          <ThemeToggle />
 
           {/* Support button — desktop */}
           <a

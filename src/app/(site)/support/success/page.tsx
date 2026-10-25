@@ -8,7 +8,7 @@ export default function SupportSuccessPage() {
   return (
     <main
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "#0D0B06" }}
+      style={{ background: "var(--color-bg)" }}
       dir="rtl"
     >
       <div className="text-center max-w-md">
@@ -20,19 +20,19 @@ export default function SupportSuccessPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="text-3xl font-black mb-3" style={{ color: "#E8D5A3" }}>
+        <h1 className="text-3xl font-black mb-3" style={{ color: "var(--color-gold-light)" }}>
           شكراً لدعمك!
         </h1>
-        <p className="text-base leading-loose mb-2" style={{ color: "#9A9070" }}>
+        <p className="text-base leading-loose mb-2" style={{ color: "var(--color-text-muted)" }}>
           دعمك يعني أننا نبقى مستقلين ونواصل عملنا.
         </p>
-        <p className="text-sm mb-8" style={{ color: "#6B6040" }}>
+        <p className="text-sm mb-8" style={{ color: "var(--color-text-muted)" }}>
           ستصلك النشرة الأسبوعية على بريدك الإلكتروني.
         </p>
         <a
           href="/"
           className="inline-block px-8 py-3 rounded-full font-bold text-sm"
-          style={{ background: "#C9A844", color: "#0D0B06" }}
+          style={{ background: "#C9A844", color: "var(--color-bg)" }}
         >
           العودة للموقع
         </a>

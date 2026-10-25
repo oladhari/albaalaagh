@@ -10,7 +10,7 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
       target="_blank"
       rel="noopener noreferrer"
       className="group flex flex-col rounded-xl overflow-hidden card-hover"
-      style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
     >
       {/* Cover image or gradient placeholder */}
       <div className="overflow-hidden shrink-0" style={{ aspectRatio: "16/9" }}>
@@ -23,14 +23,14 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
             onError={(e) => {
               const parent = (e.currentTarget as HTMLImageElement).parentElement;
               if (parent) {
-                parent.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1810,#2E2A18);font-size:2.5rem;font-weight:900;color:#C9A844">${initial}</div>`;
+                parent.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--color-bg-card),var(--color-border));font-size:2.5rem;font-weight:900;color:#C9A844">${initial}</div>`;
               }
             }}
           />
         ) : (
           <div
             className="w-full h-full flex items-center justify-center text-5xl font-black"
-            style={{ background: "linear-gradient(135deg, #1A1810, #2E2A18)", color: "#C9A844" }}
+            style={{ background: "linear-gradient(135deg, var(--color-bg-card), var(--color-border))", color: "var(--color-gold)" }}
           >
             {initial}
           </div>
@@ -42,11 +42,11 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
         <div className="flex items-center justify-between mb-2">
           <span
             className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844" }}
+            style={{ background: "rgba(201,168,68,0.12)", color: "var(--color-gold)" }}
           >
             {article.writer_name}
           </span>
-          <span className="text-xs" style={{ color: "#9A9070" }}>
+          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
             {timeAgo(article.published_at)}
           </span>
         </div>
@@ -54,14 +54,14 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
         {/* Title */}
         <h3
           className="font-bold text-sm leading-snug line-clamp-3 mb-2 group-hover:text-[#C9A844] transition-colors flex-1"
-          style={{ color: "#F0EAD6" }}
+          style={{ color: "var(--color-text)" }}
         >
           {article.title}
         </h3>
 
         {/* Source domain */}
         {article.source && (
-          <p className="text-xs mt-auto" style={{ color: "#9A9070" }}>
+          <p className="text-xs mt-auto" style={{ color: "var(--color-text-muted)" }}>
             {article.source} ↗
           </p>
         )}

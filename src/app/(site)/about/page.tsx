@@ -107,7 +107,7 @@ export default async function AboutPage() {
 
       {/* Content blocks */}
       <div
-        className="space-y-10 text-base leading-loose text-text-body"
+        className="reading-paragraphs space-y-10 text-base leading-loose text-text-body"
         style={{ lineHeight: "2.2" }}
       >
         <div
@@ -172,7 +172,7 @@ export default async function AboutPage() {
           <div
             className="flex-1 h-px"
             style={{
-              background: "linear-gradient(to left, transparent, #2E2A18)",
+              background: "linear-gradient(to left, transparent, var(--color-border))",
             }}
           />
         </div>
@@ -266,7 +266,7 @@ export default async function AboutPage() {
                   className="flex-1 h-px"
                   style={{
                     background:
-                      "linear-gradient(to left, transparent, #2E2A18)",
+                      "linear-gradient(to left, transparent, var(--color-border))",
                   }}
                 />
               </div>

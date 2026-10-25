@@ -22,7 +22,7 @@ export default function NewsletterForm() {
 
   if (state === "done") {
     return (
-      <p style={{ color: "#4ade80", fontSize: "14px", fontWeight: "600" }}>
+      <p style={{ color: "var(--color-success)", fontSize: "14px", fontWeight: "600" }}>
         ✓ تم تسجيلك في النشرة البريدية
       </p>
     );
@@ -39,11 +39,11 @@ export default function NewsletterForm() {
         disabled={state === "loading"}
         style={{
           flex:         "1 1 180px",
-          background:   "#0D0B06",
-          border:       "1px solid #2E2A18",
+          background:   "var(--color-bg)",
+          border:       "1px solid var(--color-border)",
           borderRadius: "8px",
           padding:      "8px 12px",
-          color:        "#E8D5A3",
+          color:        "var(--color-gold-light)",
           fontSize:     "13px",
           outline:      "none",
           direction:    "ltr",
@@ -67,7 +67,7 @@ export default function NewsletterForm() {
         {state === "loading" ? "..." : "اشترك"}
       </button>
       {state === "error" && (
-        <p style={{ width: "100%", color: "#FF6B6B", fontSize: "12px", margin: "4px 0 0" }}>
+        <p style={{ width: "100%", color: "var(--color-danger)", fontSize: "12px", margin: "4px 0 0" }}>
           حدث خطأ، حاول مجدداً
         </p>
       )}

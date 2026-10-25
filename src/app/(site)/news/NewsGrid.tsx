@@ -37,8 +37,8 @@ function CategoryFilter({ active, onChange }: { active: string; onChange: (c: st
           onClick={() => onChange(cat)}
           className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
           style={{
-            borderColor: active === cat ? "#C9A844" : "#2E2A18",
-            color:       active === cat ? "#C9A844" : "#9A9070",
+            borderColor: active === cat ? "#C9A844" : "var(--color-border)",
+            color:       active === cat ? "#C9A844" : "var(--color-text-muted)",
             background:  active === cat ? "rgba(201,168,68,0.08)" : "transparent",
           }}
         >
@@ -57,7 +57,7 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
   return (
     <div className="flex items-center justify-center gap-2 mt-10 flex-wrap">
       {page > 1 && (
-        <Link href={`/news?geo=${geo}&page=${page - 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "#2E2A18" }}>
+        <Link href={`/news?geo=${geo}&page=${page - 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "var(--color-border)" }}>
           السابق
         </Link>
       )}
@@ -65,11 +65,11 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
         const prev = visible[i - 1];
         return (
           <span key={p} className="flex items-center gap-2">
-            {prev && p - prev > 1 && <span style={{ color: "#9A9070" }}>…</span>}
+            {prev && p - prev > 1 && <span style={{ color: "var(--color-text-muted)" }}>…</span>}
             <Link
               href={`/news?geo=${geo}&page=${p}`}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold border transition-all"
-              style={{ borderColor: p === page ? "#C9A844" : "#2E2A18", color:       p === page ? "#C9A844" : "#9A9070", background:  p === page ? "rgba(201, 168, 68, 0.08)" : "transparent",  }}
+              style={{ borderColor: p === page ? "#C9A844" : "var(--color-border)", color:       p === page ? "#C9A844" : "var(--color-text-muted)", background:  p === page ? "rgba(201, 168, 68, 0.08)" : "transparent",  }}
             >
               {p}
             </Link>
@@ -77,7 +77,7 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
         );
       })}
       {page < totalPages && (
-        <Link href={`/news?geo=${geo}&page=${page + 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "#2E2A18" }}>
+        <Link href={`/news?geo=${geo}&page=${page + 1}`} className="px-4 py-2 rounded-lg text-sm border transition-all hover:opacity-80 text-text-muted" style={{ borderColor: "var(--color-border)" }}>
           التالي
         </Link>
       )}
@@ -122,7 +122,7 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
                 <div className="flex items-center gap-3 mb-5">
                   <span className="text-lg">{meta.flag}</span>
                   <h2 className="text-xl font-black text-gold" >{meta.label}</h2>
-                  <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #2E2A18, transparent)" }} />
+                  <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, var(--color-border), transparent)" }} />
                   <span className="text-xs text-text-muted" >
                     {items.length} خبر — آخر {cutoffDays} أيام
                   </span>
@@ -141,7 +141,7 @@ function DefaultView({ articles, totalByGeo, cutoffDays }: DefaultProps) {
                   <div className="mt-5 flex items-center justify-between">
                     {olderCount > 0 && (
                       <p className="text-sm text-text-muted" >
-                        و <span style={{ color: "#C9A844" }}>{olderCount}</span> خبراً في الأرشيف
+                        و <span style={{ color: "var(--color-gold)" }}>{olderCount}</span> خبراً في الأرشيف
                       </p>
                     )}
                     <Link

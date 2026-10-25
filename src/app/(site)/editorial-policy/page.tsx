@@ -56,14 +56,14 @@ const sections = [
 export default function EditorialPolicyPage() {
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16" dir="rtl">
-      <h1 className="text-3xl font-black mb-2" style={{ color: "#F0EAD6" }}>
+      <h1 className="text-3xl font-black mb-2" style={{ color: "var(--color-text)" }}>
         السياسة التحريرية والتصحيح
       </h1>
-      <p className="text-sm mb-10" style={{ color: "#9A9070" }}>
+      <p className="text-sm mb-10" style={{ color: "var(--color-text-muted)" }}>
         آخر تحديث: أكتوبر 2026
       </p>
 
-      <div className="space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "var(--color-text-body)" }}>
         <section>
           <p>
             تشرح هذه الصفحة كيف يجمع فريق البلاغ المعلومات ويتحقق منها وينسبها إلى
@@ -74,7 +74,7 @@ export default function EditorialPolicyPage() {
 
         {sections.map((section, index) => (
           <section key={section.title}>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>
+            <h2 className="text-base font-bold mb-3" style={{ color: "var(--color-gold)" }}>
               {index + 1}. {section.title}
             </h2>
             <div className="space-y-3">
@@ -86,19 +86,19 @@ export default function EditorialPolicyPage() {
         ))}
 
         <section>
-          <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>
+          <h2 className="text-base font-bold mb-3" style={{ color: "var(--color-gold)" }}>
             7. الإبلاغ عن خطأ
           </h2>
           <p>
             إذا لاحظت خطأً في مادة منشورة، أرسل رابط الصفحة وشرحاً مختصراً عبر{" "}
-            <Link href="/contact" className="underline" style={{ color: "#C9A844" }}>
+            <Link href="/contact" className="underline" style={{ color: "var(--color-gold)" }}>
               صفحة التواصل
             </Link>
             {" "}أو إلى{" "}
             <a
               href="mailto:contact@albaalaagh.com"
               className="underline"
-              style={{ color: "#C9A844" }}
+              style={{ color: "var(--color-gold)" }}
             >
               contact@albaalaagh.com
             </a>

@@ -62,7 +62,7 @@ export default function Footer() {
   return (
     <footer
       className="mt-auto pt-12 pb-6 border-t border-border"
-      style={{ background: "#0D0C06" }}
+      style={{ background: "var(--site-footer)" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -103,8 +103,8 @@ export default function Footer() {
                   <Link
                     href={href}
                     className="text-sm transition-colors duration-200 text-text-muted"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#C9A844")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#9A9070")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-gold)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
                   >
                     {label}
                   </Link>
@@ -115,10 +115,10 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-sm font-bold mb-2" style={{ color: "#C9A844" }}>
+            <h3 className="text-sm font-bold mb-2" style={{ color: "var(--color-gold)" }}>
               النشرة البريدية
             </h3>
-            <p className="text-xs mb-3" style={{ color: "#6B6040" }}>
+            <p className="text-xs mb-3" style={{ color: "var(--color-text-muted)" }}>
               أحدث الحلقات والمقالات كل أسبوع
             </p>
             <NewsletterForm />
@@ -139,12 +139,12 @@ export default function Footer() {
                   title={s.name}
                   className="p-2 rounded-lg transition-all duration-200 text-text-muted bg-bg-card"
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "#C9A844";
+                    (e.currentTarget as HTMLElement).style.color = "var(--color-gold)";
                     (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.1)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "#9A9070";
-                    (e.currentTarget as HTMLElement).style.background = "#1A1810";
+                    (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
+                    (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
                   }}
                 >
                   <SocialIcon icon={s.icon} name={s.name} />
@@ -160,8 +160,8 @@ export default function Footer() {
                   (e.currentTarget as HTMLElement).style.background = "rgba(232,129,58,0.1)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = "#9A9070";
-                  (e.currentTarget as HTMLElement).style.background = "#1A1810";
+                  (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
+                  (e.currentTarget as HTMLElement).style.background = "var(--color-bg-card)";
                 }}
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -178,7 +178,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             <a href="/feed.xml" className="flex items-center gap-1.5 transition-colors text-text-muted"
               onMouseEnter={(e) => (e.currentTarget.style.color = "#E8813A")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#9A9070")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
                 <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>

@@ -36,14 +36,14 @@ export default function CookieBanner() {
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-50 px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
-      style={{ background: "#1A1810", borderTop: "1px solid #2E2A18" }}
+      style={{ background: "var(--color-bg-card)", borderTop: "1px solid var(--color-border)" }}
       dir="rtl"
     >
-      <p className="text-xs leading-relaxed text-center sm:text-right" style={{ color: "#9A9070" }}>
+      <p className="text-xs leading-relaxed text-center sm:text-right" style={{ color: "var(--color-text-muted)" }}>
         نستخدم ملفات ارتباط اختيارية لقياس أداء الموقع عبر Google Analytics. يمكنك قبولها أو
         متابعة التصفح من دون تفعيلها. تُدار موافقات إعلانات Google، عند انطباقها، عبر رسالة
         الخصوصية المعتمدة من Google. راجع{" "}
-        <Link href="/privacy-policy" className="underline" style={{ color: "#C9A844" }}>
+        <Link href="/privacy-policy" className="underline" style={{ color: "var(--color-gold)" }}>
           سياسة الخصوصية
         </Link>
         .
@@ -52,7 +52,7 @@ export default function CookieBanner() {
         <button
           onClick={() => choose("rejected")}
           className="px-5 py-2 rounded-full text-xs font-bold transition-opacity hover:opacity-80"
-          style={{ border: "1px solid #9A9070", color: "#F0EAD6" }}
+          style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
         >
           متابعة دون تحليلات
         </button>

@@ -53,7 +53,7 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
   return (
     <div
       className="group rounded-xl p-4 text-center card-hover"
-      style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
+      style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
     >
       <div className="relative mb-3">
         {guest.image_url ? (
@@ -61,12 +61,12 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
             src={guest.image_url}
             alt={guest.name}
             className="w-20 h-20 rounded-full object-cover mx-auto transition-transform duration-300 group-hover:scale-105"
-            style={{ border: "2px solid #2E2A18" }}
+            style={{ border: "2px solid var(--color-border)" }}
           />
         ) : (
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold mx-auto"
-            style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
+            style={{ background: "rgba(201,168,68,0.15)", color: "var(--color-gold)" }}
           >
             {guest.name[0]}
           </div>
@@ -80,11 +80,11 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
           </span>
         )}
       </div>
-      <p className="text-sm font-bold mt-3 leading-snug" style={{ color: "#F0EAD6" }}>
+      <p className="text-sm font-bold mt-3 leading-snug" style={{ color: "var(--color-text)" }}>
         {guest.name}
       </p>
       {guest.title && (
-        <p className="text-xs mt-1 line-clamp-2" style={{ color: "#9A9070" }}>
+        <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>
           {guest.title}
         </p>
       )}
@@ -94,7 +94,7 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
             <span
               key={name}
               className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(201,168,68,0.12)", color: "#C9A844", border: "1px solid rgba(201,168,68,0.3)" }}
+              style={{ background: "rgba(201,168,68,0.12)", color: "var(--color-gold)", border: "1px solid rgba(201,168,68,0.3)" }}
             >
               {name}
             </span>
@@ -118,8 +118,8 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
       {programs.length > 0 && (
         <section className="mb-14">
           <div className="flex items-center gap-4 mb-6">
-            <h2 className="text-lg font-black" style={{ color: "#C9A844" }}>برامج دورية</h2>
-            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
+            <h2 className="text-lg font-black" style={{ color: "var(--color-gold)" }}>برامج دورية</h2>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, var(--color-border))" }} />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {[...programs]
@@ -136,8 +136,8 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
         <section>
           {programs.length > 0 && (
             <div className="flex items-center gap-4 mb-6">
-              <h2 className="text-lg font-black" style={{ color: "#C9A844" }}>ضيوف الحلقات</h2>
-              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, #2E2A18)" }} />
+              <h2 className="text-lg font-black" style={{ color: "var(--color-gold)" }}>ضيوف الحلقات</h2>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, var(--color-border))" }} />
             </div>
           )}
 
@@ -147,8 +147,8 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
               onClick={() => setActive(null)}
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
               style={{
-                borderColor: active === null ? "#C9A844" : "#2E2A18",
-                color:       active === null ? "#C9A844" : "#9A9070",
+                borderColor: active === null ? "#C9A844" : "var(--color-border)",
+                color:       active === null ? "#C9A844" : "var(--color-text-muted)",
                 background:  active === null ? "rgba(201,168,68,0.08)" : "transparent",
               }}
             >
@@ -160,8 +160,8 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
                 onClick={() => setActive(active === key ? null : key)}
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
                 style={{
-                  borderColor: active === key ? "#C9A844" : "#2E2A18",
-                  color:       active === key ? "#C9A844" : "#9A9070",
+                  borderColor: active === key ? "#C9A844" : "var(--color-border)",
+                  color:       active === key ? "#C9A844" : "var(--color-text-muted)",
                   background:  active === key ? "rgba(201,168,68,0.08)" : "transparent",
                 }}
               >
@@ -172,7 +172,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
 
           {filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-sm" style={{ color: "#9A9070" }}>لا يوجد ضيوف في هذا التصنيف</p>
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>لا يوجد ضيوف في هذا التصنيف</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">

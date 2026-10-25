@@ -38,7 +38,7 @@ export default function LiveBanner({ liveStream }: Props) {
             🔴 بث مباشر
           </span>
 
-          <span className="text-sm flex-1 text-right truncate" style={{ color: "#9A9070" }}>
+          <span className="text-sm flex-1 text-right truncate" style={{ color: "var(--color-text-muted)" }}>
             {liveStream.title}
           </span>
 

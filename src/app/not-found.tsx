@@ -14,10 +14,10 @@ export default function NotFound() {
       >
         404
       </p>
-      <h1 className="text-2xl font-black mb-2" style={{ color: "#F0EAD6" }}>
+      <h1 className="text-2xl font-black mb-2" style={{ color: "var(--color-text)" }}>
         الصفحة غير موجودة
       </h1>
-      <p className="text-sm mb-8" style={{ color: "#9A9070" }}>
+      <p className="text-sm mb-8" style={{ color: "var(--color-text-muted)" }}>
         الصفحة التي تبحث عنها غير موجودة أو تمت إزالتها
       </p>
       <Link

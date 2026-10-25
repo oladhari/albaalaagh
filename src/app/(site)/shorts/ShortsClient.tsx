@@ -32,7 +32,7 @@ function PlayIcon() {
 function ShortCard({ video }: { video: Video }) {
   return (
     <Link href={videoPath(video.id)} className="group block">
-      <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "9/16", background: "#1A1810" }}>
+      <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "9/16", background: "var(--color-bg-card)" }}>
         {video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
@@ -40,7 +40,7 @@ function ShortCard({ video }: { video: Video }) {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: "#2E2A18" }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--color-border)" }}>
             <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none">
               <polygon points="5,3 19,12 5,21" fill="#C9A844" />
             </svg>
@@ -51,9 +51,9 @@ function ShortCard({ video }: { video: Video }) {
           <PlayIcon />
         </div>
         <div className="absolute bottom-0 right-0 left-0 p-3">
-          <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: "#F0EAD6" }}>{video.title}</p>
+          <p className="text-xs font-bold leading-snug line-clamp-2" style={{ color: "#F2F0EB", textShadow: "0 1px 3px rgba(0,0,0,.8)" }}>{video.title}</p>
           {video.hashtags && (
-            <p className="text-xs mt-1 truncate" style={{ color: "#C9A844" }}>{video.hashtags}</p>
+            <p className="text-xs mt-1 truncate" style={{ color: "#E8D5A3" }}>{video.hashtags}</p>
           )}
         </div>
       </div>
@@ -64,7 +64,7 @@ function ShortCard({ video }: { video: Video }) {
 function VideoCard({ video }: { video: Video }) {
   return (
     <Link href={videoPath(video.id)} className="group block">
-      <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: "16/9", background: "#1A1810" }}>
+      <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: "16/9", background: "var(--color-bg-card)" }}>
         {video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
@@ -72,7 +72,7 @@ function VideoCard({ video }: { video: Video }) {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: "#2E2A18" }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--color-border)" }}>
             <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none">
               <polygon points="5,3 19,12 5,21" fill="#C9A844" />
             </svg>
@@ -84,12 +84,12 @@ function VideoCard({ video }: { video: Video }) {
         </div>
       </div>
       <div className="mt-2 px-1">
-        <p className="text-sm font-bold leading-snug line-clamp-2" style={{ color: "#F0EAD6" }}>{video.title}</p>
+        <p className="text-sm font-bold leading-snug line-clamp-2" style={{ color: "var(--color-text)" }}>{video.title}</p>
         {video.description && (
-          <p className="text-xs mt-1 line-clamp-2" style={{ color: "#9A9070" }}>{video.description}</p>
+          <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>{video.description}</p>
         )}
         {video.published_at && (
-          <p className="text-xs mt-1" style={{ color: "#6B6448" }}>
+          <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
             {formatArabicDate(video.published_at)}
           </p>
         )}
@@ -106,7 +106,7 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
 
   if (counts.short === 0 && counts.video === 0) {
     return (
-      <div className="text-center py-20" style={{ color: "#9A9070" }}>
+      <div className="text-center py-20" style={{ color: "var(--color-text-muted)" }}>
         لا توجد فيديوهات بعد في هذا القسم
       </div>
     );
@@ -123,8 +123,8 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
               style={{
                 background: kind === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
-                color:      kind === t.key ? "#111008" : "#9A9070",
-                border:     kind === t.key ? "none" : "1px solid #2E2A18",
+                color:      kind === t.key ? "#111008" : "var(--color-text-muted)",
+                border:     kind === t.key ? "none" : "1px solid var(--color-border)",
               }}
             >
               {t.label}
@@ -150,17 +150,17 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
             <Link
               href={`/shorts?kind=${kind}&page=${page - 1}`}
               className="px-5 py-2 rounded-full text-sm font-bold"
-              style={{ border: "1px solid #2E2A18", color: "#C9A844" }}
+              style={{ border: "1px solid var(--color-border)", color: "var(--color-gold)" }}
             >
               الصفحة السابقة
             </Link>
           )}
-          <span className="text-sm" style={{ color: "#9A9070" }}>{page} / {totalPages}</span>
+          <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>{page} / {totalPages}</span>
           {page < totalPages && (
             <Link
               href={`/shorts?kind=${kind}&page=${page + 1}`}
               className="px-5 py-2 rounded-full text-sm font-bold"
-              style={{ border: "1px solid #2E2A18", color: "#C9A844" }}
+              style={{ border: "1px solid var(--color-border)", color: "var(--color-gold)" }}
             >
               الصفحة التالية
             </Link>

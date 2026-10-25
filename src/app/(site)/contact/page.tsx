@@ -111,9 +111,9 @@ export default function ContactPage() {
                     required
                     name="name"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-colors bg-bg text-text"
-                    style={{ border: "1px solid #2E2A18" }}
+                    style={{ border: "1px solid var(--color-border)" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                    onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                    onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
                   />
                 </div>
                 <div>
@@ -125,9 +125,9 @@ export default function ContactPage() {
                     name="email"
                     type="email"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
-                    style={{ border: "1px solid #2E2A18" }}
+                    style={{ border: "1px solid var(--color-border)" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                    onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                    onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
                   />
                 </div>
               </div>
@@ -141,24 +141,24 @@ export default function ContactPage() {
                     name="role"
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
                     placeholder="مثال: وزير سابق، ناشط حقوقي..."
-                    style={{ border: "1px solid #2E2A18" }}
+                    style={{ border: "1px solid var(--color-border)" }}
                     onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                    onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                    onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-muted)" }}>
                   الموضوع *
                 </label>
                 <input
                   required
                   name="subject"
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none bg-bg text-text"
-                  style={{ border: "1px solid #2E2A18" }}
+                  style={{ border: "1px solid var(--color-border)" }}
                   onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
                 />
               </div>
 
@@ -171,9 +171,9 @@ export default function ContactPage() {
                   name="message"
                   rows={5}
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none resize-none bg-bg text-text"
-                  style={{ border: "1px solid #2E2A18" }}
+                  style={{ border: "1px solid var(--color-border)" }}
                   onFocus={(e) => (e.target.style.borderColor = "#C9A844")}
-                  onBlur={(e) => (e.target.style.borderColor = "#2E2A18")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
                 />
               </div>
 
@@ -186,8 +186,8 @@ export default function ContactPage() {
                 disabled={sending}
                 className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200"
                 style={{
-                  background: sending ? "#2E2A18" : "linear-gradient(135deg, #C9A844, #9A7B28)",
-                  color: sending ? "#9A9070" : "#111008",
+                  background: sending ? "var(--color-border)" : "linear-gradient(135deg, #C9A844, #9A7B28)",
+                  color: sending ? "var(--color-text-muted)" : "#111008",
                   cursor: sending ? "not-allowed" : "pointer",
                 }}
               >
@@ -221,7 +221,7 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-text-muted"
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "#C9A844";
+                    (e.currentTarget as HTMLElement).style.color = "var(--color-gold)";
                     (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.06)";
                   }}
                   onMouseLeave={(e) => {

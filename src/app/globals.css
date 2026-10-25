@@ -1,25 +1,70 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-gold:         #C9A844;
-  --color-gold-light:   #E8D5A3;
-  --color-gold-dark:    #9A7B28;
-  --color-bg:           #111008;
-  --color-bg-card:      #1A1810;
-  --color-bg-elevated:  #221F12;
-  --color-border:       #2E2A18;
-  --color-text:         #F0EAD6;
-  --color-text-muted:   #9A9070;
-  --color-text-body:    #D4C9A8;
-  --color-success:      #6BCB77;
-  --color-danger:       #FF6B6B;
+  --color-gold: var(--site-gold);
+  --color-gold-light: var(--site-gold-light);
+  --color-gold-dark: var(--site-gold-dark);
+  --color-bg: var(--site-bg);
+  --color-bg-card: var(--site-bg-card);
+  --color-bg-elevated: var(--site-bg-elevated);
+  --color-border: var(--site-border);
+  --color-text: var(--site-text);
+  --color-text-muted: var(--site-text-muted);
+  --color-text-body: var(--site-text-body);
+  --color-success: var(--site-success);
+  --color-danger: var(--site-danger);
   --font-arabic:        var(--font-cairo);
 }
 
 :root {
-  --background: #111008;
-  --foreground: #F0EAD6;
+  color-scheme: dark;
+  --site-gold: #C9A844;
+  --site-gold-light: #E8D5A3;
+  --site-gold-dark: #9A7B28;
+  --site-bg: #181818;
+  --site-bg-card: #202020;
+  --site-bg-elevated: #292929;
+  --site-border: #383838;
+  --site-text: #F2F0EB;
+  --site-text-muted: #B8B5AE;
+  --site-text-body: #E8E6E1;
+  --site-success: #6BCB77;
+  --site-danger: #FF6B6B;
+  --site-header: rgba(24,24,24,.94);
+  --site-footer: #141414;
+  --background: var(--site-bg);
+  --foreground: var(--site-text);
 }
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --site-gold: #80600F;
+  --site-gold-light: #705417;
+  --site-gold-dark: #62490E;
+  --site-bg: #FAF9F6;
+  --site-bg-card: #FFFFFF;
+  --site-bg-elevated: #F0EEE8;
+  --site-border: #D8D3C9;
+  --site-text: #242321;
+  --site-text-muted: #625E55;
+  --site-text-body: #35322D;
+  --site-success: #23713B;
+  --site-danger: #B4232C;
+  --site-header: rgba(250,249,246,.94);
+  --site-footer: #F0EEE8;
+}
+
+.theme-show-dark { display: none; }
+[data-theme="light"] .theme-show-dark { display: block; }
+[data-theme="light"] .theme-show-light { display: none; }
+[data-theme="light"] .logo-3d,
+[data-theme="light"] .text-gold-gradient {
+  background: none;
+  color: var(--color-gold);
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+}
+
 
 * {
   box-sizing: border-box;
@@ -93,8 +138,8 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #111008; }
-::-webkit-scrollbar-thumb { background: #2E2A18; border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #C9A844; }
 
 /* Line clamp utilities */
@@ -114,7 +159,7 @@ body {
 /* Gold outline button */
 .btn-gold-outline {
   border: 1px solid #C9A844;
-  color: #C9A844;
+  color: var(--color-gold);
   background: transparent;
   transition: background 0.2s ease;
 }
@@ -137,27 +182,27 @@ body {
 .article-prose h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #C9A844;
+  color: var(--color-gold);
   margin: 2rem 0 1rem;
 }
 .article-prose h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #E8D5A3;
+  color: var(--color-gold-light);
   margin: 1.5rem 0 0.75rem;
 }
 .article-prose blockquote {
   border-right: 3px solid #C9A844;
   padding-right: 1.25rem;
   margin: 1.5rem 0;
-  color: #9A9070;
+  color: var(--color-text-muted);
   font-style: italic;
 }
-.article-prose strong { color: #E8D5A3; }
+.article-prose strong { color: var(--color-text); }
 .article-prose ul { list-style: disc; padding-right: 1.5rem; margin-bottom: 1.5rem; }
 .article-prose ol { list-style: decimal; padding-right: 1.5rem; margin-bottom: 1.5rem; }
 .article-prose li { margin-bottom: 0.5rem; }
-.article-prose a { color: #C9A844; text-decoration: underline; }
+.article-prose a { color: var(--color-gold); text-decoration: underline; }
 
 /* Reports retain the site's gold palette while keeping documents readable. */
 .report-page { min-width: 0; overflow-wrap: anywhere; }
@@ -174,9 +219,22 @@ body {
 .report-prose th, .report-prose td { padding: .7rem .85rem; text-align: right; border-bottom: 1px solid var(--color-border); }
 .report-prose th { background: #C9A84418; }
 .report-prose td[dir="ltr"] { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.report-prose .report-download { display: inline-block; padding: .9rem 1.3rem; border-radius: .65rem; color: #111008; background: #C9A844; font-weight: 800; text-decoration: none; }
+.report-prose .report-download { display: inline-block; padding: .9rem 1.3rem; border-radius: .65rem; color: #181818; background: #C9A844; font-weight: 800; text-decoration: none; }
 .report-prose .report-note { border-right: 3px solid #C9A844; padding: 1rem; background: #C9A8440c; margin: 1.5rem 0; }
 .report-prose iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: .75rem; }
 .report-prose #sources li { margin-bottom: 1rem; font-size: .92rem; }
 @media (max-width: 640px) { .report-prose { font-size: 1rem; } .report-prose h2 { font-size: 1.4rem; } }
 .report-prose h2, .report-prose [id^="source-"] { scroll-margin-top: 6rem; }
+
+/* Justify reading paragraphs only; headings, lists and captions keep their alignment. */
+:where(.article-prose, .prose-ar, .reading-paragraphs) p {
+  text-align: justify;
+  text-align-last: start;
+}
+
+/* Inline gold title gradients also need contrast against the light surface. */
+[data-theme="light"] [style*="background-clip"] {
+  background: none !important;
+  color: var(--color-gold) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
