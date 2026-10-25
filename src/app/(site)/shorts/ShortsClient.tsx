@@ -86,10 +86,10 @@ function VideoCard({ video }: { video: Video }) {
       <div className="mt-2 px-1">
         <p className="text-sm font-bold leading-snug line-clamp-2" style={{ color: "#F0EAD6" }}>{video.title}</p>
         {video.description && (
-          <p className="text-xs mt-1 line-clamp-2" style={{ color: "#9A9070" }}>{video.description}</p>
+          <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>{video.description}</p>
         )}
         {video.published_at && (
-          <p className="text-xs mt-1" style={{ color: "#6B6448" }}>
+          <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
             {formatArabicDate(video.published_at)}
           </p>
         )}
@@ -106,7 +106,7 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
 
   if (counts.short === 0 && counts.video === 0) {
     return (
-      <div className="text-center py-20" style={{ color: "#9A9070" }}>
+      <div className="text-center py-20" style={{ color: "var(--color-text-muted)" }}>
         لا توجد فيديوهات بعد في هذا القسم
       </div>
     );
@@ -123,7 +123,7 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
               style={{
                 background: kind === t.key ? "linear-gradient(135deg, #C9A844, #9A7B28)" : "transparent",
-                color:      kind === t.key ? "#111008" : "#9A9070",
+                color:      kind === t.key ? "#111008" : "var(--color-text-muted)",
                 border:     kind === t.key ? "none" : "1px solid #2E2A18",
               }}
             >
@@ -155,7 +155,7 @@ export default function ShortsClient({ videos, kind, counts, page, totalPages }:
               الصفحة السابقة
             </Link>
           )}
-          <span className="text-sm" style={{ color: "#9A9070" }}>{page} / {totalPages}</span>
+          <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>{page} / {totalPages}</span>
           {page < totalPages && (
             <Link
               href={`/shorts?kind=${kind}&page=${page + 1}`}

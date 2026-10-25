@@ -149,7 +149,7 @@ export default function ContactPage() {
               )}
 
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#9A9070" }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--color-text-muted)" }}>
                   الموضوع *
                 </label>
                 <input
@@ -187,7 +187,7 @@ export default function ContactPage() {
                 className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200"
                 style={{
                   background: sending ? "#2E2A18" : "linear-gradient(135deg, #C9A844, #9A7B28)",
-                  color: sending ? "#9A9070" : "#111008",
+                  color: sending ? "var(--color-text-muted)" : "#111008",
                   cursor: sending ? "not-allowed" : "pointer",
                 }}
               >

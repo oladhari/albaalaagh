@@ -54,12 +54,12 @@ const innerContent = (title: string, description: string | null | undefined, thu
         {title}
       </h3>
       {description && (
-        <p className="text-xs line-clamp-2 mt-1" style={{ color: "#9A9070", lineHeight: "1.7" }}>
+        <p className="text-xs line-clamp-2 mt-1" style={{ color: "var(--color-text-muted)", lineHeight: "1.7" }}>
           {description}
         </p>
       )}
       {published_at && (
-        <p className="text-xs mt-2" style={{ color: "#6B6448" }}>
+        <p className="text-xs mt-2" style={{ color: "var(--color-text-muted)" }}>
           {formatArabicDate(published_at)}
         </p>
       )}

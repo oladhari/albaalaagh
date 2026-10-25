@@ -12,17 +12,17 @@ export default function TermsOfUsePage() {
       <h1 className="text-3xl font-black mb-2" style={{ color: "#F0EAD6" }}>
         شروط الاستخدام
       </h1>
-      <p className="text-sm mb-10" style={{ color: "#9A9070" }}>
+      <p className="text-sm mb-10" style={{ color: "var(--color-text-muted)" }}>
         آخر تحديث: يونيو 2026
       </p>
 
-      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "var(--color-text-body)" }}>
 
         <section>
           <h2 className="text-base font-bold mb-3" style={{ color: "#C9A844" }}>1. القبول بالشروط</h2>
           <p>
             باستخدامك لموقع <strong style={{ color: "#F0EAD6" }}>البلاغ</strong> (
-            <span style={{ color: "#9A9070" }}>albaalaagh.com</span>) فأنت توافق على الالتزام
+            <span style={{ color: "var(--color-text-muted)" }}>albaalaagh.com</span>) فأنت توافق على الالتزام
             بهذه الشروط والأحكام. إن كنت لا توافق على أي من هذه الشروط، يُرجى التوقف عن
             استخدام الموقع.
           </p>

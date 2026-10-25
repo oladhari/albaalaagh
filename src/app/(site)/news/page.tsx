@@ -85,7 +85,7 @@ export default async function NewsPage({
           <Link
             href="/news"
             className="inline-flex items-center gap-2 text-sm mb-6 transition-colors hover:opacity-80"
-            style={{ color: "#9A9070" }}
+            style={{ color: "var(--color-text-muted)" }}
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M10 19l-7-7 7-7v4h11v6H10v4z"/></svg>
             كل الأخبار

@@ -64,7 +64,7 @@ export default function ShareButtons({ title, url }: ShareButtonsProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 mt-8 mb-4">
-      <span className="text-xs font-bold ml-1" style={{ color: "#9A9070" }}>مشاركة:</span>
+      <span className="text-xs font-bold ml-1" style={{ color: "var(--color-text-muted)" }}>مشاركة:</span>
       {links.map((link) => (
         <a
           key={link.label}
@@ -83,7 +83,7 @@ export default function ShareButtons({ title, url }: ShareButtonsProps) {
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all"
         style={{
           borderColor: copied ? "#6BCB77" : "#2E2A18",
-          color: copied ? "#6BCB77" : "#9A9070",
+          color: copied ? "#6BCB77" : "var(--color-text-muted)",
         }}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">

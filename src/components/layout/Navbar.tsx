@@ -58,7 +58,7 @@ export default function Navbar() {
                     if (!active) (e.currentTarget as HTMLElement).style.color = "#E8D5A3";
                   }}
                   onMouseLeave={(e) => {
-                    if (!active) (e.currentTarget as HTMLElement).style.color = "#9A9070";
+                    if (!active) (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
                   }}
                 >
                   {link.label}

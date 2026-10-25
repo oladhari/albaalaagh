@@ -38,7 +38,7 @@ function CategoryFilter({ active, onChange }: { active: string; onChange: (c: st
           className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all"
           style={{
             borderColor: active === cat ? "#C9A844" : "#2E2A18",
-            color:       active === cat ? "#C9A844" : "#9A9070",
+            color:       active === cat ? "#C9A844" : "var(--color-text-muted)",
             background:  active === cat ? "rgba(201,168,68,0.08)" : "transparent",
           }}
         >
@@ -65,11 +65,11 @@ function Pagination({ page, totalPages, geo }: { page: number; totalPages: numbe
         const prev = visible[i - 1];
         return (
           <span key={p} className="flex items-center gap-2">
-            {prev && p - prev > 1 && <span style={{ color: "#9A9070" }}>…</span>}
+            {prev && p - prev > 1 && <span style={{ color: "var(--color-text-muted)" }}>…</span>}
             <Link
               href={`/news?geo=${geo}&page=${p}`}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold border transition-all"
-              style={{ borderColor: p === page ? "#C9A844" : "#2E2A18", color:       p === page ? "#C9A844" : "#9A9070", background:  p === page ? "rgba(201, 168, 68, 0.08)" : "transparent",  }}
+              style={{ borderColor: p === page ? "#C9A844" : "#2E2A18", color:       p === page ? "#C9A844" : "var(--color-text-muted)", background:  p === page ? "rgba(201, 168, 68, 0.08)" : "transparent",  }}
             >
               {p}
             </Link>

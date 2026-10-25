@@ -94,7 +94,7 @@ export default function InterviewsClient({
             className="px-3 py-2 rounded-full text-sm outline-none"
             style={{ background: "rgba(201,168,68,0.08)", color: "#EDE7D3", border: "1px solid rgba(201,168,68,0.3)" }}
           />
-          <span className="text-sm" style={{ color: "#6B6040" }}>→</span>
+          <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>→</span>
           <input
             type="date"
             value={dateTo ?? ""}
@@ -144,7 +144,7 @@ export default function InterviewsClient({
       </div>
 
       {/* Count */}
-      <p className="text-xs mb-4" style={{ color: "#6B6040" }}>
+      <p className="text-xs mb-4" style={{ color: "var(--color-text-muted)" }}>
         {totalCount} حلقة
         {activePlaylistId && ` — ${playlists.find(p => p.id === activePlaylistId)?.name ?? ""}`}
       </p>
@@ -154,7 +154,7 @@ export default function InterviewsClient({
           className="rounded-2xl p-12 text-center"
           style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
         >
-          <p className="text-sm" style={{ color: "#9A9070" }}>
+          <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
             {hasFilters ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد حلقات بعد في هذا البرنامج"}
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function InterviewsClient({
             }, [])
             .map((p, idx) =>
               p === "…" ? (
-                <span key={`ellipsis-${idx}`} className="px-2 text-sm" style={{ color: "#6B6040" }}>…</span>
+                <span key={`ellipsis-${idx}`} className="px-2 text-sm" style={{ color: "var(--color-text-muted)" }}>…</span>
               ) : (
                 <button
                   key={p}

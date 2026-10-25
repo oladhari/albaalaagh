@@ -37,7 +37,7 @@ export default function SocialBar() {
                 (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.06)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#9A9070";
+                (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)";
                 (e.currentTarget as HTMLElement).style.borderColor = "#2E2A18";
                 (e.currentTarget as HTMLElement).style.background = "#1A1810";
               }}

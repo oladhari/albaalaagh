@@ -23,10 +23,10 @@ export default function SupportSuccessPage() {
         <h1 className="text-3xl font-black mb-3" style={{ color: "#E8D5A3" }}>
           شكراً لدعمك!
         </h1>
-        <p className="text-base leading-loose mb-2" style={{ color: "#9A9070" }}>
+        <p className="text-base leading-loose mb-2" style={{ color: "var(--color-text-muted)" }}>
           دعمك يعني أننا نبقى مستقلين ونواصل عملنا.
         </p>
-        <p className="text-sm mb-8" style={{ color: "#6B6040" }}>
+        <p className="text-sm mb-8" style={{ color: "var(--color-text-muted)" }}>
           ستصلك النشرة الأسبوعية على بريدك الإلكتروني.
         </p>
         <a

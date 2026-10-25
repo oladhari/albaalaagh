@@ -84,7 +84,7 @@ function GuestCard({ guest, isProgram }: { guest: Guest; isProgram?: boolean }) 
         {guest.name}
       </p>
       {guest.title && (
-        <p className="text-xs mt-1 line-clamp-2" style={{ color: "#9A9070" }}>
+        <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--color-text-muted)" }}>
           {guest.title}
         </p>
       )}
@@ -148,7 +148,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
               className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
               style={{
                 borderColor: active === null ? "#C9A844" : "#2E2A18",
-                color:       active === null ? "#C9A844" : "#9A9070",
+                color:       active === null ? "#C9A844" : "var(--color-text-muted)",
                 background:  active === null ? "rgba(201,168,68,0.08)" : "transparent",
               }}
             >
@@ -161,7 +161,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
                 style={{
                   borderColor: active === key ? "#C9A844" : "#2E2A18",
-                  color:       active === key ? "#C9A844" : "#9A9070",
+                  color:       active === key ? "#C9A844" : "var(--color-text-muted)",
                   background:  active === key ? "rgba(201,168,68,0.08)" : "transparent",
                 }}
               >
@@ -172,7 +172,7 @@ export default function GuestsGrid({ programs, guests }: { programs: Guest[]; gu
 
           {filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-sm" style={{ color: "#9A9070" }}>لا يوجد ضيوف في هذا التصنيف</p>
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>لا يوجد ضيوف في هذا التصنيف</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">

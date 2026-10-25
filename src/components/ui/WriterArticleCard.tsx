@@ -46,7 +46,7 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
           >
             {article.writer_name}
           </span>
-          <span className="text-xs" style={{ color: "#9A9070" }}>
+          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
             {timeAgo(article.published_at)}
           </span>
         </div>
@@ -61,7 +61,7 @@ export default function WriterArticleCard({ article }: { article: WriterArticle 
 
         {/* Source domain */}
         {article.source && (
-          <p className="text-xs mt-auto" style={{ color: "#9A9070" }}>
+          <p className="text-xs mt-auto" style={{ color: "var(--color-text-muted)" }}>
             {article.source} ↗
           </p>
         )}

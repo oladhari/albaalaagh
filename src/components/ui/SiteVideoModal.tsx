@@ -53,7 +53,7 @@ export default function SiteVideoModal({ id, title, video_url, onClose }: Props)
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center text-lg leading-none transition-colors hover:opacity-70 shrink-0"
-            style={{ background: "#2E2A18", color: "#9A9070" }}
+            style={{ background: "#2E2A18", color: "var(--color-text-muted)" }}
           >
             ×
           </button>

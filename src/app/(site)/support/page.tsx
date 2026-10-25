@@ -69,10 +69,10 @@ export default function SupportPage() {
         >
           ادعم البلاغ
         </h1>
-        <p className="text-lg leading-loose mb-2" style={{ color: "#9A9070" }}>
+        <p className="text-lg leading-loose mb-2" style={{ color: "var(--color-text-muted)" }}>
           نحن منبر إعلامي تونسي مستقل — لا ممول سياسي، لا إعلانات.
         </p>
-        <p className="text-base" style={{ color: "#6B6040" }}>
+        <p className="text-base" style={{ color: "var(--color-text-muted)" }}>
           استمرارنا يعتمد فقط على دعمكم.
         </p>
       </section>
@@ -88,7 +88,7 @@ export default function SupportPage() {
         <div className="space-y-2">
           {COSTS.map((c) => (
             <div key={c.label} className="flex justify-between text-sm">
-              <span style={{ color: "#9A9070" }}>{c.label}</span>
+              <span style={{ color: "var(--color-text-muted)" }}>{c.label}</span>
               <span className="font-bold" style={{ color: "#E8D5A3" }}>{c.amount}</span>
             </div>
           ))}
@@ -100,7 +100,7 @@ export default function SupportPage() {
           <span>المجموع التقني فقط</span>
           <span>~$173/شهر</span>
         </div>
-        <p className="text-xs mt-3" style={{ color: "#6B6040" }}>
+        <p className="text-xs mt-3" style={{ color: "var(--color-text-muted)" }}>
           20 مشترك بـ €10/شهر تكفي لتغطية كل التكاليف التقنية وتبقينا مستقلين.
         </p>
       </section>
@@ -115,7 +115,7 @@ export default function SupportPage() {
               className="px-5 py-2 text-sm font-bold transition-all"
               style={{
                 background: currency === c ? "#C9A844" : "#1A1810",
-                color:      currency === c ? "#0D0B06"  : "#9A9070",
+                color:      currency === c ? "#0D0B06"  : "var(--color-text-muted)",
               }}
             >
               {c === "eur" ? "€ يورو" : "$ دولار"}
@@ -155,12 +155,12 @@ export default function SupportPage() {
                   <p className="text-lg font-black" style={{ color: "#C9A844" }}>{plan.nameAr}</p>
                   <p className="text-3xl font-black mt-1" style={{ color: "#E8D5A3" }}>
                     {symbol}{price}
-                    <span className="text-sm font-normal" style={{ color: "#9A9070" }}>/شهر</span>
+                    <span className="text-sm font-normal" style={{ color: "var(--color-text-muted)" }}>/شهر</span>
                   </p>
                 </div>
                 <ul className="space-y-2 flex-1 mb-6">
                   {plan.perks.map((perk) => (
-                    <li key={perk} className="text-sm flex gap-2 items-start" style={{ color: "#9A9070" }}>
+                    <li key={perk} className="text-sm flex gap-2 items-start" style={{ color: "var(--color-text-muted)" }}>
                       <span style={{ color: "#C9A844" }}>✓</span>
                       {perk}
                     </li>
@@ -192,9 +192,9 @@ export default function SupportPage() {
           style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
         >
           <h2 className="text-xl font-bold mb-2" style={{ color: "#E8D5A3" }}>تبرع لمرة واحدة</h2>
-          <p className="text-sm mb-5" style={{ color: "#6B6040" }}>بدون التزام شهري — مبلغ من اختيارك</p>
+          <p className="text-sm mb-5" style={{ color: "var(--color-text-muted)" }}>بدون التزام شهري — مبلغ من اختيارك</p>
           <div className="mb-4">
-            <label className="text-sm mb-2 block" style={{ color: "#9A9070" }}>اختر المبلغ</label>
+            <label className="text-sm mb-2 block" style={{ color: "var(--color-text-muted)" }}>اختر المبلغ</label>
             <select
               value={oneTimeAmount}
               onChange={(e) => setOneTimeAmount(Number(e.target.value))}

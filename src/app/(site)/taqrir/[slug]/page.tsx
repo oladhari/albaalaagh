@@ -129,9 +129,9 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-xs mb-6 flex items-center gap-2 text-text-muted" >
-        <Link href="/" style={{ color: "#9A9070" }}>الرئيسية</Link>
+        <Link href="/" style={{ color: "var(--color-text-muted)" }}>الرئيسية</Link>
         <span>›</span>
-        <Link href="/news" style={{ color: "#9A9070" }}>الأخبار</Link>
+        <Link href="/news" style={{ color: "var(--color-text-muted)" }}>الأخبار</Link>
         <span>›</span>
         <span className="text-gold">تقرير البلاغ</span>
       </nav>
@@ -227,7 +227,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
               </li>
             ))}
           </ul>
-          <p className="text-xs mt-4" style={{ color: "#6B6448" }}>
+          <p className="text-xs mt-4" style={{ color: "var(--color-text-muted)" }}>
             إعداد وتحرير: فريق تحرير البلاغ
           </p>
         </section>

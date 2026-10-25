@@ -59,11 +59,11 @@ export default function EditorialPolicyPage() {
       <h1 className="text-3xl font-black mb-2" style={{ color: "#F0EAD6" }}>
         السياسة التحريرية والتصحيح
       </h1>
-      <p className="text-sm mb-10" style={{ color: "#9A9070" }}>
+      <p className="text-sm mb-10" style={{ color: "var(--color-text-muted)" }}>
         آخر تحديث: أكتوبر 2026
       </p>
 
-      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "#C8BFA0" }}>
+      <div className="reading-paragraphs space-y-10 text-sm leading-loose" style={{ color: "var(--color-text-body)" }}>
         <section>
           <p>
             تشرح هذه الصفحة كيف يجمع فريق البلاغ المعلومات ويتحقق منها وينسبها إلى
