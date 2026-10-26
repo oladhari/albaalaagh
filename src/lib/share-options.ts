@@ -3,6 +3,7 @@ import { isReport, reportPublicId } from "./reports";
 
 export type ShareContentType = "article" | "news" | "report" | "programme";
 export interface ShareOptions {
+  sourceId?: string;
   title: string;
   excerpt?: string;
   slug: string;

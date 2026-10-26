@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/sync-youtube-videos",
       "schedule": "0 */12 * * *"
+    },
+    {
+      "path": "/api/cron/sync-buffer-news",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
