@@ -108,7 +108,7 @@ export async function POST(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Run after response is sent — after() keeps the function alive on Vercel until done
-  after(() => shareToAll({ title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null }).catch(console.error));
+  after(() => shareToAll({ sourceId: `news:${id}`, title, excerpt, slug, type: "news", facebook_image: facebook_image || null, image: (ownedImageUrl ?? image_url) || null }).catch(console.error));
 
   return NextResponse.json({ ok: true, slug, url });
 }

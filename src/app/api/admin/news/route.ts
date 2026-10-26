@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: citationError.message }, { status: 500 });
   }
 
-  await shareToAll({ title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null, image: image_url || null });
+  await shareToAll({ sourceId: `news:${data.id}`, title, excerpt, slug: data.slug, type: "news", facebook_image: facebook_image || null, image: image_url || null });
 
   return NextResponse.json(data, { status: 201 });
 }
