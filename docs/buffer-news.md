@@ -10,6 +10,10 @@ Server-only configuration (also required on the production host):
 - `BUFFER_X_CHANNEL_ID`: connected Albaalaagh X channel ID.
 - `BUFFER_LINKEDIN_CHANNEL_ID`: connected Albaalaagh LinkedIn Page channel ID.
 
+The adapter trims whitespace from the API key and channel IDs before use, including
+trailing newlines introduced by hosting environment-variable input. Configure
+these values without trailing line breaks.
+
 Both Buffer posts use `shareNow`, the exact `facebook_image` square asset,
 platform-sized text, the complete canonical article URL, and hashtags. A missing
 square image produces a logged failure for Buffer without falling back to the
