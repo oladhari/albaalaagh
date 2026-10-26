@@ -9,7 +9,7 @@ const prefix = "buffer_news:";
 const fields = "id channelId status externalLink error{message}";
 
 async function request(query: string, variables: object): Promise<Record<string, unknown>> {
-  const key = process.env.BUFFER_TIKTOK_API;
+  const key = process.env.BUFFER_TIKTOK_API?.trim();
   if (!key) throw new Error("Buffer news: missing API key");
   // No automatic POST retry: a timeout can mean the post was already accepted.
   const response = await fetch("https://api.buffer.com", {
@@ -39,11 +39,11 @@ export function newsBufferInput(opts: ShareOptions, network: Network, channelId:
   if (!opts.facebook_image) throw new Error("Buffer news requires the Facebook square image");
   const image = new URL(opts.facebook_image);
   if (image.protocol !== "https:" || image.username || image.password) throw new Error("Invalid Buffer news image URL");
-  return { channelId, text, schedulingType: "automatic", mode: "shareNow", needsApproval: false, assets: [{ image: { url: image.href } }] };
+  return { channelId: channelId.trim(), text, schedulingType: "automatic", mode: "shareNow", needsApproval: false, assets: [{ image: { url: image.href } }] };
 }
 
 export function newsBufferKey(opts: ShareOptions, network: Network, channelId: string): string {
-  return prefix + createHash("sha256").update(`${network}\n${channelId}\n${opts.sourceId || shareUrl(opts)}`).digest("hex");
+  return prefix + createHash("sha256").update(`${network}\n${channelId.trim()}\n${opts.sourceId || shareUrl(opts)}`).digest("hex");
 }
 async function save(key: string, receipt: Receipt) {
   receipt.updatedAt = new Date().toISOString();
@@ -63,8 +63,8 @@ async function refresh(key: string, receipt: Receipt) {
 
 export async function postNewsToBufferNetwork(opts: ShareOptions, network: Network) {
   if (opts.type !== "news") throw new Error("Buffer news adapter only accepts news");
-  const channelId = network === "twitter" ? process.env.BUFFER_X_CHANNEL_ID : process.env.BUFFER_LINKEDIN_CHANNEL_ID;
-  if (!channelId || !process.env.BUFFER_TIKTOK_API) throw new Error(`Buffer news ${network}: configuration missing`);
+  const channelId = (network === "twitter" ? process.env.BUFFER_X_CHANNEL_ID : process.env.BUFFER_LINKEDIN_CHANNEL_ID)?.trim();
+  if (!channelId || !process.env.BUFFER_TIKTOK_API?.trim()) throw new Error(`Buffer news ${network}: configuration missing`);
   const input = newsBufferInput(opts, network, channelId);
   const key = newsBufferKey(opts, network, channelId);
   const receipt: Receipt = { network, channelId, sourceUrl: shareUrl(opts), state: "submitting", updatedAt: new Date().toISOString() };
