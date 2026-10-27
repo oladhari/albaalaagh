@@ -28,6 +28,13 @@ Updating `@types/node` alone does not update Node.js. Track this operational che
 
 ## Article thumbnail house style
 
-The article-only writer generator uses the stored writer ID to load the authoritative name/photo on the server. It prepares a concise 1–3-line headline and a topic-specific text-free background, then composites the original photograph (an intentional frame), approved transparent gold logo at top-left, burgundy writer nameplate above the headline, and white/gold Arabic typography locally. It never passes the writer photograph to the image generator. Output is a 1280×720 JPEG under 2 MB, and the shortened cover wording is shown for review without changing the article title. Missing/unreadable writer photos fail instead of inventing a face. The news generation functions/templates are unchanged.
+The article-only writer generator uses the stored writer ID to load the authoritative name/photo on the server. It prepares a concise 1–3-line headline and a topic-specific text-free background, then composites the original photograph with a checked non-generative alpha mask (no rectangular frame), the fixed «سلسلة مقالات البلاغ» badge at top-left, burgundy writer nameplate above the headline, and white/gold Arabic typography locally. It never passes the writer photograph to the image generator. Output is a 1280×720 JPEG under 2 MB, and the shortened cover wording is shown for review without changing the article title. Missing/unreadable writer photos fail instead of inventing a face. The news generation functions/templates are unchanged.
 
 The admin button retains its existing background-generation service; local layout validation and tests use no generation API calls. The installed `$taqrir` skill uses the built-in imagegen workflow where illustration is appropriate, with no paid fallback unless explicitly requested. Its versioned source is `skills/taqrir/`, installed locally at `/home/oladhari/.codex/skills/taqrir/`.
+
+New ordinary/religious article and report covers use the same fixed badge asset
+`public/branding/article-series.png`, rendered by `src/lib/editorial-cover-branding.ts`.
+It replaces the gold logo and separate channel label for these editorial covers;
+video thumbnails and news templates retain their own branding. Reuse the badge
+locally instead of asking an image generator to render it. Older published covers
+are changed only when specifically requested.

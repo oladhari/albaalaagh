@@ -131,8 +131,8 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
 
         offset = data.nextOffset;
       }
-    } catch (err: any) {
-      setImportResult(`خطأ في الاتصال: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+      setImportResult(`خطأ في الاتصال: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setImporting(false);
     }
@@ -215,7 +215,7 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                     className="p-3 rounded-xl space-y-2"
                     style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
                       <div
                         className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
                         style={{ background: "rgba(201,168,68,0.15)", color: "#C9A844" }}
@@ -239,7 +239,14 @@ export default function GuestsManager({ videos, initialGuests }: Props) {
                           ))}
                         </div>
                       </div>
-                      <div className="flex gap-1 shrink-0">
+                      <div className="flex w-full flex-wrap justify-end gap-1 sm:w-auto sm:shrink-0">
+                        <Link
+                          href={`/admin/writers/new?guest_id=${guest.id}`}
+                          className="text-xs px-2 py-1 rounded border"
+                          style={{ color: "#C9A844", borderColor: "#2E2A18" }}
+                        >
+                          إضافة ككاتب
+                        </Link>
                         <Link
                           href={`/admin/guests/${guest.id}/edit`}
                           className="text-xs px-2 py-1 rounded border"

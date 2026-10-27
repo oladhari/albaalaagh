@@ -32,24 +32,37 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    const uploads = await fetchNewestUploadsDetailed(100);
+    // Revisit two weeks so upload bursts and missed runs cannot strand episodes
+    // outside a fixed 100-video window. The cap fails visibly if exhausted.
+    const cutoff = new Date(Date.now() - 14 * 86400_000).toISOString();
+    const uploads = await fetchNewestUploadsDetailed(2000, cutoff);
     results.checked = uploads.length;
 
     // Check existence per-candidate (ilike on the 11-char id) instead of pulling
     // the whole table — a plain unfiltered select gets capped at 1000 rows by
     // PostgREST, which silently misses recent inserts once the table passes that size.
     const candidateIds = uploads.map((v) => v.videoId);
-    const orFilter = candidateIds.map((id) => `video_url.ilike.%${id}%`).join(",");
+    const candidateChunks: string[][] = [];
+    for (let i = 0; i < candidateIds.length; i += 100) {
+      candidateChunks.push(candidateIds.slice(i, i + 100));
+    }
 
     const ytPlaylists = await fetchPlaylistNames();
 
     const [membership, playlistsRes, existingRes] = await Promise.all([
       fetchPlaylistVideoMembership(ytPlaylists),
       supabaseAdmin.from("playlists").select("id, name"),
-      candidateIds.length
-        ? supabaseAdmin.from("site_videos").select("video_url").or(orFilter)
-        : Promise.resolve({ data: [] as { video_url: string }[] }),
+      Promise.all(candidateChunks.map((ids) =>
+        supabaseAdmin.from("site_videos").select("video_url,youtube_video_id").or(
+          ids.flatMap((id) => [`video_url.ilike.%${id}%`, `youtube_video_id.eq.${id}`]).join(",")
+        )
+      )),
     ]);
+
+    if (playlistsRes.error) throw new Error(playlistsRes.error.message);
+    for (const result of existingRes) {
+      if (result.error) throw new Error(result.error.message);
+    }
 
     // Which real YouTube playlist does each internal playlists-table row correspond
     // to? Matched by exact playlist NAME (a small, reviewable set — ~70 rows — unlike
@@ -64,8 +77,8 @@ export async function GET(req: NextRequest) {
     }
 
     const knownIds = new Set(
-      (existingRes.data ?? [])
-        .map((v: { video_url: string }) => extractYoutubeId(v.video_url))
+      existingRes.flatMap((result) => result.data ?? [])
+        .map((v: { video_url: string; youtube_video_id: string | null }) => v.youtube_video_id ?? extractYoutubeId(v.video_url))
         .filter((id): id is string => !!id)
     );
 
@@ -87,6 +100,7 @@ export async function GET(req: NextRequest) {
       if (!playlistId) results.unmatchedPlaylist++;
 
       const { error } = await supabaseAdmin.from("site_videos").insert({
+        youtube_video_id: v.videoId,
         title: v.title,
         description: v.description ? v.description.slice(0, 4500) : null,
         video_url: `https://www.youtube.com/watch?v=${v.videoId}`,
@@ -102,9 +116,9 @@ export async function GET(req: NextRequest) {
       if (error) results.errors.push(`${v.videoId}: ${error.message}`);
       else results.inserted++;
     }
-  } catch (err: any) {
-    results.errors.push(String(err?.message ?? err));
+  } catch (err: unknown) {
+    results.errors.push(err instanceof Error ? err.message : String(err));
   }
 
-  return NextResponse.json(results);
+  return NextResponse.json(results, { status: results.errors.length ? 500 : 200 });
 }
