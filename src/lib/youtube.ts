@@ -201,7 +201,10 @@ export interface YTUploadDetailed {
   liveStartedAt: string | null;
 }
 
-export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUploadDetailed[]> {
+export async function fetchNewestUploadsDetailed(
+  maxResults = 100,
+  publishedAfter?: string,
+): Promise<YTUploadDetailed[]> {
   if (!YOUTUBE_API_KEY) return [];
 
   try {
@@ -211,13 +214,14 @@ export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUp
     chUrl.searchParams.set("part", "contentDetails");
     const chData = await ytFetch(chUrl, 86400);
     const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-    if (!uploadsId) return [];
+    if (!uploadsId) throw new Error("YouTube uploads playlist unavailable");
 
     // Paginate past the API's 50-per-page cap so an upload burst between cron
     // runs (this channel posts ~20+ videos/day) can't silently push a video
     // past a single fixed-size page and out of the sync window forever.
     const videoIds: string[] = [];
     let pageToken: string | undefined;
+    let reachedCutoff = false;
     do {
       const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
       plUrl.searchParams.set("key", YOUTUBE_API_KEY);
@@ -226,12 +230,20 @@ export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUp
       plUrl.searchParams.set("maxResults", String(Math.min(50, maxResults - videoIds.length)));
       if (pageToken) plUrl.searchParams.set("pageToken", pageToken);
       const plData = await ytFetch(plUrl, 300);
+      if (plData.error) throw new Error("YouTube uploads request failed");
       for (const item of plData.items ?? []) {
+        if (publishedAfter && item.snippet?.publishedAt < publishedAfter) {
+          reachedCutoff = true;
+          break;
+        }
         const id = item.snippet?.resourceId?.videoId;
         if (id) videoIds.push(id);
       }
       pageToken = plData.nextPageToken;
-    } while (pageToken && videoIds.length < maxResults);
+    } while (pageToken && !reachedCutoff && videoIds.length < maxResults);
+    if (publishedAfter && pageToken && !reachedCutoff && videoIds.length >= maxResults) {
+      throw new Error("YouTube sync scan limit reached before the lookback cutoff");
+    }
     if (!videoIds.length) return [];
 
     // videos.list accepts at most 50 IDs per call.
@@ -243,6 +255,7 @@ export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUp
       vidUrl.searchParams.set("id", chunk.join(","));
       vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
       const vidData = await ytFetch(vidUrl, 300);
+      if (vidData.error) throw new Error("YouTube video details request failed");
       items.push(...(vidData.items ?? []));
     }
 
@@ -264,8 +277,7 @@ export async function fetchNewestUploadsDetailed(maxResults = 100): Promise<YTUp
       } satisfies YTUploadDetailed;
     });
   } catch (e) {
-    console.error("YouTube fetchNewestUploadsDetailed error:", e);
-    return [];
+    throw new Error(e instanceof Error ? e.message : "YouTube upload sync failed");
   }
 }
 

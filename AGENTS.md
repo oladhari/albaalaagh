@@ -46,3 +46,18 @@ This rule is authoritative and must not be inferred from a checker rating:
 - Anything from the private archive must still be re-checked and explicitly
   approved before publication.
 - Full procedure, batch list, retrieval with signed links and rotation: `docs/private-r2-archive.md`.
+
+# TikTok through Buffer
+
+Use `tools/buffer-tiktok/cli.mjs` for selected existing website Shorts and
+`tools/buffer-tiktok/batch.mjs` for explicitly selected finite batches. Credentials
+come from `BUFFER_TIKTOK_API` in `.env.local`. Publication requires explicit
+TikTok scope; the regular `/reels` destinations do not implicitly include it.
+The local reels publisher supports the opt-in `--with-tiktok` handoff.
+
+Mark a clip done only after confirmed delivery, using its `tiktok_done:UUID`
+record in `site_settings`. Preserve browser manual marks during migration.
+Durable ledgers and batch selections live in
+`/mnt/linuxdata/albaalaagh-buffer-tiktok/`. Never blindly retry an unknown
+submission. Workflow, retry review and deployment details:
+[`docs/buffer-tiktok.md`](docs/buffer-tiktok.md).

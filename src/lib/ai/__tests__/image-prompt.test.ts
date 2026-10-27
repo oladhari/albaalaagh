@@ -28,6 +28,20 @@ describe("Facebook image prompt", () => {
   });
 });
 
+describe("Square documentary references", () => {
+  it("uses the photographed seafood scene despite an ambiguous subject label", () => {
+    const prompt = buildFacebookPrompt("ارتفاع أسعار جراد البحر", "سوق السمك في تونس", [
+      { name: "جراد البحر", url: "https://example.com/crevettes.jpg" },
+    ]);
+    expect(prompt).toContain("Image 2: story reference labeled جراد البحر");
+    expect(prompt).toContain("the visible photograph determines what to show");
+    expect(prompt).toContain("Do not substitute lobster or crayfish for shrimp/prawns");
+    expect(prompt).toContain("A documentary market/group photograph is a scene reference");
+    expect(prompt).not.toContain("Create one restrained, non-actionable editorial metaphor");
+    expect(prompt).not.toContain("NO PEOPLE:");
+  });
+});
+
 describe("Landscape reference policy", () => {
   it("does not assume a supplied field or logo reference is a person", () => {
     const prompt = buildNews16_9Prompt("القصرين: برمجة 85 ألف هكتار لزراعة الحبوب", "", [{ name: "85 ألف هكتار لزراعة الحبوب", url: "https://example.com/fields.png" }]);

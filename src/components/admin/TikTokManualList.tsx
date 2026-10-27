@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 interface ShortVideo {
-  id: number;
+  id: string;
   title: string;
   description: string | null;
   video_url: string;
@@ -11,17 +11,18 @@ interface ShortVideo {
 }
 
 const STORAGE_KEY = "tiktok-manual-done";
+const MIGRATION_KEY = 'tiktok-manual-done-migrated-v1';
 
-function loadDone(): Set<number> {
+function loadDone(): Set<string> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
+    return raw ? new Set(JSON.parse(raw).map(String)) : new Set();
   } catch {
     return new Set();
   }
 }
 
-function saveDone(ids: Set<number>) {
+function saveDone(ids: Set<string>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
   } catch {}
@@ -54,25 +55,49 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
-  const [done, setDone] = useState<Set<number>>(new Set());
+  const [done, setDone] = useState<Set<string>>(new Set());
   const [hideDone, setHideDone] = useState(false);
+  const [syncError, setSyncError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setDone(loadDone());
-  }, []);
+    let active = true;
+    async function refresh() {
+      const cached = loadDone();
+      if (active) setDone(cached);
+      try {
+        const ids = [...cached].filter(id => videos.some(video => video.id === id));
+        if (ids.length && localStorage.getItem(MIGRATION_KEY) !== '1') {
+          const migration = await fetch('/api/admin/tiktok/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, done: true }) });
+          if (!migration.ok) throw new Error('sync');
+        }
+        localStorage.setItem(MIGRATION_KEY, '1');
+        const response = await fetch('/api/admin/tiktok/done', { cache: 'no-store' });
+        if (!response.ok) throw new Error('sync');
+        const result = await response.json();
+        const merged = new Set<string>([...cached].filter(id => !videos.some(video => video.id === id)));
+        for (const id of result.ids) merged.add(String(id));
+        if (active) { setDone(merged); setSyncError(''); saveDone(merged); }
+      } catch {
+        if (active) setSyncError('تعذّرت مزامنة علامات النشر. العلامات المحلية محفوظة.');
+      }
+    }
+    void refresh();
+    return () => { active = false; };
+  }, [videos]);
 
-  const markDone = (id: number) => {
-    const next = new Set(done);
-    next.add(id);
-    setDone(next);
-    saveDone(next);
-  };
-
-  const undo = (id: number) => {
-    const next = new Set(done);
-    next.delete(id);
-    setDone(next);
-    saveDone(next);
+  const toggleDone = async (id: string) => {
+    setSaving(true);
+    try {
+      const nextDone = !done.has(id);
+      const response = await fetch('/api/admin/tiktok/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id], done: nextDone }) });
+      if (!response.ok) throw new Error('sync');
+      const next = new Set(done);
+      if (nextDone) next.add(id); else next.delete(id);
+      setDone(next); saveDone(next); setSyncError('');
+    } catch {
+      setSyncError('تعذّر حفظ العلامة. يرجى المحاولة مجدداً.');
+    } finally { setSaving(false); }
   };
 
   if (videos.length === 0) {
@@ -86,6 +111,7 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
 
   return (
     <div>
+      {syncError && <p role="alert" className="text-xs text-red-400 mb-2">{syncError}</p>}
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs" style={{ color: "#9A9070" }}>
           متبقي {remaining} من {videos.length}
@@ -123,7 +149,8 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
                   ⬇️ تحميل الفيديو
                 </a>
                 <button
-                  onClick={() => (isDone ? undo(v.id) : markDone(v.id))}
+                  onClick={() => void toggleDone(v.id)}
+                  disabled={saving}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
                   style={{
                     background: isDone ? "rgba(107,203,119,0.15)" : "transparent",

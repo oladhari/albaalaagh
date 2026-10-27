@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AvatarUpload from "@/components/admin/AvatarUpload";
+import GuestWriterImport from "../GuestWriterImport";
 
 export default function NewWriterPage() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function NewWriterPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-black mb-8" style={{ color: "#F0EAD6" }}>إضافة كاتب جديد</h1>
+      <GuestWriterImport />
 
       {error && (
         <div

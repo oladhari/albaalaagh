@@ -648,16 +648,20 @@ USE THE PROVIDED ALBAALAAGH TEMPLATE (the first attached image) EXACTLY AS THE B
 
 Preserve the existing logo, branding, borders, and frame. Do not add "عاجل", summaries, paragraphs, bullet points, quotes, dates, or URLs.
 
-${people.length ? `REFERENCE PHOTOS:
-The attached reference photo(s) after the template are labeled: ${people.map(p => p.name).join("، ")}.
-Use a reference as a face only when it is an authentic human photograph, preserve that person's identity exactly, and do not invent or add any other person. If a reference is a logo or emblem, reproduce it only as that object.` : `NO PEOPLE:
+${people.length ? `REQUIRED STORY PHOTOGRAPHS — NOT OPTIONAL INSPIRATION:
+Use the attached story reference image(s) after the template as the primary visual source. Preserve their actual photographed subject, species, objects, setting and factual details. Reframe or crop to fit the square template; do not replace them with an imagined scene, stock-style substitute or editorial metaphor.
+Labels provide context, not permission to reinterpret the photograph. When a label is ambiguous, the visible photograph determines what to show.
+For seafood, animals, crops or products, preserve exactly the kind and visible appearance in the reference. Do not substitute lobster or crayfish for shrimp/prawns, change raw seafood into cooked seafood, or invent claws, colors or anatomy absent from the photograph.
+A documentary market/group photograph is a scene reference: retain its photographed setting and people as needed for composition, without identifying anyone from a label or inventing additional people or actions. A single-person portrait must retain that person's identity. Reproduce logos/emblems only as objects.
+REFERENCE ORDER:
+${people.map((reference, index) => `Image ${index + 2}: story reference labeled ${reference.name}`).join("\n")}` : `NO PEOPLE:
 No authentic person photo is attached. Do not generate any human, face, figure, or depiction of a named person. Use objects and abstract symbolic imagery only.`}
 
 TEXT RULES:
 Show only the supplied news title, unchanged, in large bold Arabic typography, maximum 2 to 4 lines, with strong mobile readability.
 
 VISUAL RULES:
-Create one restrained, non-actionable editorial metaphor based only on the supplied story. For an AI-safety or cybersecurity story, prefer an abstract interface, lock, shield, warning symbol, or redacted report. Do not depict or explain harmful materials, construction, biological processes, technical mechanisms, or operational steps.
+${people.length ? "Build the composition around the supplied photographic content. The template supplies branding and framing only; replace all sample editorial imagery and sample text. Template subjects are not story references." : "Create one restrained, non-actionable editorial metaphor based only on the supplied story."} For an AI-safety or cybersecurity story, prefer an abstract interface, lock, shield, warning symbol, or redacted report. Do not depict or explain harmful materials, construction, biological processes, technical mechanisms, or operational steps.
 ${buildGeographicAccuracyRules(title, excerpt)}
 Use a modern premium newsroom style, realistic documentary lighting, clean composition, strong focal point, and high contrast.
 
@@ -675,6 +679,9 @@ export async function generateFacebookImage(title: string, excerpt: string, peop
   const templateBuffer = await fs.readFile(FACEBOOK_TEMPLATE_PATH);
   const templateFile = await toFile(templateBuffer, "template.png", { type: "image/png" });
   const { files: personFiles, attached, failed } = await fetchPersonFiles(people);
+  if (failed.length) {
+    throw new Error("تعذّر تحميل صورة مرجعية مرفقة؛ أعد رفعها قبل إنشاء صورة فيسبوك. لم تُنشأ صورة بديلة.");
+  }
 
   const result = await getOpenAI().images.edit({
     model: "gpt-image-2",

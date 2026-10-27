@@ -1,0 +1,71 @@
+--- a/scripts/upload-shorts-to-fb-reels.mjs
++++ b/scripts/upload-shorts-to-fb-reels.mjs
+@@ -34,6 +34,8 @@
+ import { tmpdir } from "node:os";
+ import { join, dirname } from "node:path";
+ import { fileURLToPath } from "node:url";
++import { BufferClient } from "../tools/buffer-tiktok/client.mjs";
++import { submit as submitTikTok } from "../tools/buffer-tiktok/workflow.mjs";
+ 
+ // This machine has no working IPv6 route. Node's address race aborts the IPv4
+ // connection before it finishes, which surfaces as "fetch failed".
+@@ -42,6 +44,8 @@
+ const __dir = dirname(fileURLToPath(import.meta.url));
+ const envText = readFileSync(join(__dir, "../.env.local"), "utf8");
+ const getEnv = (k) => envText.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]?.trim() ?? "";
++const withTikTok = process.argv.includes("--with-tiktok");
++let bufferClient, bufferTarget;
+ 
+ const YOUTUBE_API_KEY = getEnv("YOUTUBE_API_KEY");
+ const PAGE_ID    = getEnv("FB_PAGE2_ID");
+@@ -492,6 +496,16 @@
+   if (siteRows?.[0]?.id) recordStage("website", { state: "published", id: siteRows[0].id, url: `https://www.albaalaagh.com/videos/${siteRows[0].id.replaceAll("-", "")}`, listing: longVideo ? "https://www.albaalaagh.com/videos" : "https://www.albaalaagh.com/shorts", r2_url: r2Url });
+   if (!dbError && siteRows?.[0]?.id) log(`رابط الموقع: https://www.albaalaagh.com/videos/${siteRows[0].id.replaceAll("-", "")}`);
+   log(dbError ? `تحذير: فشلت إضافة المقطع إلى الموقع — ${dbError.message}` : `تمت إضافة المقطع إلى ${longVideo ? "/videos" : "/shorts"} على الموقع`);
++  if (withTikTok) {
++    if (dbError || !siteRows?.[0]?.id) throw new Error("TikTok stopped: website Short was not confirmed; retry TikTok separately after review");
++    const result = await submitTikTok({
++      client: bufferClient, target: bufferTarget,
++      item: { source_id: `site:${siteRows[0].id}`, video_url: r2Url, caption: description?.trim() || title, ai_generated: false },
++      ledgerPath: "/mnt/linuxdata/albaalaagh-buffer-tiktok/ledger.json",
++    });
++    recordStage("tiktok", { state: result.post?.status || result.entry?.state || "duplicate", buffer_post_id: result.post?.id || result.entry?.post_id, skipped: result.skipped });
++    log(result.skipped ? "TikTok: already tracked; inspect Buffer status" : `TikTok queued in Buffer: ${result.post.id}`);
++  }
+ }
+ 
+ async function runOne(ytUrl, log) {
+@@ -637,12 +651,23 @@
+   const onlyInstagram = args.includes("--only-instagram");
+   const longVideo = args.includes("--long-video");
+   const facebookOnly = args.includes("--facebook-only");
+-  const urls = args.filter((arg, i) => !["--only-instagram", "--long-video", "--facebook-only", "--media-url"].includes(arg) && args[i - 1] !== "--media-url");
++  const urls = args.filter((arg, i) => !["--only-instagram", "--long-video", "--facebook-only", "--media-url", "--with-tiktok"].includes(arg) && args[i - 1] !== "--media-url");
+   if (!urls.length) {
+     console.error("الاستخدام: node scripts/upload-shorts-to-fb-reels.mjs [--only-instagram] <youtube_url | local.mp4> [...]");
+     process.exit(1);
+   }
+   if (!PAGE_ID || !PAGE_TOKEN) { console.error("بيانات صفحة فيسبوك غير مضبوطة (FB_PAGE2_ID / FB_PAGE2_TOKEN)"); process.exit(1); }
++  if (withTikTok) {
++    if (onlyInstagram || facebookOnly || longVideo || urls.some(url => !existsSync(url))) throw new Error("--with-tiktok supports local Short files only; use the standalone TikTok command for existing posts");
++    // Preflight the full batch before any remote publication begins.
++    for (const path of urls) {
++      const meta = readLocalMeta(path);
++      if ([...(meta.description.trim() || meta.title)].length > 2200) throw new Error("TikTok caption exceeds 2200 characters; shorten metadata before publication");
++    }
++    bufferClient = new BufferClient(process.env.BUFFER_TIKTOK_API || getEnv("BUFFER_TIKTOK_API").replace(/^(["'])(.*)\1$/, "$2"));
++    bufferTarget = await bufferClient.target();
++    if (bufferTarget.isQueuePaused) throw new Error("Buffer TikTok queue is paused");
++  }
+ 
+   let succeeded = 0, failed = 0;
+   for (let i = 0; i < urls.length; i++) {
+@@ -651,7 +676,7 @@
+     const log = (msg) => console.log(msg);
+     const run = facebookOnly ? runFacebookOnly : onlyInstagram ? runInstagramOnly : (existsSync(ytUrl) ? runLocal : runOne);
+     try { await run(ytUrl, log, longVideo); succeeded++; }
+-    catch (err) { failed++; console.error(`❌ فشل هذا الفيديو — ${err instanceof Error ? err.message : String(err)}`); if (stateFile) throw new Error("Tracked publication stopped; inspect destination ledger before resuming"); }
++    catch (err) { failed++; console.error(`❌ فشل هذا الفيديو — ${err instanceof Error ? err.message : String(err)}`); if (stateFile || withTikTok) throw new Error("Tracked publication stopped; inspect destination ledger before resuming"); }
+ 
+     if (i < urls.length - 1) {
+       console.log("⏸️  انتظار دقيقة واحدة قبل الفيديو التالي لتفادي حظر فيسبوك...");
