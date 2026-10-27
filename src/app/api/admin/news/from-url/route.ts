@@ -3,33 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { generateUrlDraft, type NewsDraft } from "@/lib/ai/workflows";
 import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
+import { fetchNewsSource, NewsSourceError } from "@/lib/news-source";
 
-export const maxDuration = 60;
-
-function extractMeta(html: string, property: string): string {
-  const m =
-    html.match(new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`, "i")) ??
-    html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${property}["']`, "i"));
-  return m ? m[1].trim() : "";
-}
-
-function extractText(html: string): string {
-  // Strip scripts, styles, nav, header, footer, aside
-  const clean = html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<(nav|header|footer|aside|figure|figcaption)[^>]*>[\s\S]*?<\/\1>/gi, "");
-
-  // Extract <p> tag content
-  const paragraphs: string[] = [];
-  const pRe = /<p[^>]*>([\s\S]*?)<\/p>/gi;
-  let match;
-  while ((match = pRe.exec(clean)) !== null) {
-    const text = match[1].replace(/<[^>]+>/g, "").trim();
-    if (text.length > 60) paragraphs.push(text);
-  }
-  return paragraphs.slice(0, 20).join("\n\n");
-}
+export const maxDuration = 90;
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -39,45 +15,16 @@ export async function POST(req: NextRequest) {
   if (!url || typeof url !== "string") {
     return NextResponse.json({ error: "رابط غير صالح" }, { status: 400 });
   }
-  // SSRF protection: only allow public HTTP(S) URLs, block private IPs
-  let parsedUrl: URL;
-  try { parsedUrl = new URL(url); } catch {
-    return NextResponse.json({ error: "رابط غير صالح" }, { status: 400 });
-  }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    return NextResponse.json({ error: "بروتوكول غير مسموح به" }, { status: 400 });
-  }
-  const hostname = parsedUrl.hostname.toLowerCase();
-  const blockedPatterns = [/^localhost$/, /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^::1$/, /^0\.0\.0\.0$/];
-  if (blockedPatterns.some((p) => p.test(hostname))) {
-    return NextResponse.json({ error: "رابط غير مسموح به" }, { status: 400 });
-  }
-
-  // 1. Fetch the page
-  let html = "";
+  let article: Awaited<ReturnType<typeof fetchNewsSource>>;
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; AlBaalaagh/1.0)" },
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) return NextResponse.json({ error: "تعذّر جلب الصفحة" }, { status: 400 });
-    html = await res.text();
-  } catch {
-    return NextResponse.json({ error: "تعذّر الوصول إلى الرابط" }, { status: 400 });
+    article = await fetchNewsSource(url);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof NewsSourceError ? error.message : "تعذّر جلب المصدر" }, { status: 422 });
   }
-
-  // 2. Extract metadata
-  const ogTitle   = extractMeta(html, "og:title")   || extractMeta(html, "twitter:title");
-  const ogDesc    = extractMeta(html, "og:description") || extractMeta(html, "twitter:description");
-  const ogImage   = extractMeta(html, "og:image")   || extractMeta(html, "twitter:image");
-  const bodyText  = extractText(html);
-
-  if (!ogTitle && !bodyText) {
-    return NextResponse.json({ error: "لم نتمكن من استخراج محتوى الصفحة" }, { status: 400 });
-  }
-
-  const sourceTitle = ogTitle || "خبر من رابط خارجي";
-  const sourceDesc  = ogDesc  || "";
+  const parsedUrl = new URL(url);
+  const sourceTitle = article.title || "خبر من رابط خارجي";
+  const sourceDesc = article.description;
+  const ogImage = article.image;
 
   // 3. Generate and validate the complete draft before any database mutation.
   let generated: NewsDraft;
@@ -87,7 +34,7 @@ export async function POST(req: NextRequest) {
       source_name: parsedUrl.hostname.replace("www.", ""),
       source_url: url,
       description: sourceDesc,
-      article_text: bodyText.slice(0, 12_000),
+      article_text: article.articleText,
     });
   } catch (err: unknown) {
     if (err instanceof AiProviderError) {

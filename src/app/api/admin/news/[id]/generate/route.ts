@@ -3,8 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { generateNewsDraft, type Tone } from "@/lib/ai/workflows";
 import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
+import { fetchNewsSource, NewsSourceError } from "@/lib/news-source";
 
-export const maxDuration = 60;
+export const maxDuration = 90;
 
 export async function POST(
   req: NextRequest,
@@ -30,6 +31,9 @@ export async function POST(
   }
 
   try {
+    // RSS excerpts are deliberately short. Fetch the source before asking for
+    // an article; a URL in an AI prompt does not retrieve that page.
+    const article = await fetchNewsSource(news.url);
     const generated = await generateNewsDraft({
       title: news.title,
       excerpt: news.excerpt ?? "",
@@ -38,6 +42,9 @@ export async function POST(
       source_language: news.source_language ?? "ar",
       source_kind: news.source_kind ?? "media",
       category: news.category ?? "",
+      original_title: article.title,
+      article_text: article.articleText,
+      source_description: article.description,
     }, tone);
 
     // Generation only returns an editable preview. Publication remains a separate,
@@ -59,6 +66,9 @@ export async function POST(
       }],
     });
   } catch (err: unknown) {
+    if (err instanceof NewsSourceError) {
+      return NextResponse.json({ error: err.message }, { status: 422 });
+    }
     if (err instanceof AiProviderError) {
       const response = toAdminAiResponse(err);
       return NextResponse.json({ error: response.error, category: response.category }, { status: response.status });
