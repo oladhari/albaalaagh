@@ -38,3 +38,11 @@ Publishing through the existing admin article API dispatches the main cover and
 `/from-programmes/<compact-id>` URL to the existing SNS adapters, like articles
 and reports. Creating a draft or editing a published article does not dispatch
 another share. The feature does not authorize publication or sharing by itself.
+
+X and LinkedIn publication for programme articles, ordinary articles and reports
+uses the same guarded Buffer adapter as news. Editorial content sends its main
+landscape cover and dedicated canonical path; news retains its square asset.
+Receipts are claimed separately per source/channel and unknown outcomes are not
+automatically retried. Buffer failures are isolated from the other SNS and the
+already-saved website record. Draft saves never dispatch SNS. Existing
+`buffer_news:` receipt keys are retained for reconciliation compatibility.

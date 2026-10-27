@@ -8,7 +8,7 @@ vi.mock("../supabase", () => ({ supabaseAdmin: { from: () => ({
   update: ({value}: {value:string}) => ({eq: async (_:string,key:string) => {store.set(key,value);return {error:null};}}),
   select: () => ({eq: (_:string,key:string) => ({single: async () => ({data:{value:store.get(key)},error:null})}),like: () => ({limit: async () => ({data:[...store].map(([key,value])=>({key,value})),error:null})})}),
 })} }));
-import { newsBufferInput, newsBufferKey, postNewsToBufferNetwork, syncBufferNews } from "../buffer-news";
+import { contentBufferInput, postContentToBufferNetwork, newsBufferInput, newsBufferKey, postNewsToBufferNetwork, syncBufferNews } from "../buffer-news";
 const opts={sourceId:"news:stable-id",type:"news" as const,slug:"item",title:"عنوان الخبر",excerpt:"ملخص الخبر",facebook_image:"https://media.albaalaagh.com/square.png"};
 const fetcher=vi.fn();
 beforeEach(()=>{store.clear();fetcher.mockReset();vi.stubEnv("BUFFER_TIKTOK_API","test-key");vi.stubEnv("BUFFER_X_CHANNEL_ID","x-channel");vi.stubEnv("BUFFER_LINKEDIN_CHANNEL_ID","li-channel");vi.stubGlobal("fetch",fetcher);});
@@ -30,4 +30,10 @@ describe("Buffer news publication",()=>{
  it("persists an API rejection without claiming delivery or blindly retrying",async()=>{fetcher.mockResolvedValueOnce({ok:false,status:429});await expect(postNewsToBufferNetwork(opts,"linkedin")).rejects.toThrow("429");expect(JSON.parse([...store.values()][0]).state).toBe("unknown");});
  it("only reads pending post IDs during delivery reconciliation",async()=>{respond("sending");await postNewsToBufferNetwork(opts,"linkedin");fetcher.mockResolvedValueOnce({ok:true,json:async()=>({data:{post:{id:"post-li-channel",channelId:"li-channel",status:"sent",externalLink:"https://linkedin.com/post"}}})});expect(await syncBufferNews()).toEqual({checked:1});expect(JSON.parse([...store.values()][0]).state).toBe("sent");expect(await syncBufferNews()).toEqual({checked:0});expect(fetcher).toHaveBeenCalledTimes(2);});
  it("uses stable source IDs rather than a newly generated slug for duplicate detection",()=>{expect(newsBufferKey(opts,"twitter","x")).toBe(newsBufferKey({...opts,slug:"changed"},"twitter","x"));});
+});
+
+
+describe("Buffer editorial publication",()=>{
+ it.each([['article','articles'],['report','reports'],['programme','from-programmes']] as const)("shares %s with its landscape cover and correct canonical path",(type,section)=>{const input=contentBufferInput({...opts,type,facebook_image:null,image:"https://media.albaalaagh.com/landscape.jpg"},"twitter","x-channel");expect(input.text).toContain(`https://www.albaalaagh.com/${section}/item`);expect(input.assets).toEqual([{image:{url:"https://media.albaalaagh.com/landscape.jpg"}}]);});
+ it("deduplicates editorial delivery by stable article ID across slug changes",async()=>{respond();const article={...opts,type:"programme" as const,sourceId:"article:stable"};await postContentToBufferNetwork(article,"linkedin");await postContentToBufferNetwork({...article,slug:"renamed"},"linkedin");expect(fetcher).toHaveBeenCalledTimes(1);});
 });

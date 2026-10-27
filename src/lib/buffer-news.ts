@@ -26,7 +26,7 @@ function clip(text: string, limit: number): string {
   const chars = Array.from(text.replace(/\s+/gu, " ").trim());
   return chars.length <= limit ? chars.join("") : chars.slice(0, Math.max(0, limit - 1)).join("").replace(/\s+\S*$/u, "") + "…";
 }
-export function newsBufferInput(opts: ShareOptions, network: Network, channelId: string) {
+export function contentBufferInput(opts: ShareOptions, network: Network, channelId: string) {
   const url = shareUrl(opts);
   const hashtags = "#البلاغ #تونس";
   // Count full URL length conservatively; never truncate the link or hashtags.
@@ -35,11 +35,17 @@ export function newsBufferInput(opts: ShareOptions, network: Network, channelId:
   const room = budget - Array.from(title).length - 2;
   const excerpt = room >= 25 && opts.excerpt ? clip(opts.excerpt, room) : "";
   const text = [title, excerpt, url, hashtags].filter(Boolean).join("\n\n");
-  // News uses the exact square Facebook asset, never a landscape fallback.
-  if (!opts.facebook_image) throw new Error("Buffer news requires the Facebook square image");
-  const image = new URL(opts.facebook_image);
+  // News keeps its exact square asset; editorial sections reuse the main landscape cover.
+  const cover = opts.type === "news" ? opts.facebook_image : opts.facebook_image || opts.image;
+  if (!cover) throw new Error(opts.type === "news" ? "Buffer news requires the Facebook square image" : "Buffer editorial requires the main cover image");
+  const image = new URL(cover);
   if (image.protocol !== "https:" || image.username || image.password) throw new Error("Invalid Buffer news image URL");
   return { channelId: channelId.trim(), text, schedulingType: "automatic", mode: "shareNow", needsApproval: false, assets: [{ image: { url: image.href } }] };
+}
+
+export function newsBufferInput(opts: ShareOptions, network: Network, channelId: string) {
+  if (opts.type !== "news") throw new Error("Buffer news adapter only accepts news");
+  return contentBufferInput(opts, network, channelId);
 }
 
 export function newsBufferKey(opts: ShareOptions, network: Network, channelId: string): string {
@@ -61,11 +67,10 @@ async function refresh(key: string, receipt: Receipt) {
   return receipt;
 }
 
-export async function postNewsToBufferNetwork(opts: ShareOptions, network: Network) {
-  if (opts.type !== "news") throw new Error("Buffer news adapter only accepts news");
+export async function postContentToBufferNetwork(opts: ShareOptions, network: Network) {
   const channelId = (network === "twitter" ? process.env.BUFFER_X_CHANNEL_ID : process.env.BUFFER_LINKEDIN_CHANNEL_ID)?.trim();
   if (!channelId || !process.env.BUFFER_TIKTOK_API?.trim()) throw new Error(`Buffer news ${network}: configuration missing`);
-  const input = newsBufferInput(opts, network, channelId);
+  const input = contentBufferInput(opts, network, channelId);
   const key = newsBufferKey(opts, network, channelId);
   const receipt: Receipt = { network, channelId, sourceUrl: shareUrl(opts), state: "submitting", updatedAt: new Date().toISOString() };
   // A unique key atomically claims this source across concurrent clicks/instances.
@@ -93,6 +98,12 @@ export async function postNewsToBufferNetwork(opts: ShareOptions, network: Netwo
     await save(key, receipt);
     throw error;
   }
+}
+
+// Preserve the news-only entry point and existing receipt keys/reconciliation.
+export async function postNewsToBufferNetwork(opts: ShareOptions, network: Network) {
+  if (opts.type !== "news") throw new Error("Buffer news adapter only accepts news");
+  return postContentToBufferNetwork(opts, network);
 }
 
 export async function syncBufferNews() {

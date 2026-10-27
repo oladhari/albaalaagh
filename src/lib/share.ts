@@ -1,9 +1,7 @@
 import { postArticleToFacebook } from "@/lib/facebook";
 import { postArticleToInstagram } from "@/lib/instagram";
 import { postToTelegram } from "@/lib/telegram";
-import { postToX } from "@/lib/twitter";
-import { postToLinkedIn } from "@/lib/linkedin";
-import { postNewsToBufferNetwork } from "@/lib/buffer-news";
+import { postContentToBufferNetwork } from "@/lib/buffer-news";
 // Add new SNS imports here ↑
 
 import type { ShareOptions } from "./share-options";
@@ -14,8 +12,8 @@ export async function shareToAll(opts: ShareOptions): Promise<void> {
     postArticleToFacebook(opts),
     postArticleToInstagram(opts), // only fires when facebook_image is set — IG requires an image
     postToTelegram(opts),
-    opts.type === "news" ? postNewsToBufferNetwork(opts, "twitter") : postToX(opts),
-    opts.type === "news" ? postNewsToBufferNetwork(opts, "linkedin") : postToLinkedIn(opts),
+    postContentToBufferNetwork(opts, "twitter"),
+    postContentToBufferNetwork(opts, "linkedin"),
     // Add new SNS calls here ↑
   ]);
   results.forEach((result, index) => {

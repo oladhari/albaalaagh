@@ -29,6 +29,7 @@ export function articleShareOptions(article: ArticleShareRecord): ShareOptions {
   const report = isReport(article.category);
   const programme = isProgrammeArticle(article.category);
   return {
+    sourceId: `article:${article.id}`,
     title: article.title,
     excerpt: article.excerpt ?? "",
     slug: programme ? programmeArticlePublicId(article) : report ? reportPublicId(article) : article.slug,
