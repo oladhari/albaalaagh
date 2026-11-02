@@ -128,6 +128,9 @@ export const WRITERS = [
   { name: "عبد اللطيف المكي" },
 ] as const;
 
+// Retain stored URLs/history, but do not offer failing discovery sources for generation.
+export const UNAVAILABLE_NEWS_DISCOVERY_SOURCES = ["فرانس 24 عربي"] as const;
+
 export const NEWS_SOURCES = [
   // Tunisia: primary institutions first, followed by established local media.
   { name: "رئاسة الحكومة التونسية", rss: "https://www.pm.gov.tn/ar/rss.xml", language: "ar", kind: "official", topic: "tunisia", maxItems: 15 },
@@ -139,7 +142,7 @@ export const NEWS_SOURCES = [
   { name: "الأناضول", rss: "https://www.aa.com.tr/ar/rss/default?cat=live", language: "ar", kind: "agency", topic: "arab", maxItems: 20 },
   { name: "أخبار الأمم المتحدة", rss: "https://news.un.org/feed/subscribe/ar/news/all/rss.xml", language: "ar", kind: "official", topic: "international", maxItems: 15 },
   { name: "DW عربية", rss: "https://rss.dw.com/rdf/rss-ar-all", language: "ar", kind: "media", topic: "international", maxItems: 15 },
-  { name: "فرانس 24 عربي", rss: "https://www.france24.com/ar/rss", language: "ar", kind: "media", topic: "international", maxItems: 15 },
+  { name: "BBC عربي", rss: "https://feeds.bbci.co.uk/arabic/rss.xml", language: "ar", kind: "media", topic: "international", maxItems: 15 },
 
   // English discovery feeds. Published reports must be translated, attributed,
   // verified, and expanded with Albaalaagh context in the review screen.

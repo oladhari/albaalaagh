@@ -11,7 +11,7 @@ describe("CRM report lookup", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.auth.mockResolvedValue(null);
-    const query = { select: vi.fn().mockReturnThis(), eq: mocks.eq, maybeSingle: mocks.result };
+    const query = { select: vi.fn().mockReturnThis(), eq: mocks.eq, maybeSingle: mocks.result, gte: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), limit: mocks.result };
     mocks.eq.mockReturnValue(query);
     mocks.from.mockReturnValue(query);
   });
@@ -30,6 +30,17 @@ describe("CRM report lookup", () => {
     mocks.result.mockResolvedValue({ data: null, error: null });
     const response = await GET(new NextRequest("https://www.albaalaagh.com/api/admin/news?slug=missing"));
     expect(response.status).toBe(404);
+  });
+
+  it("hides retired discovery sources from pending suggestions without deleting history", async () => {
+    mocks.result.mockResolvedValue({ data: [
+      { id: "old", source: "فرانس 24 عربي", title: "حرب جديدة", source_topic: "international" },
+      { id: "new", source: "BBC عربي", title: "حرب جديدة", source_topic: "international" },
+    ], error: null });
+    const pending = await GET(new NextRequest("https://www.albaalaagh.com/api/admin/news?status=pending&view=important"));
+    expect((await pending.json()).map((item: { id: string }) => item.id)).toEqual(["new"]);
+    const history = await GET(new NextRequest("https://www.albaalaagh.com/api/admin/news?status=approved"));
+    expect(await history.json()).toHaveLength(2);
   });
 
   it("does not read the database for an unauthenticated request", async () => {

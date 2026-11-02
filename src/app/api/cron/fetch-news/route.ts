@@ -5,9 +5,13 @@ import { NEWS_SOURCES } from "@/types";
 import { scoreNewsPriority } from "@/lib/news-priority";
 import { classifyNewsBatch, type Classification } from "@/lib/ai/workflows";
 import { requireAdmin } from "@/lib/admin-auth";
-import { isFreshNewsDate, newsFreshnessCutoff } from "@/lib/news-feed";
+import { isFreshNewsDate, newsFreshnessCutoff, resolveNewsGeo } from "@/lib/news-feed";
+
+export const maxDuration = 300;
 
 const parser = new Parser({
+  timeout: 12_000,
+  headers: { "User-Agent": "Mozilla/5.0", Accept: "application/rss+xml, application/xml, text/xml, */*" },
   customFields: { item: ["media:content", "media:thumbnail", "enclosure"] },
 });
 
@@ -173,11 +177,7 @@ export async function GET(req: NextRequest) {
   for (let i = 0; i < toInsert.length; i++) {
     const article = toInsert[i];
     const inferred = classifications[i] ?? { geo: "general", category: "سياسة" };
-    const geo = article.source_topic === "tunisia"
-      ? "tunisia"
-      : article.source_topic === "arab"
-        ? "arab"
-        : inferred.geo;
+    const geo = resolveNewsGeo({ ...article, geo: inferred.geo === "general" ? article.source_topic : inferred.geo });
     const category = article.source_topic === "technology"
       ? "تكنولوجيا"
       : article.source_topic === "disaster"
@@ -187,6 +187,8 @@ export async function GET(req: NextRequest) {
 
     const { error } = await supabaseAdmin.from("news").insert({
       ...article,
+      source_topic: ["technology", "disaster"].includes(article.source_topic) ? article.source_topic
+        : ["tunisia", "arab", "international"].includes(geo) ? geo : article.source_topic,
       status: "pending",
       geo,
       category,

@@ -89,5 +89,17 @@ export function scoreNewsPriority(title: string, excerpt: string): number {
     score += 1;
   }
 
-  return Math.min(score, 10);
+  return Math.max(Math.min(score, 10), scoreMajorEvent(title, excerpt));
+}
+
+/** Major-event signals for discovery only, never evidence for article generation. */
+export function scoreMajorEvent(title: string, excerpt = ""): number {
+  const text = `${title} ${excerpt}`.toLowerCase();
+  if (/لورنس العرب|الحرب العالمية (?:الأولى|الاولى|الثانية)|world war (?:one|two|i\b|ii\b|1|2)/.test(text)) return 0;
+  if (/وقف (?:إطلاق|اطلاق) النار|حرب|غارات|غارة|هجمات|صواريخ|صاروخ|باتريوت|اغتيال|هجوم (?:صاروخي|عسكري|واسع)|قصف|اجتياح|توغل|تصعيد عسكري|ceasefire|airstrikes?|\bmissiles?\b|arms (?:sale|deal)|military aid|invasion|\bwar\b/.test(text)) return 9;
+  if (/زلزال|فيضانات|إعصار|تسونامي|كارثة|حريق واسع|تسمم جماعي|انهيار مبنى|حالة الطوارئ|ضحايا|قتلى|مقتل|انفجار|earthquake|tsunami|flooding|hurricane|killed|deadly|state of emergency/.test(text)) return 8;
+  if (/انتخابات (?:رئاسية|تشريعية)|حل البرلمان|حلّ البرلمان|إقالة الحكومة|استقالة (?:الرئيس|الحكومة)|رئيس الحكومة|تعديل الدستور|تشكيل الحكومة|نتائج الانتخابات|انتخابات إسرائيل|presidential election|parliamentary election|election results|government collaps/.test(text)) return 7;
+  if (/الميزانية|ميزانية الدولة|قانون المالية|البنك المركزي|التضخم|المديونية|صندوق النقد|عجز تجاري|أزمة (?:الماء|المياه|الكهرباء|الوقود|الخبز)|إضراب عام|انقطاع (?:المياه|الكهرباء).*ولايات|وباء|national strike|inflation|central bank|debt crisis|outbreak/.test(text)) return 6;
+  if (/حقوق الإنسان|الحريات|حرية الصحافة|مساجين الرأي|إضراب عن الطعام|احتجاجات|مظاهرات|protests|human rights|political prisoners/.test(text)) return 5;
+  return 0;
 }

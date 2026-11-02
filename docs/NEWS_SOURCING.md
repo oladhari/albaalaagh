@@ -14,6 +14,35 @@ The source registry in `src/types/index.ts` contains only feeds checked during
 development. Feed failures are isolated so one unavailable publisher does not
 stop the remaining imports.
 
+## Article-body retrieval and the review shortlist
+
+`src/lib/news-source.ts` fetches bounded public pages and extracts actual article
+containers or explicit `articleBody` data. Mosaïque's body is the URL-matched
+`__NEXT_DATA__.props.pageProps.pagedata.article.description` HTML, not its SEO
+teaser. Anadolu's streamed body and UN/France 24 containers need separate DOM
+scopes. Never fall back to arbitrary page paragraphs, RSS excerpts or metadata.
+USGS event pages require their official GeoJSON API; GDACS uses labelled event
+summary tables. Keep event evidence separate from generic disaster-model help.
+
+NASA's public `192.0.66.*` hosting addresses must not be confused with the special
+`192.0.0.0/24` range. Private, loopback, link-local and reserved addresses remain
+blocked, including after redirects.
+
+The admin opens **أهم الأخبار** by default: at most 12 Tunisian and 12 other
+important stories from the last 24 hours, plus the existing technology/science
+choices. Wars, major disasters and national developments receive stronger
+ranking. This is a deterministic discovery aid, not a factual verification or
+an automatic publication decision. **كل الأخبار الجديدة** retains the complete
+pending list. Existing pending items are re-scored on reads; no backfill or edits
+to published articles are needed. Geography follows story content where known,
+not simply the publisher's home country. BBC Arabic's free official feed replaces
+France 24 for discovery: France 24 passed local extraction checks but failed the
+live production-server retrieval test. Its old pending suggestions are hidden,
+not deleted; approved/rejected history is preserved. BBC Arabic and Mosaïque
+both passed live, draft-only generation tests.
+
+For live extraction audit details, see [the October 2026 source audit](news-source-audit-2026-10-31.md).
+
 ## Publishing rules
 
 - Keep the exact original URL and publisher name.

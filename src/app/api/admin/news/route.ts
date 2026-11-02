@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { UNAVAILABLE_NEWS_DISCOVERY_SOURCES } from "@/types";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/admin-auth";
 import { shareToAll } from "@/lib/share";
 import { publishedAtOrNow } from "@/lib/utils";
-import { newsFreshnessCutoff, sortNewsSuggestions } from "@/lib/news-feed";
+import { newsFreshnessCutoff, sortNewsSuggestions, selectImportantNews, suggestionPriority, resolveNewsGeo } from "@/lib/news-feed";
 
 export async function POST(req: NextRequest) {
   const unauthed = await requireAdmin();
@@ -128,5 +129,10 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json(sortNewsSuggestions(data ?? []));
+  const available = status === "pending"
+    ? (data ?? []).filter((item) => !UNAVAILABLE_NEWS_DISCOVERY_SOURCES.some((source) => source === item.source))
+    : data ?? [];
+  const items = available.map((item) => ({ ...item, geo: resolveNewsGeo(item), priority_score: suggestionPriority(item) }));
+  return NextResponse.json(status === "pending" && searchParams.get("view") === "important"
+    ? selectImportantNews(items) : sortNewsSuggestions(items));
 }
