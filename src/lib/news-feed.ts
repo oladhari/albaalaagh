@@ -20,6 +20,7 @@ type NewsSuggestion = {
 const SOURCE_PRIORITY: Record<string, number> = {
   "رئاسة الحكومة التونسية": 1,
   "موزاييك FM": 2,
+  "تونيزي تلغراف": 3,
   "نواة": 3,
   "الجزيرة": 4,
   "الأناضول": 5,
