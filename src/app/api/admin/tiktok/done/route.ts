@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { parseTikTokQueueRow, TIKTOK_QUEUE_PREFIX } from '@/lib/tiktok-queue';
 
 const prefix = 'tiktok_done:';
 const validId = (id: unknown): id is string => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -28,7 +29,19 @@ export async function POST(request: NextRequest) {
   if (!Array.isArray(ids) || ids.length > 500 || !ids.every(validId) || typeof body?.done !== 'boolean') return NextResponse.json({ error: 'Invalid marks' }, { status: 400 });
   if (!ids.length) return NextResponse.json({ ok: true });
   const { data: rows, error: lookupError } = await supabaseAdmin.from('site_videos').select('id').in('id', ids).eq('video_type', 'short').eq('published', true);
-  if (lookupError || rows?.length !== new Set(ids).size) return NextResponse.json({ error: 'Unknown Short IDs' }, { status: 400 });
+  if (lookupError) return NextResponse.json({ error: 'Could not validate Short IDs' }, { status: 500 });
+  const known = new Set((rows || []).map(row => row.id));
+  const missing = [...new Set(ids)].filter(id => !known.has(id));
+  if (missing.length) {
+    const { data: queued, error } = await supabaseAdmin.from('site_settings').select('key, value')
+      .in('key', missing.map(id => `${TIKTOK_QUEUE_PREFIX}${id}`));
+    if (error) return NextResponse.json({ error: 'Could not validate queue IDs' }, { status: 500 });
+    for (const row of queued || []) {
+      const video = parseTikTokQueueRow(row);
+      if (video) known.add(video.id);
+    }
+  }
+  if (known.size !== new Set(ids).size) return NextResponse.json({ error: 'Unknown Short IDs' }, { status: 400 });
   if (body.done) {
     // Ignore existing rows so migration of browser marks preserves Buffer receipts.
     const { error } = await supabaseAdmin.from('site_settings').upsert([...new Set(ids)].map(id => ({ key: `${prefix}${id}`, value: JSON.stringify({ site_id: id, state: 'sent', source: 'manual', updated_at: new Date().toISOString() }) })), { onConflict: 'key', ignoreDuplicates: true });

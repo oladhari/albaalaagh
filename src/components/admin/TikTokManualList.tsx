@@ -56,7 +56,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 
 export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
   const [done, setDone] = useState<Set<string>>(new Set());
-  const [hideDone, setHideDone] = useState(false);
+  const [hideDone, setHideDone] = useState(true);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const [syncError, setSyncError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -68,8 +70,10 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
       try {
         const ids = [...cached].filter(id => videos.some(video => video.id === id));
         if (ids.length && localStorage.getItem(MIGRATION_KEY) !== '1') {
-          const migration = await fetch('/api/admin/tiktok/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, done: true }) });
-          if (!migration.ok) throw new Error('sync');
+          for (let offset = 0; offset < ids.length; offset += 500) {
+            const migration = await fetch('/api/admin/tiktok/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids.slice(offset, offset + 500), done: true }) });
+            if (!migration.ok) throw new Error('sync');
+          }
         }
         localStorage.setItem(MIGRATION_KEY, '1');
         const response = await fetch('/api/admin/tiktok/done', { cache: 'no-store' });
@@ -80,6 +84,8 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
         if (active) { setDone(merged); setSyncError(''); saveDone(merged); }
       } catch {
         if (active) setSyncError('تعذّرت مزامنة علامات النشر. العلامات المحلية محفوظة.');
+      } finally {
+        if (active) setLoading(false);
       }
     }
     void refresh();
@@ -100,6 +106,8 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
     } finally { setSaving(false); }
   };
 
+  if (loading) return <p className="text-sm" style={{ color: "#9A9070" }}>جارٍ تحميل حالة النشر…</p>;
+
   if (videos.length === 0) {
     return (
       <p className="text-xs" style={{ color: "#9A9070" }}>لا توجد مقاطع شورتس بعد</p>
@@ -107,7 +115,7 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
   }
 
   const remaining = videos.filter((v) => !done.has(v.id)).length;
-  const visible   = hideDone ? videos.filter((v) => !done.has(v.id)) : videos;
+  const visible = videos.filter(v => (!hideDone || !done.has(v.id)) && v.title.includes(query.trim()));
 
   return (
     <div>
@@ -121,6 +129,15 @@ export default function TikTokManualList({ videos }: { videos: ShortVideo[] }) {
           إخفاء المكتملة
         </label>
       </div>
+      <input
+        type="search"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="ابحث في المقاطع"
+        aria-label="ابحث في المقاطع"
+        className="w-full mb-3 px-3 py-2 rounded-lg border text-sm"
+        style={{ background: "#111008", borderColor: "#2E2A18", color: "#F0EAD6" }}
+      />
       <div className="space-y-3">
         {visible.map((v) => {
           const isDone = done.has(v.id);

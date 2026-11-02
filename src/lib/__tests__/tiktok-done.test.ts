@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
-const m = vi.hoisted(() => ({ auth: vi.fn(), pages: vi.fn(), lookup: vi.fn(), upsert: vi.fn(), remove: vi.fn() }));
+const m = vi.hoisted(() => ({ auth: vi.fn(), pages: vi.fn(), lookup: vi.fn(), upsert: vi.fn(), remove: vi.fn(), queue: vi.fn() }));
 vi.mock("@/lib/admin-auth", () => ({ requireAdmin: m.auth }));
 vi.mock("@/lib/supabase", () => ({ supabaseAdmin: { from: (table: string) => {
+  let deleting = false;
   const q = { select: () => q, like: () => q, order: () => q, range: m.pages,
-    in: (...args: unknown[]) => table === "site_videos" ? q : m.remove(...args),
+    in: (...args: unknown[]) => table === "site_videos" ? q : deleting ? m.remove(...args) : m.queue(...args),
     eq: (_key: string, value: unknown) => value === true ? m.lookup() : q,
-    upsert: m.upsert, delete: () => q };
+    upsert: m.upsert, delete: () => { deleting = true; return q; } };
   return q;
 } } }));
 import { GET, POST } from "@/app/api/admin/tiktok/done/route";
@@ -22,6 +23,7 @@ beforeEach(() => {
   m.lookup.mockResolvedValue({ data: [{ id }], error: null });
   m.upsert.mockResolvedValue({ error: null });
   m.remove.mockResolvedValue({ error: null });
+  m.queue.mockResolvedValue({ data: [], error: null });
 });
 describe("shared TikTok publication marks", () => {
   it("requires admin authentication for reads and writes", async () => {
@@ -48,6 +50,12 @@ describe("shared TikTok publication marks", () => {
     m.lookup.mockResolvedValue({ data: [], error: null });
     expect((await POST(request({ ids: [id], done: true }))).status).toBe(400);
     expect(m.upsert).not.toHaveBeenCalled();
+  });
+  it("allows tracking a standalone public R2 reel without publishing it on the website", async () => {
+    m.lookup.mockResolvedValue({ data: [], error: null });
+    m.queue.mockResolvedValue({ data: [{ key: `tiktok_queue:${id}`, value: JSON.stringify({ id, title: "Reel", video_url: "https://media.albaalaagh.com/shorts/reel.mp4" }) }], error: null });
+    expect((await POST(request({ ids: [id], done: true }))).status).toBe(200);
+    expect(m.upsert).toHaveBeenCalled();
   });
   it("removes only explicitly selected marks on undo", async () => {
     expect((await POST(request({ ids: [id], done: false }))).status).toBe(200);

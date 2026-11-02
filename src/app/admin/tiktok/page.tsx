@@ -1,15 +1,32 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import TikTokManualList from "@/components/admin/TikTokManualList";
+import { mergeTikTokQueue, parseTikTokQueueRow, TIKTOK_QUEUE_PREFIX, type TikTokQueueVideo } from "@/lib/tiktok-queue";
 
 async function getRecentShorts() {
-  const { data } = await supabaseAdmin
-    .from("site_videos")
-    .select("id, title, description, video_url, published_at")
-    .eq("video_type", "short")
-    .eq("published", true)
-    .order("published_at", { ascending: false })
-    .limit(500);
-  return data ?? [];
+  const videos: TikTokQueueVideo[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabaseAdmin.from("site_videos")
+      .select("id, title, description, video_url, published_at")
+      .eq("video_type", "short").eq("published", true)
+      .order("published_at", { ascending: false }).order("id")
+      .range(offset, offset + 999);
+    if (error) throw new Error("Could not load TikTok candidates");
+    videos.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  const queued: TikTokQueueVideo[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabaseAdmin.from("site_settings")
+      .select("key, value").like("key", `${TIKTOK_QUEUE_PREFIX}%`)
+      .order("key").range(offset, offset + 999);
+    if (error) throw new Error("Could not load TikTok queue");
+    for (const row of data || []) {
+      const video = parseTikTokQueueRow(row);
+      if (video) queued.push(video);
+    }
+    if (!data || data.length < 1000) break;
+  }
+  return mergeTikTokQueue(videos, queued);
 }
 
 async function getTikTokStatus() {
@@ -19,7 +36,7 @@ async function getTikTokStatus() {
     .in("key", ["tiktok_access_token", "tiktok_open_id", "tiktok_token_expires_at"]);
 
   const map: Record<string, string> = {};
-  (data ?? []).forEach((r: any) => { map[r.key] = r.value; });
+  (data ?? []).forEach((r: { key: string; value: string }) => { map[r.key] = r.value; });
 
   const connected  = !!map["tiktok_access_token"];
   const openId     = map["tiktok_open_id"] ?? null;
@@ -97,11 +114,11 @@ export default async function TikTokAdminPage({
         )}
       </div>
 
-      {!status.connected && (
+      {(
         <div className="mt-8">
-          <h2 className="text-xs font-bold mb-1" style={{ color: "#C9A844" }}>نشر يدوي — بانتظار ربط الحساب</h2>
+          <h2 className="text-xs font-bold mb-1" style={{ color: "#C9A844" }}>متابعة النشر على TikTok</h2>
           <p className="text-xs mb-3" style={{ color: "#9A9070" }}>
-            انسخ العنوان (وهو نفسه ما سيُستخدم كنص الفيديو لاحقاً)، حمّل الفيديو، وارفعه من تطبيق TikTok يدوياً.
+            تظهر هنا مقاطع الموقع والمقاطع المضافة للمتابعة. ضع علامة «تم النشر» بعد التأكد من وجود المقطع على TikTok؛ الانتظار أو فشل الرفع لا يعني اكتمال النشر.
           </p>
           <TikTokManualList videos={shorts} />
         </div>
