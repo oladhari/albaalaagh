@@ -33,8 +33,7 @@ node --env-file=.env.local tools/buffer-tiktok/cli.mjs status
 
 This is TikTok-only: it never republishes Facebook/Instagram or inserts website
 video records. `status` writes a per-Short `tiktok_done:UUID` row to `site_settings`
-only after Buffer confirms `sent` and supplies a TikTok URL. TikTok consent is
-separate from the existing `/reels` skill's destinations.
+only after Buffer confirms `sent` and supplies a TikTok URL. TikTok and X are now included in the user's standing `/reels` authorization for the selected batch; standalone unrelated TikTok batches still need explicit scope.
 Do not send an unselected backlog automatically.
 
 Alternatively use `--file /absolute/path/item.json` instead of `--site-id`:
@@ -51,12 +50,12 @@ Alternatively use `--file /absolute/path/item.json` instead of `--site-id`:
 Only existing public `/shorts/*.mp4` media on our public media host is accepted.
 Captions over 2200 characters stop the workflow. Private archive URLs are rejected.
 
-## New local reels: explicit opt-in handoff
+## New local reels: CLI handoff and skill defaults
 
 The existing `scripts/upload-shorts-to-fb-reels.mjs` now accepts `--with-tiktok`
 for local Shorts. The flag queues the same public video and caption in Buffer
 after confirming the website insert. It does not upload a new YouTube copy.
-Without this flag, the publisher keeps its existing destinations.
+Without this flag, the CLI publisher keeps its existing destinations. The `/reels` skill must separately complete the missing TikTok/X Buffer stages; the CLI flag is not the skill authorization boundary.
 
 ```sh
 # This publishes to the publisher's usual public destinations AND queues TikTok.
@@ -90,8 +89,7 @@ missing receipts and database failures stop the batch. Reusing the same manifest
 skips locally tracked posts rather than creating new copies.
 
 The runner polls only the active post, once per minute, and does not repeatedly
-query sent posts. Buffer's Free API currently allows 100 calls in a rolling
-15-minute window. On HTTP 429, stop and honor the returned `Retry-After` seconds
+query sent posts. Use the API's returned rate-limit headers for the account's current short-window and daily allowance; do not assume a fixed plan limit. On HTTP 429, stop and honor the returned `Retry-After` seconds
 before resuming the same manifest. Never restart or resubmit a pending post to
 work around a read quota. API errors now report the retry interval explicitly.
 
@@ -176,3 +174,5 @@ schedules, reports and ledgers remain on the data disk, outside Git.
 
 `npm test` runs the website's Vitest suite and the tools' separate Node test
 suite. These automated checks mock external services and do not publish.
+
+For the standing `/reels` default, explicitly select `destinations: ["tiktok", "twitter"]` in the Buffer manifest. A platform-only recovery may select just one. `publication_authorized` plus saved authorization must cover every selected network; do not add LinkedIn without a separate request. Supply the actual `programme_title`, or authored `buffer_x_caption` in per-clip metadata. The worker no longer uses a fixed programme label. `buffer_x_link_only: true` sends a reviewed text/link post for a reel exceeding Buffer's native X duration limit, preserving the full video rather than silently truncating it. TikTok delivery errors/cooldowns are checked before another TikTok submission; an unexpired saved cooldown blocks new TikTok writes. Run X independently when TikTok is deferred.

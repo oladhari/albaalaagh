@@ -11,6 +11,14 @@ Also read the canonical cross-project workstation instructions at
 repository remain authoritative for website, secrets, storage, and publishing
 work if the two instruction sets overlap.
 
+# Completing verified fixes
+
+The user authorizes merging verified requested fixes into `main` and deploying
+them to production as the normal completion step. Commit the relevant changes,
+merge the PR, and verify the active production deployment before calling a fix
+complete. Do not leave fixes only in a dirty checkout or preview. This standing
+instruction does not authorize publishing content or including unrelated edits.
+
 # Never leak secrets into tracked files
 
 Never write a real API key, token, JWT, service_role key, or any other `.env*` value into README.md, code comments, docs, scripts, or any other file that gets committed/pushed — even temporarily, even in an example. This happened once (a live Supabase `service_role` JWT hardcoded in a README curl example, sitting in a public repo) and must never happen again.
@@ -51,8 +59,7 @@ This rule is authoritative and must not be inferred from a checker rating:
 
 Use `tools/buffer-tiktok/cli.mjs` for selected existing website Shorts and
 `tools/buffer-tiktok/batch.mjs` for explicitly selected finite batches. Credentials
-come from `BUFFER_TIKTOK_API` in `.env.local`. Publication requires explicit
-TikTok scope; the regular `/reels` destinations do not implicitly include it.
+come from `BUFFER_TIKTOK_API` in `.env.local`. The user has added TikTok and X through Buffer to the standing `/reels` destinations. An actual selected `/reels` batch authorizes those two networks; skill maintenance alone does not authorize posting or expanding the batch. LinkedIn still requires a separate request.
 The local reels publisher supports the opt-in `--with-tiktok` handoff.
 
 Mark a clip done only after confirmed delivery, using its `tiktok_done:UUID`
