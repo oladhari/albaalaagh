@@ -135,6 +135,7 @@ export const NEWS_SOURCES = [
   // Tunisia: primary institutions first, followed by established local media.
   { name: "رئاسة الحكومة التونسية", rss: "https://www.pm.gov.tn/ar/rss.xml", language: "ar", kind: "official", topic: "tunisia", maxItems: 15 },
   { name: "موزاييك FM", rss: "https://www.mosaiquefm.net/ar/rss", language: "ar", kind: "media", topic: "tunisia", maxItems: 25 },
+  { name: "تونيزي تلغراف", rss: "https://tunisie-telegraph.com/feed/", language: "ar", kind: "media", topic: "tunisia", maxItems: 15 },
   { name: "نواة", rss: "https://nawaat.org/feed/", language: "ar", kind: "media", topic: "tunisia", maxItems: 10 },
 
   // Arabic regional and international coverage.

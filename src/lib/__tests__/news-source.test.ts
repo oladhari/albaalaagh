@@ -40,6 +40,16 @@ describe("news article extraction", () => {
 });
 
 describe("publisher article layouts", () => {
+  it("extracts Tunisie Telegraph's actual body including its final paragraph, excluding page teasers", () => {
+    const body = `<p>${story}</p><p>Verified final detail absent from the headline and RSS excerpt.</p>`;
+    const html = `<meta name="description" content="Short RSS-like teaser"><article><p>UNRELATED teaser ${story}</p><div class="td_block_wrap tdb_single_content td-post-content tagdiv-type"><div class="tdb-block-inner td-fix-index">${body}</div></div><div><p>UNRELATED next story ${story}</p></div></article>`;
+    const source = extractNewsSource(html, "https://tunisie-telegraph.com/news-tunisie/example/");
+    expect(source.articleText).toContain(story);
+    expect(source.articleText).toContain("Verified final detail");
+    expect(source.articleText).not.toMatch(/UNRELATED|Short RSS-like teaser/);
+    expect(() => extractNewsSource(`<title>Headline only</title><meta name="description" content="${story}"><div class="td-post-content"></div>`, "https://tunisie-telegraph.com/news-tunisie/empty/")).toThrow();
+  });
+
   it("reads Mosaïque's matched article body from hydration, never its SEO teaser or a related story", () => {
     const data = { props: { pageProps: { pagedata: { article: { id: 12345, description: `<p>${story}</p><p>Body-only fact omitted from the teaser.</p>`, seoDescription: "Title-only teaser" }, related: [{ description: `<p>UNRELATED ${story}</p>` }] } } } };
     const html = `<meta property="og:title" content="Source headline"><article><div class="tags">Tags</div></article><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(data)}</script>`;

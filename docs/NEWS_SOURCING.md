@@ -16,6 +16,15 @@ stop the remaining imports.
 
 ## Article-body retrieval and the review shortlist
 
+Tunisie Telegraph (`تونيزي تلغراف`) uses its public `/feed/` for discovery.
+Generation separately fetches the article's `td-post-content` body, including
+the final paragraph, and excludes surrounding article recommendations. A headline,
+RSS excerpt or metadata description alone still fails extraction. Three current
+articles passed local full-body checks when this source was added. A live
+production draft-only test also retrieved the fuel-transport strike article,
+including its agreement details absent from the discovery excerpt. No article
+was published during the test.
+
 `src/lib/news-source.ts` fetches bounded public pages and extracts actual article
 containers or explicit `articleBody` data. Mosaïque's body is the URL-matched
 `__NEXT_DATA__.props.pageProps.pagedata.article.description` HTML, not its SEO

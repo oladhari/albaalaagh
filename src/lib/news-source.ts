@@ -76,7 +76,7 @@ export function extractNewsSource(html: string, sourceUrl?: string) {
     DomUtils.removeElement(node);
   }
   const containers = DomUtils.findAll((node) => ["div", "section", "article", "main"].includes(node.name), document.children);
-  const bodyClasses = /(?:^|\s)(?:entry-content|article-content|article-body|post-content|t-content__main|field--name-body|embed-responsive)(?:\s|$)/;
+  const bodyClasses = /(?:^|\s)(?:entry-content|article-content|article-body|post-content|td-post-content|t-content__main|field--name-body|embed-responsive)(?:\s|$)/;
   const explicit = containers.filter((node) => node.attribs.itemprop === "articleBody" || "data-article-content" in node.attribs || bodyClasses.test(node.attribs.class ?? ""));
   // Do not stop at the first empty <article> (UN News/streamed React pages).
   const scoped = [...explicit, ...containers.filter((node) => node.name === "article"), ...containers.filter((node) => node.name === "main")];
