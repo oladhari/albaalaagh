@@ -7,7 +7,7 @@ import type { NewsArticle, NewsCitation } from "@/types";
 import CoverUpload from "@/components/admin/CoverUpload";
 import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
 
-type Filter = "pending" | "approved" | "rejected" | "priority";
+type Filter = "important" | "pending" | "approved" | "rejected" | "priority";
 type Tone   = "accountability" | "neutral" | "positive";
 
 const TONES: { value: Tone; label: string; color: string }[] = [
@@ -55,7 +55,7 @@ const inputStyle = {
 export default function AdminNewsPage() {
   const router = useRouter();
   const [items, setItems]         = useState<NewsArticle[]>([]);
-  const [filter, setFilter]       = useState<Filter>("pending");
+  const [filter, setFilter]       = useState<Filter>("important");
   const [loading, setLoading]     = useState(true);
   const [working, setWorking]     = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
@@ -74,8 +74,8 @@ export default function AdminNewsPage() {
 
   const load = useCallback(async (status: Filter) => {
     setLoading(true);
-    const apiStatus = status === "priority" ? "pending" : status;
-    const res  = await fetch(`/api/admin/news?status=${apiStatus}`, { credentials: "include" });
+    const apiStatus = status === "priority" || status === "important" ? "pending" : status;
+    const res  = await fetch(`/api/admin/news?status=${apiStatus}${status === "important" ? "&view=important" : ""}`, { credentials: "include" });
     const data = await res.json();
     const all  = Array.isArray(data) ? data : [];
     setItems(status === "priority" ? all.filter((n: any) => (n.priority_score ?? 0) >= 5) : all);
@@ -315,8 +315,9 @@ export default function AdminNewsPage() {
   };
 
   const LABELS: Record<Filter, string> = {
+    important: "أهم الأخبار",
     priority: "⭐ أولوية",
-    pending:  "بانتظار الموافقة",
+    pending:  "كل الأخبار الجديدة",
     approved: "موافق عليها",
     rejected: "مرفوضة",
   };
@@ -385,7 +386,7 @@ export default function AdminNewsPage() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        {(["priority", "pending", "approved", "rejected"] as Filter[]).map((tab) => (
+        {(["important", "pending", "priority", "approved", "rejected"] as Filter[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
@@ -401,6 +402,9 @@ export default function AdminNewsPage() {
         ))}
       </div>
 
+      {filter === "important" && <p className="text-sm mb-5" style={{ color: DIM }}>
+        مختارات من آخر 24 ساعة: حتى 12 خبرًا مهمًا من تونس و12 من الأخبار العربية والدولية، مع تقليل التكرار. أخبار التقنية والعلوم تبقى كاملة. تجد بقية المواد في «كل الأخبار الجديدة».
+      </p>}
       {/* Preview / Edit panel */}
       {preview && (
         <div
@@ -674,7 +678,7 @@ export default function AdminNewsPage() {
         {!loading && items.length === 0 && (
           <div className="text-center py-12">
             <p className="text-sm" style={{ color: DIM }}>
-              {filter === "pending" ? "لا توجد أخبار جديدة — اضغط «جلب أخبار جديدة» أعلاه" : "لا توجد عناصر في هذه الفئة"}
+              {filter === "pending" || filter === "important" ? "لا توجد أخبار جديدة — اضغط «جلب أخبار جديدة» أعلاه" : "لا توجد عناصر في هذه الفئة"}
             </p>
           </div>
         )}

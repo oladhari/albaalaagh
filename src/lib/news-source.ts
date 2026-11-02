@@ -1,6 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import sanitizeHtml from "sanitize-html";
+import { parseDocument, DomUtils } from "htmlparser2";
 
 export class NewsSourceError extends Error {}
 
@@ -14,58 +15,99 @@ function text(value: string): string {
     .replace(/\s+/g, " ").trim();
 }
 
-// Find the matching closing tag, rather than stopping at a nested div's end.
-function container(html: string, opening: RegExp): string | null {
-  const match = opening.exec(html);
-  if (!match) return null;
-  const tag = /^<(\w+)/.exec(match[0])![1];
-  const tags = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi");
-  tags.lastIndex = match.index + match[0].length;
-  const start = tags.lastIndex;
-  let depth = 1;
-  for (let token; (token = tags.exec(html));) {
-    depth += token[1] ? -1 : 1;
-    if (!depth) return html.slice(start, token.index);
+// Explicit article fields only: feed snippets, metadata descriptions and arbitrary
+// page paragraphs must never become evidence for a generated report.
+export function extractNewsSource(html: string, sourceUrl?: string) {
+  const document = parseDocument(html);
+  const elements = (name: string) => DomUtils.getElementsByTagName(name, document, true);
+  const meta = (name: string) => {
+    const node = elements("meta").find((node) => node.attribs.property === name || node.attribs.name === name);
+    return text(node?.attribs.content ?? "");
+  };
+  const title = meta("og:title") || meta("twitter:title") || text(DomUtils.textContent(elements("title")[0] ?? document));
+  const description = meta("og:description") || meta("description") || meta("twitter:description");
+  const candidates: string[] = [];
+  const scripts = elements("script");
+
+  // Mosaïque's <article> is an empty hydration shell. Its *actual HTML body*
+  // lives here; seoDescription/metadata and other stories are not fallbacks.
+  if (sourceUrl && /(^|\.)mosaiquefm\.net$/i.test(new URL(sourceUrl).hostname)) {
+    const script = scripts.find((node) => node.attribs.id === "__NEXT_DATA__");
+    try {
+      const article = JSON.parse(DomUtils.textContent(script ?? document)).props?.pageProps?.pagedata?.article;
+      if (article && sourceUrl.split("/").includes(String(article.id)) && /<p\b/i.test(article.description ?? "")) {
+        candidates.push(article.description);
+      }
+    } catch { /* Missing/changed hydration data is not permission to use metadata. */ }
   }
-  return null;
+
+  // GDACS reports publish evidence in labelled table cells, not article <p>s.
+  if (sourceUrl && /(^|\.)gdacs\.org$/i.test(new URL(sourceUrl).hostname)) {
+    const summary = DomUtils.findOne((node) => node.attribs.id === "alert_summary_left", document.children, true);
+    if (summary) {
+      const rows = DomUtils.getElementsByTagName("tr", summary, true).map((row) =>
+        DomUtils.getElementsByTagName("td", row, true).map((cell) => text(DomUtils.getOuterHTML(cell)).replace(/:\s*$/, "")).join(": "));
+      const eventId = new URL(sourceUrl).searchParams.get("eventid");
+      const evidence = [...DomUtils.getElementsByTagName("p", summary, true).map((node) => text(DomUtils.getOuterHTML(node))), ...rows].join("\n\n");
+      if (eventId && /^\d+$/.test(eventId) && rows.some((row) => row.includes(` ${eventId}`)) && validArticleText(evidence)) {
+        return { title, description, image: meta("og:image"), articleText: evidence };
+      }
+    }
+  }
+
+  const structuredBodies: string[] = [];
+  const visit = (value: unknown, depth = 0) => {
+    if (!value || typeof value !== "object" || depth > 12) return;
+    if (Array.isArray(value)) { value.forEach((v) => visit(v, depth + 1)); return; }
+    const record = value as Record<string, unknown>;
+    const types = Array.isArray(record["@type"]) ? record["@type"] : [record["@type"]];
+    if (types.some((v) => /^(?:NewsArticle|Article|BlogPosting|LiveBlogPosting|ReportageNewsArticle|TechArticle)$/.test(String(v)))
+      && typeof record.articleBody === "string") structuredBodies.push(record.articleBody);
+    // Only the document's structured graph, not related-item lists.
+    if (record["@graph"]) visit(record["@graph"], depth + 1);
+    if (record.mainEntity) visit(record.mainEntity, depth + 1);
+  };
+  for (const node of scripts.filter((node) => node.attribs.type === "application/ld+json")) {
+    try { visit(JSON.parse(DomUtils.textContent(node))); } catch { /* Malformed JSON-LD: try the DOM. */ }
+  }
+
+  const ignored = /(?:^|[\s_-])(?:related|newsletter|share|sharing|advertisement|advert|social)(?:[\s_-]|$)/i;
+  for (const node of DomUtils.findAll((node) => ["script", "style", "nav", "header", "footer", "aside", "figure", "figcaption", "form", "noscript", "button"].includes(node.name) || ignored.test(node.attribs.class ?? ""), document.children)) {
+    DomUtils.removeElement(node);
+  }
+  const containers = DomUtils.findAll((node) => ["div", "section", "article", "main"].includes(node.name), document.children);
+  const bodyClasses = /(?:^|\s)(?:entry-content|article-content|article-body|post-content|t-content__main|field--name-body|embed-responsive)(?:\s|$)/;
+  const explicit = containers.filter((node) => node.attribs.itemprop === "articleBody" || "data-article-content" in node.attribs || bodyClasses.test(node.attribs.class ?? ""));
+  // Do not stop at the first empty <article> (UN News/streamed React pages).
+  const scoped = [...explicit, ...containers.filter((node) => node.name === "article"), ...containers.filter((node) => node.name === "main")];
+  for (const node of scoped) candidates.push(DomUtils.getOuterHTML(node));
+  for (const body of candidates) {
+    const dom = parseDocument(body);
+    const paragraphs = DomUtils.getElementsByTagName("p", dom, true)
+      .map((node) => text(DomUtils.getOuterHTML(node))).filter((p) => p.length >= 2 && !/^(?:نشرت في:|آخر تحديث:|كلمات مفتاحية مرتبطة)/.test(p));
+    const articleText = [...new Set(paragraphs)].join("\n\n").slice(0, MAX_TEXT);
+    if (validArticleText(articleText)) return { title, description, image: meta("og:image") || meta("twitter:image"), articleText };
+  }
+  for (const body of structuredBodies) {
+    const articleText = text(body).slice(0, MAX_TEXT);
+    if (validArticleText(articleText) && articleText !== description && articleText !== title) {
+      return { title, description, image: meta("og:image") || meta("twitter:image"), articleText };
+    }
+  }
+  throw new NewsSourceError("تعذّر استخراج نص المقال كاملاً. ألصق نص المصدر للمراجعة بدلاً من التلخيص من عنوان فقط.");
 }
 
-export function extractNewsSource(html: string) {
-  function meta(name: string): string {
-    for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
-      const attrs = Object.fromEntries([...tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)]
-        .map((m) => [m[1].toLowerCase(), m[2] ?? m[3]]));
-      if (attrs.property === name || attrs.name === name) return text(attrs.content ?? "");
-    }
-    return "";
-  }
-  const clean = html.replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<(script|style|nav|header|footer|aside|figure|figcaption|form)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "");
-  // Prefer the article body over headers, related stories and promotional copy.
-  const body = container(clean, /<(?:div|section)\b[^>]*class=["'][^"']*\b(?:entry-content|article-content|article-body|post-content)\b[^"']*["'][^>]*>/i)
-    ?? container(clean, /<article\b[^>]*>/i)
-    ?? container(clean, /<main\b[^>]*>/i)
-    ?? clean;
-  const paragraphs = [...body.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p\s*>/gi)]
-    .map((m) => text(m[1])).filter((p) => p.length >= 20);
-  const articleText = [...new Set(paragraphs)].join("\n\n").slice(0, MAX_TEXT);
-  if (articleText.length < 250 || /^(access denied|just a moment|enable javascript)/i.test(articleText)) {
-    throw new NewsSourceError("تعذّر استخراج نص المقال كاملاً. ألصق نص المصدر للمراجعة بدلاً من التلخيص من عنوان فقط.");
-  }
-  return {
-    title: meta("og:title") || meta("twitter:title") || text(/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? ""),
-    description: meta("og:description") || meta("description") || meta("twitter:description"),
-    image: meta("og:image") || meta("twitter:image"),
-    articleText,
-  };
+function validArticleText(value: string): boolean {
+  return value.length >= 250 && !/(?:access denied|just a moment|enable javascript|requires javascript|verify (?:that )?you are human|browser is not supported|checking your browser)/i.test(value);
 }
 
 export function isPublicNewsAddress(address: string): boolean {
   if (isIP(address) === 4) {
-    const [a, b] = address.split(".").map(Number);
+    const [a, b, c] = address.split(".").map(Number);
     return !(a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127)
       || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
-      || (a === 192 && (b === 0 || b === 168)) || (a === 198 && (b === 18 || b === 19)));
+      || (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2))))
+      || (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) || (a === 203 && b === 0 && c === 113));
   }
   // Only global IPv6 unicast; excludes loopback, link-local, private and mapped IPv4.
   return isIP(address) === 6 && /^[23][0-9a-f]{3}:/i.test(address);
@@ -85,10 +127,39 @@ async function publicUrl(value: string): Promise<URL> {
   return url;
 }
 
+export function extractEarthquakeSource(value: unknown, eventId: string) {
+  const event = value as { id?: string; type?: string; properties?: Record<string, unknown>; geometry?: { coordinates?: number[] } };
+  const props = event?.properties;
+  const coordinates = event?.geometry?.coordinates;
+  if (event?.type !== "Feature" || event.id !== eventId || !props || !coordinates || coordinates.length < 3
+    || !coordinates.every(Number.isFinite) || typeof props.mag !== "number" || !Number.isFinite(props.mag)
+    || typeof props.time !== "number" || !Number.isFinite(new Date(props.time).getTime()) || typeof props.place !== "string") {
+    throw new NewsSourceError("تعذّر التحقق من بيانات الزلزال من USGS.");
+  }
+  const title = text(String(props.title || `M ${props.mag} - ${props.place}`));
+  const articleText = [
+    "Official USGS earthquake event data (GeoJSON).",
+    `Event identifier: ${eventId}. Event type: ${text(String(props.type ?? "earthquake"))}.`,
+    `Location: ${text(props.place)}. Magnitude: ${props.mag}; magnitude type: ${text(String(props.magType ?? "not supplied"))}.`,
+    `Origin time (UTC): ${new Date(props.time).toISOString()}.`,
+    `Epicentre coordinates: latitude ${coordinates[1]} degrees, longitude ${coordinates[0]} degrees. Depth: ${coordinates[2]} km.`,
+    `Review status: ${text(String(props.status ?? "not supplied"))}.`,
+    "These event fields do not provide confirmed casualty or damage counts; those must not be inferred from magnitude alone.",
+  ].join("\n\n");
+  return { title, description: title, image: "", articleText };
+}
+
 export async function fetchNewsSource(value: string) {
   const signal = AbortSignal.timeout(12_000);
   try {
-    let url = await publicUrl(value);
+    const originalUrl = await publicUrl(value);
+    // GDACS still advertises HTTP links, while its report server requires HTTPS.
+    if (/(^|\.)gdacs\.org$/.test(originalUrl.hostname)) originalUrl.protocol = "https:";
+    const eventId = originalUrl.hostname === "earthquake.usgs.gov"
+      ? /^\/earthquakes\/eventpage\/([a-z0-9]+)(?:\/|$)/i.exec(originalUrl.pathname)?.[1] : undefined;
+    let url = eventId
+      ? await publicUrl(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventid=${encodeURIComponent(eventId)}`)
+      : originalUrl;
     for (let redirects = 0; redirects <= 3; redirects++) {
       const response = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; AlBaalaagh/1.0)" },
@@ -101,7 +172,8 @@ export async function fetchNewsSource(value: string) {
         url = await publicUrl(new URL(location, url).href);
         continue;
       }
-      if (!response.ok || !response.headers.get("content-type")?.includes("text/html") || !response.body) break;
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!response.ok || !response.body || !(eventId ? /application\/(?:geo\+)?json/.test(contentType) : contentType.includes("text/html"))) break;
       const reader = response.body.getReader();
       const chunks: Uint8Array[] = [];
       let bytes = 0;
@@ -112,7 +184,9 @@ export async function fetchNewsSource(value: string) {
         if (bytes > MAX_BYTES) { await reader.cancel(); throw new NewsSourceError("صفحة المصدر أكبر من الحد المسموح"); }
         chunks.push(chunk);
       }
-      return { ...extractNewsSource(Buffer.concat(chunks).toString("utf8")), url: url.href };
+      const source = Buffer.concat(chunks).toString("utf8");
+      if (eventId) return { ...extractEarthquakeSource(JSON.parse(source), eventId), url: originalUrl.href };
+      return { ...extractNewsSource(source, url.href), url: url.href };
     }
   } catch (error) {
     if (error instanceof NewsSourceError) throw error;
