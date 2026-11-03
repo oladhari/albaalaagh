@@ -36,11 +36,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          <a
+            href="/"
+            aria-label="البلاغ — الصفحة الرئيسية"
+            onClick={() => setOpen(false)}
+            className="flex min-h-11 items-center gap-2 px-1 shrink-0 rounded-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+          >
             <span className="logo-3d text-2xl font-black tracking-tight">
               البلاغ
             </span>
-          </Link>
+          </a>
 
           {/* Desktop Nav */}
           <nav className="hidden xl:flex items-center gap-1">
