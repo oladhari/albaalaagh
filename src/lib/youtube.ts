@@ -42,7 +42,7 @@ function mapVideo(item: any, videoId?: string): YTVideo {
 }
 
 async function ytFetch(url: URL, revalidate = 1800): Promise<any> {
-  const res = await fetch(url.toString(), { next: { revalidate } });
+  const res = await fetch(url.toString(), { next: { revalidate }, signal: AbortSignal.timeout(15_000) });
   return res.json();
 }
 
