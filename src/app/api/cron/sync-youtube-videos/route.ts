@@ -53,9 +53,10 @@ export async function GET(req: NextRequest) {
     }
 
     const ytPlaylists = await fetchPlaylistNames();
+    progress("playlist_names_fetched");
 
     const [membership, playlistsRes, existingRes] = await Promise.all([
-      fetchPlaylistVideoMembership(ytPlaylists),
+      fetchPlaylistVideoMembership(ytPlaylists).then(value => { progress("youtube_membership_fetched"); return value; }),
       supabaseAdmin.from("playlists").select("id, name"),
       Promise.all(candidateChunks.map((ids) =>
         supabaseAdmin.from("site_videos").select("id,video_url,youtube_video_id,playlist_id").or(

@@ -212,7 +212,7 @@ export async function fetchNewestUploadsDetailed(
     chUrl.searchParams.set("key", YOUTUBE_API_KEY);
     chUrl.searchParams.set("id", CHANNEL_ID);
     chUrl.searchParams.set("part", "contentDetails");
-    const chData = await ytFetch(chUrl, 86400);
+    const chData = await ytFetch(chUrl, 0);
     const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadsId) throw new Error("YouTube uploads playlist unavailable");
 
@@ -229,7 +229,7 @@ export async function fetchNewestUploadsDetailed(
       plUrl.searchParams.set("part", "snippet");
       plUrl.searchParams.set("maxResults", String(Math.min(50, maxResults - videoIds.length)));
       if (pageToken) plUrl.searchParams.set("pageToken", pageToken);
-      const plData = await ytFetch(plUrl, 300);
+      const plData = await ytFetch(plUrl, 0);
       if (plData.error) throw new Error("YouTube uploads request failed");
       for (const item of plData.items ?? []) {
         if (publishedAfter && item.snippet?.publishedAt < publishedAfter) {
@@ -254,7 +254,7 @@ export async function fetchNewestUploadsDetailed(
       vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
       vidUrl.searchParams.set("id", chunk.join(","));
       vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
-      const vidData = await ytFetch(vidUrl, 300);
+      const vidData = await ytFetch(vidUrl, 0);
       if (vidData.error) throw new Error("YouTube video details request failed");
       items.push(...(vidData.items ?? []));
     }
@@ -304,7 +304,7 @@ export async function fetchPlaylistVideoMembership(
           url.searchParams.set("part", "contentDetails");
           url.searchParams.set("maxResults", "50");
           if (pageToken) url.searchParams.set("pageToken", pageToken);
-          const data = await ytFetch(url, 3600);
+          const data = await ytFetch(url, 0);
           if (data.error) throw new Error("YouTube playlist membership request failed");
           for (const item of data.items ?? []) {
             const vid = item.contentDetails?.videoId;
@@ -441,8 +441,8 @@ export async function fetchPlaylistNames(): Promise<{ id: string; title: string 
       url.searchParams.set("maxResults", "50");
       if (pageToken) url.searchParams.set("pageToken", pageToken);
 
-      // Short cache so renamed playlists appear within an hour
-      const data = await ytFetch(url, 3600);
+      // Sync must read current names rather than reuse a cached playlist snapshot.
+      const data = await ytFetch(url, 0);
       if (data.error) throw new Error("YouTube playlist names request failed");
       for (const p of data.items ?? []) {
         const title = (p.snippet?.title ?? "").trim();
