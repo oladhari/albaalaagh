@@ -33,11 +33,15 @@ export async function GET(req: NextRequest) {
     errors: [] as string[],
   };
 
+  const started = Date.now();
+  const progress = (stage: string) => console.info(JSON.stringify({ event: "youtube_sync", stage, elapsedMs: Date.now() - started, ...results }));
   try {
+    progress("started");
     // Revisit a month to recover missed runs; batch writes keep this bounded.
     const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
     const uploads = await fetchNewestUploadsDetailed(5000, cutoff);
     results.checked = uploads.length;
+    progress("uploads_fetched");
 
     // Check existence per-candidate (ilike on the 11-char id) instead of pulling
     // the whole table — a plain unfiltered select gets capped at 1000 rows by
@@ -60,6 +64,7 @@ export async function GET(req: NextRequest) {
       )),
     ]);
 
+    progress("membership_fetched");
     if (playlistsRes.error) throw new Error(playlistsRes.error.message);
     for (const result of existingRes) {
       if (result.error) throw new Error(result.error.message);
@@ -149,5 +154,6 @@ export async function GET(req: NextRequest) {
     results.errors.push(err instanceof Error ? err.message : String(err));
   }
 
+  progress("finished");
   return NextResponse.json(results, { status: results.errors.length ? 500 : 200 });
 }
