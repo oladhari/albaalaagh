@@ -35,18 +35,23 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          {/* Direct navigation also resets scroll when the visitor is already home. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
+          {/* Keep client navigation; explicitly reset scroll when already home. */}
+          <Link
             href="/"
             aria-label="البلاغ — الصفحة الرئيسية"
-            onClick={() => setOpen(false)}
+            onClick={(event) => {
+              setOpen(false);
+              if (pathname === "/") {
+                event.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
             className="flex min-h-11 items-center gap-2 px-1 shrink-0 rounded-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
           >
             <span className="logo-3d text-2xl font-black tracking-tight">
               البلاغ
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden xl:flex items-center gap-1">

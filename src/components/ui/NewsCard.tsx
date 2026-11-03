@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { timeAgo } from "@/lib/utils";
 import { newsPath } from "@/lib/public-urls";
 import type { NewsArticle } from "@/types";
@@ -17,8 +18,10 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
   const isInternal = article.source === "البلاغ";
   const href = isInternal ? newsPath(article) : article.url;
 
+  const CardLink = isInternal ? Link : "a";
+
   return (
-    <a
+    <CardLink
       href={href}
       target={isInternal ? "_self" : "_blank"}
       rel={isInternal ? undefined : "noopener noreferrer"}
@@ -63,6 +66,6 @@ export default function NewsCard({ article }: { article: NewsArticle }) {
           </p>
         )}
       </div>
-    </a>
+    </CardLink>
   );
 }

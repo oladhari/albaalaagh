@@ -21,7 +21,7 @@ async function getDefaultData() {
   const [{ data: recent }, { data: allGeos }] = await Promise.all([
     supabaseAdmin
       .from("news")
-      .select("*, news_citations!inner(id)")
+      .select("id, slug, title, excerpt, url, source, image_url, published_at, status, category, geo, created_at, news_citations!inner(id)")
       .eq("source", "البلاغ")
       .eq("status", "approved")
       .gte("published_at", cutoff)
@@ -49,7 +49,7 @@ async function getGeoData(geo: string, page: number) {
   const from = (page - 1) * PAGE_SIZE;
   const { data, count } = await supabaseAdmin
     .from("news")
-    .select("*, news_citations!inner(id)", { count: "exact" })
+    .select("id, slug, title, excerpt, url, source, image_url, published_at, status, category, geo, created_at, news_citations!inner(id)", { count: "exact" })
     .eq("source", "البلاغ")
     .eq("status", "approved")
     .eq("geo", geo)

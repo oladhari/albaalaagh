@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchNewestUploadsDetailed, fetchPlaylistNames, fetchPlaylistVideoMembership } from "@/lib/youtube";
@@ -155,6 +156,9 @@ export async function GET(req: NextRequest) {
     results.errors.push(err instanceof Error ? err.message : String(err));
   }
 
+  if (results.inserted || results.repairedPlaylists || results.createdPlaylists) {
+    revalidateTag("public-programmes", { expire: 0 });
+  }
   progress("finished");
   return NextResponse.json(results, { status: results.errors.length ? 500 : 200 });
 }
