@@ -205,7 +205,7 @@ export async function fetchNewestUploadsDetailed(
   maxResults = 100,
   publishedAfter?: string,
 ): Promise<YTUploadDetailed[]> {
-  if (!YOUTUBE_API_KEY) return [];
+  if (!YOUTUBE_API_KEY) throw new Error("YouTube API key missing");
 
   try {
     const chUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
@@ -305,6 +305,7 @@ export async function fetchPlaylistVideoMembership(
           url.searchParams.set("maxResults", "50");
           if (pageToken) url.searchParams.set("pageToken", pageToken);
           const data = await ytFetch(url, 3600);
+          if (data.error) throw new Error("YouTube playlist membership request failed");
           for (const item of data.items ?? []) {
             const vid = item.contentDetails?.videoId;
             if (vid && !map.has(vid)) map.set(vid, pl.id);
@@ -312,7 +313,7 @@ export async function fetchPlaylistVideoMembership(
           pageToken = data.nextPageToken;
         } while (pageToken);
       } catch (e) {
-        console.error(`playlistItems fetch failed for ${pl.id}:`, e);
+        throw new Error(`Playlist membership sync failed for ${pl.id}: ${e instanceof Error ? e.message : "request failed"}`);
       }
     })
   );
@@ -427,7 +428,7 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
 // Single API call, cached 24h. Returns just id + title.
 
 export async function fetchPlaylistNames(): Promise<{ id: string; title: string }[]> {
-  if (!YOUTUBE_API_KEY) return [];
+  if (!YOUTUBE_API_KEY) throw new Error("YouTube API key missing");
   try {
     const all: { id: string; title: string }[] = [];
     let pageToken: string | undefined;
@@ -442,6 +443,7 @@ export async function fetchPlaylistNames(): Promise<{ id: string; title: string 
 
       // Short cache so renamed playlists appear within an hour
       const data = await ytFetch(url, 3600);
+      if (data.error) throw new Error("YouTube playlist names request failed");
       for (const p of data.items ?? []) {
         const title = (p.snippet?.title ?? "").trim();
         if (title) all.push({ id: p.id, title });
@@ -455,7 +457,7 @@ export async function fetchPlaylistNames(): Promise<{ id: string; title: string 
       .filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; })
       .sort((a, b) => a.title.localeCompare(b.title, "ar"));
   } catch {
-    return [];
+    throw new Error("YouTube playlist names request failed");
   }
 }
 
