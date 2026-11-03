@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchNewestUploadsDetailed, fetchPlaylistNames, fetchPlaylistVideoMembership } from "@/lib/youtube";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function extractYoutubeId(url: string): string | null {
   const watch = url.match(/[?&]v=([A-Za-z0-9_-]{11})/);
@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
   const headerSecret = req.headers.get("x-cron-secret");
   const authHeader = req.headers.get("authorization");
   const isDev = process.env.NODE_ENV === "development";
-  const validManual = headerSecret === cronSecret;
-  const validVercel = authHeader === `Bearer ${cronSecret}`;
+  const validManual = Boolean(cronSecret) && headerSecret === cronSecret;
+  const validVercel = Boolean(cronSecret) && authHeader === `Bearer ${cronSecret}`;
   if (!isDev && !validManual && !validVercel) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
   const results = {
     checked: 0,
     inserted: 0,
+    repairedPlaylists: 0,
+    createdPlaylists: 0,
     skippedExisting: 0,
     skippedLive: 0,
     unmatchedPlaylist: 0,
@@ -32,10 +34,9 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    // Revisit two weeks so upload bursts and missed runs cannot strand episodes
-    // outside a fixed 100-video window. The cap fails visibly if exhausted.
-    const cutoff = new Date(Date.now() - 14 * 86400_000).toISOString();
-    const uploads = await fetchNewestUploadsDetailed(2000, cutoff);
+    // Revisit a month to recover missed runs; batch writes keep this bounded.
+    const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
+    const uploads = await fetchNewestUploadsDetailed(5000, cutoff);
     results.checked = uploads.length;
 
     // Check existence per-candidate (ilike on the 11-char id) instead of pulling
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       fetchPlaylistVideoMembership(ytPlaylists),
       supabaseAdmin.from("playlists").select("id, name"),
       Promise.all(candidateChunks.map((ids) =>
-        supabaseAdmin.from("site_videos").select("video_url,youtube_video_id").or(
+        supabaseAdmin.from("site_videos").select("id,video_url,youtube_video_id,playlist_id").or(
           ids.flatMap((id) => [`video_url.ilike.%${id}%`, `youtube_video_id.eq.${id}`]).join(",")
         )
       )),
@@ -70,17 +71,42 @@ export async function GET(req: NextRequest) {
     const nameToInternalId = new Map(
       (playlistsRes.data ?? []).map((p: { id: string; name: string }) => [p.name.trim(), p.id])
     );
+    // New programmes must become usable without a separate manual database import.
+    for (const pl of ytPlaylists) {
+      const name = pl.title.trim();
+      if (nameToInternalId.has(name)) continue;
+      const { data, error } = await supabaseAdmin.from("playlists")
+        .insert({ name, display_order: nameToInternalId.size }).select("id").single();
+      if (error) throw new Error(error.message);
+      nameToInternalId.set(name, data.id);
+      results.createdPlaylists++;
+    }
     const ytPlaylistIdToInternalId = new Map<string, string>();
     for (const pl of ytPlaylists) {
       const internalId = nameToInternalId.get(pl.title.trim());
       if (internalId) ytPlaylistIdToInternalId.set(pl.id, internalId);
     }
 
-    const knownIds = new Set(
-      existingRes.flatMap((result) => result.data ?? [])
-        .map((v: { video_url: string; youtube_video_id: string | null }) => v.youtube_video_id ?? extractYoutubeId(v.video_url))
-        .filter((id): id is string => !!id)
-    );
+    const existing = existingRes.flatMap((result) => result.data ?? []);
+    const knownIds = new Set(existing.map(v => v.youtube_video_id ?? extractYoutubeId(v.video_url)).filter(Boolean));
+    const repairs = new Map<string, string[]>();
+    for (const row of existing) {
+      const sourceId = row.youtube_video_id ?? extractYoutubeId(row.video_url);
+      const ytPlaylist = sourceId ? membership.get(sourceId) : null;
+      const playlistId = ytPlaylist ? ytPlaylistIdToInternalId.get(ytPlaylist) : null;
+      if (playlistId && playlistId !== row.playlist_id) {
+        repairs.set(playlistId, [...(repairs.get(playlistId) ?? []), row.id]);
+      }
+    }
+    for (const [playlistId, ids] of repairs) {
+      for (let i = 0; i < ids.length; i += 100) {
+        const batch = ids.slice(i, i + 100);
+        const { error } = await supabaseAdmin.from("site_videos").update({ playlist_id: playlistId }).in("id", batch);
+        if (error) results.errors.push(error.message);
+        else results.repairedPlaylists += batch.length;
+      }
+    }
+    const inserts = [];
 
     for (const v of uploads) {
       if (knownIds.has(v.videoId)) {
@@ -99,7 +125,7 @@ export async function GET(req: NextRequest) {
       const playlistId = ytPlaylistId ? ytPlaylistIdToInternalId.get(ytPlaylistId) ?? null : null;
       if (!playlistId) results.unmatchedPlaylist++;
 
-      const { error } = await supabaseAdmin.from("site_videos").insert({
+      inserts.push({
         youtube_video_id: v.videoId,
         title: v.title,
         description: v.description ? v.description.slice(0, 4500) : null,
@@ -112,9 +138,12 @@ export async function GET(req: NextRequest) {
         video_type: v.isLivestream ? "live" : "clip",
         hashtags: null,
       });
-
-      if (error) results.errors.push(`${v.videoId}: ${error.message}`);
-      else results.inserted++;
+    }
+    for (let i = 0; i < inserts.length; i += 100) {
+      const batch = inserts.slice(i, i + 100);
+      const { error } = await supabaseAdmin.from("site_videos").insert(batch);
+      if (error) results.errors.push(error.message);
+      else results.inserted += batch.length;
     }
   } catch (err: unknown) {
     results.errors.push(err instanceof Error ? err.message : String(err));
