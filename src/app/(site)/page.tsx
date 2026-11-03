@@ -1,4 +1,5 @@
-import { getHomePlaylists } from "@/lib/home-playlists";
+import { unstable_cache } from "next/cache";
+import { getCachedHomePlaylists as getHomePlaylists } from "@/lib/home-playlists";
 import { getHomeEditorialSections } from "@/lib/home-editorial";
 import Link from "next/link";
 import Script from "next/script";
@@ -22,7 +23,7 @@ export const metadata = {
 async function getLatestNews() {
   const { data } = await supabaseAdmin
     .from("news")
-    .select("*, news_citations!inner(id)")
+    .select("id, slug, title, excerpt, url, source, image_url, published_at, status, category, geo, created_at, news_citations!inner(id)")
     .eq("source", "البلاغ")
     .eq("status", "approved")
     .lte("published_at", new Date().toISOString())
@@ -61,15 +62,20 @@ function formatCount(n: number): string {
   return String(n);
 }
 
+const getCachedLatestNews = unstable_cache(getLatestNews, ["home-latest-news"], { revalidate: 120 });
+const getCachedEditorial = unstable_cache(getHomeEditorialSections, ["home-editorial"], { revalidate: 60 });
+const getCachedCounts = unstable_cache(async () => Promise.all([
+  getArticlesCount(), getInterviewsCount(), getPlaylistsCount(),
+]), ["home-public-counts"], { revalidate: 120, tags: ["public-programmes"] });
+const getCachedLiveStream = unstable_cache(fetchActiveLiveStream, ["home-active-live"], { revalidate: 120 });
+
 export default async function HomePage() {
-  const [news, editorialSections, articlesCount, interviewsCount, playlistsCount, playlistsWithVideos, liveStream, requestHeaders] = await Promise.all([
-    getLatestNews(),
-    getHomeEditorialSections(),
-    getArticlesCount(),
-    getInterviewsCount(),
-    getPlaylistsCount(),
+  const [news, editorialSections, [articlesCount, interviewsCount, playlistsCount], playlistsWithVideos, liveStream, requestHeaders] = await Promise.all([
+    getCachedLatestNews(),
+    getCachedEditorial(),
+    getCachedCounts(),
     getHomePlaylists(),
-    fetchActiveLiveStream(),
+    getCachedLiveStream(),
     headers(),
   ]);
   const nonce = requestHeaders.get("x-nonce") ?? undefined;

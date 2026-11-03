@@ -52,7 +52,9 @@ async function getData(
       rows.push(...(data ?? []));
       if ((data?.length ?? 0) < 1000) break;
     }
-    const videos = deduplicatePlaylistEpisodes(rows);
+    const videos = deduplicatePlaylistEpisodes(rows).map(video => ({
+      ...video, description: video.description?.slice(0, 300) ?? null,
+    }));
     return { playlists, videos, totalCount: videos.length, page: 1, totalPages: 1 };
   }
 
@@ -80,7 +82,9 @@ async function getData(
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  return { playlists, videos: videos ?? [], totalCount: count ?? 0, page, totalPages };
+  return { playlists, videos: (videos ?? []).map(video => ({
+    ...video, description: video.description?.slice(0, 300) ?? null,
+  })), totalCount: count ?? 0, page, totalPages };
 }
 
 export default async function InterviewsPage({

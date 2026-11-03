@@ -1,3 +1,5 @@
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+import { revalidateTag } from "next/cache";
 import { afterEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ uploads: vi.fn(), names: vi.fn(), membership: vi.fn(), from: vi.fn() }));
 vi.mock("@/lib/youtube", () => ({ fetchNewestUploadsDetailed: mocks.uploads, fetchPlaylistNames: mocks.names, fetchPlaylistVideoMembership: mocks.membership }));
@@ -19,6 +21,7 @@ it("batches missing uploads and repairs playlist assignments without replacing a
   expect(await response.json()).toMatchObject({ inserted: 201, repairedPlaylists: 1, skippedExisting: 1 });
   expect(insert.mock.calls.map(call => (call as unknown as [unknown[]])[0].length)).toEqual([100, 100, 1]);
   expect(update).toHaveBeenCalledWith({ playlist_id: "show" });
+  expect(revalidateTag).toHaveBeenCalledWith("public-programmes", { expire: 0 });
 });
 it("rejects unauthenticated requests when the secret is missing", async () => {
   vi.stubEnv("NODE_ENV", "production");
@@ -38,4 +41,16 @@ it("creates missing programme records before assigning their episodes", async ()
   expect(response.status).toBe(200);
   expect(await response.json()).toMatchObject({ createdPlaylists: 1 });
   expect(insert).toHaveBeenCalledWith({ name: "New programme", display_order: 0 });
+});
+
+it("does not expire programme summaries when nothing changed", async () => {
+  vi.stubEnv("CRON_SECRET", "test-secret");
+  mocks.uploads.mockResolvedValue([]);
+  mocks.names.mockResolvedValue([]);
+  mocks.membership.mockResolvedValue(new Map());
+  mocks.from.mockReturnValue({ select: async () => ({ data: [], error: null }) });
+  const { GET } = await import("@/app/api/cron/sync-youtube-videos/route");
+  const response = await GET(new Request("https://example.com", { headers: { "x-cron-secret": "test-secret" } }) as never);
+  expect(response.status).toBe(200);
+  expect(revalidateTag).not.toHaveBeenCalled();
 });

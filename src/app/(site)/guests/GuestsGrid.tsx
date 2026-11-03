@@ -49,6 +49,7 @@ function GuestCard({ guest }: { guest: Guest }) {
       <div className="relative mb-3">
         {guest.image_url ? (
           <img
+            loading="lazy"
             src={guest.image_url}
             alt={guest.name}
             className="w-20 h-20 rounded-full object-cover mx-auto transition-transform duration-300 group-hover:scale-105"

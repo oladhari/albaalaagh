@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { deduplicatePlaylistEpisodes } from "./playlist-episodes";
 import { supabaseAdmin } from "./supabase";
 const PAGE_SIZE = 1000;
@@ -31,3 +32,7 @@ export async function getHomePlaylists() {
   return (playlists ?? []).filter(p => byPlaylist.has(p.id)).map(p => ({ id: p.id, name: p.name, ...byPlaylist.get(p.id)! }))
     .sort((a, b) => (b.latestDate ?? "").localeCompare(a.latestDate ?? ""));
 }
+
+// Cache only the public summary, never the full archive or authenticated data.
+export const getCachedHomePlaylists = unstable_cache(getHomePlaylists,
+  ["home-programme-summary-v1"], { revalidate: 120, tags: ["public-programmes"] });
