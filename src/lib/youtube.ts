@@ -1,3 +1,6 @@
+import { YouTubeSyncClient, YouTubeBudgetError, YouTubeSyncError } from "./youtube-sync-api";
+import type { YouTubeSyncState } from "./youtube-sync-state";
+
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = "UC3jvdYx_FbLzQ8Ntcx95AQg";
 
@@ -204,6 +207,7 @@ export interface YTUploadDetailed {
 export async function fetchNewestUploadsDetailed(
   maxResults = 100,
   publishedAfter?: string,
+  client = new YouTubeSyncClient(),
 ): Promise<YTUploadDetailed[]> {
   if (!YOUTUBE_API_KEY) throw new Error("YouTube API key missing");
 
@@ -212,8 +216,8 @@ export async function fetchNewestUploadsDetailed(
     chUrl.searchParams.set("key", YOUTUBE_API_KEY);
     chUrl.searchParams.set("id", CHANNEL_ID);
     chUrl.searchParams.set("part", "contentDetails");
-    const chData = await ytFetch(chUrl, 0);
-    const uploadsId: string = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    const chData = await client.request(chUrl);
+    const uploadsId = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadsId) throw new Error("YouTube uploads playlist unavailable");
 
     // Paginate past the API's 50-per-page cap so an upload burst between cron
@@ -222,6 +226,7 @@ export async function fetchNewestUploadsDetailed(
     const videoIds: string[] = [];
     let pageToken: string | undefined;
     let reachedCutoff = false;
+    const seenTokens = new Set<string>();
     do {
       const plUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
       plUrl.searchParams.set("key", YOUTUBE_API_KEY);
@@ -229,10 +234,10 @@ export async function fetchNewestUploadsDetailed(
       plUrl.searchParams.set("part", "snippet");
       plUrl.searchParams.set("maxResults", String(Math.min(50, maxResults - videoIds.length)));
       if (pageToken) plUrl.searchParams.set("pageToken", pageToken);
-      const plData = await ytFetch(plUrl, 0);
+      const plData = await client.request(plUrl);
       if (plData.error) throw new Error("YouTube uploads request failed");
       for (const item of plData.items ?? []) {
-        if (publishedAfter && item.snippet?.publishedAt < publishedAfter) {
+        if (publishedAfter && item.snippet?.publishedAt && item.snippet.publishedAt < publishedAfter) {
           reachedCutoff = true;
           break;
         }
@@ -240,6 +245,8 @@ export async function fetchNewestUploadsDetailed(
         if (id) videoIds.push(id);
       }
       pageToken = plData.nextPageToken;
+      if (pageToken && seenTokens.has(pageToken)) throw new Error("YouTube uploads returned a repeated page token");
+      if (pageToken) seenTokens.add(pageToken);
     } while (pageToken && !reachedCutoff && videoIds.length < maxResults);
     if (publishedAfter && pageToken && !reachedCutoff && videoIds.length >= maxResults) {
       throw new Error("YouTube sync scan limit reached before the lookback cutoff");
@@ -253,13 +260,13 @@ export async function fetchNewestUploadsDetailed(
       const vidUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
       vidUrl.searchParams.set("key", YOUTUBE_API_KEY);
       vidUrl.searchParams.set("id", chunk.join(","));
-      vidUrl.searchParams.set("part", "snippet,liveStreamingDetails");
-      const vidData = await ytFetch(vidUrl, 0);
+      vidUrl.searchParams.set("part", "snippet,liveStreamingDetails,status");
+      const vidData = await client.request(vidUrl);
       if (vidData.error) throw new Error("YouTube video details request failed");
       items.push(...(vidData.items ?? []));
     }
 
-    return items.map((item: any) => {
+    return items.filter((item: any) => item.status?.privacyStatus === "public").map((item: any) => {
       const snippet = item.snippet ?? {};
       const live = item.liveStreamingDetails;
       return {
@@ -277,48 +284,108 @@ export async function fetchNewestUploadsDetailed(
       } satisfies YTUploadDetailed;
     });
   } catch (e) {
-    throw new Error(e instanceof Error ? e.message : "YouTube upload sync failed");
+    if (e instanceof Error) throw e;
+    throw new Error("YouTube upload sync failed");
   }
 }
 
 // ── Fetch real playlist membership (video ID → YouTube playlist ID) ──────────
-// Authoritative alternative to guessing a video's show from its title: walks
-// every real playlist on the channel and records which videos are actually in it.
+// Reuses historical membership and resumes bounded fresh scans for only the
+// missing/unassigned candidates. Never infer a programme from its video title.
 
 export async function fetchPlaylistVideoMembership(
-  playlists?: { id: string; title: string }[]
-): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
-  if (!YOUTUBE_API_KEY) return map;
-
-  const list = playlists ?? (await fetchPlaylistNames());
-
-  await Promise.all(
-    list.map(async (pl) => {
-      let pageToken: string | undefined;
-      try {
-        do {
-          const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
-          url.searchParams.set("key", YOUTUBE_API_KEY!);
-          url.searchParams.set("playlistId", pl.id);
-          url.searchParams.set("part", "contentDetails");
-          url.searchParams.set("maxResults", "50");
-          if (pageToken) url.searchParams.set("pageToken", pageToken);
-          const data = await ytFetch(url, 0);
-          if (data.error) throw new Error("YouTube playlist membership request failed");
-          for (const item of data.items ?? []) {
-            const vid = item.contentDetails?.videoId;
-            if (vid && !map.has(vid)) map.set(vid, pl.id);
-          }
-          pageToken = data.nextPageToken;
-        } while (pageToken);
-      } catch (e) {
-        throw new Error(`Playlist membership sync failed for ${pl.id}: ${e instanceof Error ? e.message : "request failed"}`);
-      }
-    })
-  );
-
-  return map;
+  playlists: { id: string; title: string }[],
+  targets: Set<string>,
+  state: YouTubeSyncState,
+  client: YouTubeSyncClient,
+): Promise<{ membership: Map<string, string>; complete: boolean; warnings: string[] }> {
+  const membership = new Map<string, string>();
+  const warnings: string[] = [];
+  const validIds = new Set(playlists.map(p => p.id));
+  for (const id of Object.keys(state.playlists)) if (!validIds.has(id)) delete state.playlists[id];
+  const remember = (id: string, members: string[]) => {
+    for (const vid of members) if (targets.has(vid) && !membership.has(vid)) membership.set(vid, id);
+  };
+  for (const pl of playlists) {
+    const cached = state.playlists[pl.id];
+    if (cached) remember(pl.id, [...cached.members, ...cached.pendingMembers]);
+  }
+  const unresolved = () => [...targets].some(id => !membership.has(id));
+  if (!targets.size || !unresolved()) return { membership, complete: true, warnings };
+  const disabled = new Set<string>();
+  async function page(id: string, token?: string) {
+    const url = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
+    url.searchParams.set("key", YOUTUBE_API_KEY!);
+    url.searchParams.set("playlistId", id);
+    url.searchParams.set("part", "contentDetails");
+    url.searchParams.set("maxResults", "50");
+    if (token) url.searchParams.set("pageToken", token);
+    const data = await client.request(url);
+    const ids: string[] = (data.items ?? []).map((i: any) => i.contentDetails?.videoId).filter(Boolean);
+    const checkpoint = state.playlists[id] ?? { members: [], pendingMembers: [] };
+    if (!token && !checkpoint.nextPageToken) { checkpoint.pendingMembers = []; checkpoint.seenTokens = []; }
+    checkpoint.pendingMembers = [...new Set([...checkpoint.pendingMembers, ...ids])];
+    remember(id, ids);
+    const next = data.nextPageToken as string | undefined;
+    if (next && (next === token || (token && checkpoint.seenTokens?.includes(next)))) {
+      disabled.add(id);
+      warnings.push(`Playlist ${id}: repeated page token; scan deferred`);
+    } else if (!next) {
+      checkpoint.members = checkpoint.pendingMembers;
+      checkpoint.pendingMembers = [];
+      checkpoint.nextPageToken = undefined;
+      checkpoint.seenTokens = [];
+    } else if (token || !checkpoint.nextPageToken) {
+      checkpoint.nextPageToken = next;
+      checkpoint.seenTokens = [...(checkpoint.seenTokens ?? []), ...(token ? [token] : [])];
+    }
+    state.playlists[id] = checkpoint;
+  }
+  const recover = (error: unknown, id: string) => {
+    if (!(error instanceof YouTubeSyncError)) return false;
+    if (error.status === 404) {
+      disabled.add(id); warnings.push(`Playlist ${id}: unavailable`); return true;
+    }
+    if (error.reason === "invalidPageToken") {
+      const cached = state.playlists[id];
+      if (cached) { cached.nextPageToken = undefined; cached.pendingMembers = []; cached.seenTokens = []; }
+      disabled.add(id); warnings.push(`Playlist ${id}: expired page cursor; restarting next run`); return true;
+    }
+    return false;
+  };
+  // Refresh recent pages first, reserving history progress when the inventory is
+  // larger than this run's remaining budget. Rotate heads to prevent starvation.
+  const headLimit = Math.min(playlists.length, client.remaining >= playlists.length + 1 ? playlists.length : Math.ceil(client.remaining / 2));
+  let headsVisited = 0;
+  for (; headsVisited < headLimit && unresolved() && client.remaining; headsVisited++) {
+    const pos = (state.nextHeadIndex ?? 0) % playlists.length;
+    state.nextHeadIndex = (pos + 1) % playlists.length;
+    const id = playlists[pos].id;
+    try { await page(id); }
+    catch (e) {
+      if (e instanceof YouTubeBudgetError) break;
+      if (recover(e, id)) continue;
+      throw e;
+    }
+  }
+  let idle = 0;
+  while (playlists.length && unresolved() && client.remaining && idle < playlists.length) {
+    const pos = state.nextPlaylistIndex % playlists.length;
+    state.nextPlaylistIndex = (pos + 1) % playlists.length;
+    const id = playlists[pos].id;
+    const token = state.playlists[id]?.nextPageToken;
+    if (!token || disabled.has(id)) { idle++; continue; }
+    idle = 0;
+    try { await page(id, token); }
+    catch (e) {
+      if (e instanceof YouTubeBudgetError) break;
+      if (recover(e, id)) continue;
+      throw e;
+    }
+  }
+  const deferred = headsVisited < playlists.length || playlists.some(pl => state.playlists[pl.id]?.nextPageToken);
+  if (deferred && unresolved()) warnings.push("Playlist reconciliation deferred within request budget");
+  return { membership, complete: !unresolved() || (!deferred && !disabled.size), warnings };
 }
 
 // ── Fetch featured playlists by name ─────────────────────────────────────────
@@ -425,13 +492,14 @@ export async function fetchFeaturedPlaylists(): Promise<YTPlaylist[]> {
 }
 
 // ── Lightweight playlist names list (for admin dropdowns) ────────────────────
-// Single API call, cached 24h. Returns just id + title.
+// Fresh, paginated names under the shared per-run request budget.
 
-export async function fetchPlaylistNames(): Promise<{ id: string; title: string }[]> {
+export async function fetchPlaylistNames(client = new YouTubeSyncClient()): Promise<{ id: string; title: string }[]> {
   if (!YOUTUBE_API_KEY) throw new Error("YouTube API key missing");
   try {
     const all: { id: string; title: string }[] = [];
     let pageToken: string | undefined;
+    const seenTokens = new Set<string>();
 
     do {
       const url = new URL("https://www.googleapis.com/youtube/v3/playlists");
@@ -442,13 +510,15 @@ export async function fetchPlaylistNames(): Promise<{ id: string; title: string 
       if (pageToken) url.searchParams.set("pageToken", pageToken);
 
       // Sync must read current names rather than reuse a cached playlist snapshot.
-      const data = await ytFetch(url, 0);
+      const data = await client.request(url);
       if (data.error) throw new Error("YouTube playlist names request failed");
       for (const p of data.items ?? []) {
         const title = (p.snippet?.title ?? "").trim();
-        if (title) all.push({ id: p.id, title });
+        if (title && p.id) all.push({ id: p.id, title });
       }
       pageToken = data.nextPageToken;
+      if (pageToken && seenTokens.has(pageToken)) throw new Error("YouTube playlist names returned a repeated page token");
+      if (pageToken) seenTokens.add(pageToken);
     } while (pageToken);
 
     // Deduplicate by id, then sort alphabetically
@@ -456,7 +526,8 @@ export async function fetchPlaylistNames(): Promise<{ id: string; title: string 
     return all
       .filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; })
       .sort((a, b) => a.title.localeCompare(b.title, "ar"));
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) throw error;
     throw new Error("YouTube playlist names request failed");
   }
 }

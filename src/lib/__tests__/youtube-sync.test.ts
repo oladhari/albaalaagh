@@ -18,7 +18,7 @@ it("recovers an episode beyond upload 100 and stops at the time cutoff", async (
       } })), nextPageToken: String(page + 1) };
     } else {
       const ids = u.searchParams.get("id")!.split(","); details.push(...ids);
-      data = { items: ids.map(id => ({ id, snippet: { title: id, publishedAt: "2026-10-19T00:00:00Z" }, liveStreamingDetails: { actualStartTime: "2026-10-18T20:39:02Z", actualEndTime: "2026-10-19T00:13:00Z" } })) };
+      data = { items: ids.map(id => ({ id, status: { privacyStatus: "public" }, snippet: { title: id, publishedAt: "2026-10-19T00:00:00Z" }, liveStreamingDetails: { actualStartTime: "2026-10-18T20:39:02Z", actualEndTime: "2026-10-19T00:13:00Z" } })) };
     }
     return { json: async () => data };
   }));
@@ -34,4 +34,14 @@ it("reports API failures instead of a successful empty sync", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => ({ json: async () => ({ error: { code: 403 } }) })));
   const { fetchNewestUploadsDetailed } = await import("../youtube");
   await expect(fetchNewestUploadsDetailed(2000, "2026-10-11T00:00:00Z")).rejects.toThrow();
+});
+
+it("never returns private, unlisted, or missing-visibility videos for website import", async () => {
+  vi.stubEnv("YOUTUBE_API_KEY", "test-key");
+  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
+    const path = new URL(input).pathname;
+    return { json: async () => path.endsWith("/channels") ? { items: [{ contentDetails: { relatedPlaylists: { uploads: "uploads" } } }] } : path.endsWith("/playlistItems") ? { items: ["public", "private", "unlisted", "unknown"].map(id => ({ snippet: { resourceId: { videoId: id }, publishedAt: "2026-11-08" } })) } : { items: ["public", "private", "unlisted", "unknown"].map(id => ({ id, snippet: { title: id }, status: id === "unknown" ? {} : { privacyStatus: id } })) } };
+  }));
+  const { fetchNewestUploadsDetailed } = await import("../youtube");
+  expect((await fetchNewestUploadsDetailed()).map(v => v.videoId)).toEqual(["public"]);
 });

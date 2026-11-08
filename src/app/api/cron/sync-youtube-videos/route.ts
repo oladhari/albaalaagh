@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchNewestUploadsDetailed, fetchPlaylistNames, fetchPlaylistVideoMembership } from "@/lib/youtube";
 
+import { YouTubeSyncClient, YouTubeSyncError, nextYouTubeQuotaReset } from "@/lib/youtube-sync-api";
+import { loadYouTubeSyncState, saveYouTubeSyncState, emptyYouTubeSyncState } from "@/lib/youtube-sync-state";
+
 export const maxDuration = 300;
 
 function extractYoutubeId(url: string): string | null {
@@ -32,15 +35,33 @@ export async function GET(req: NextRequest) {
     skippedLive: 0,
     unmatchedPlaylist: 0,
     errors: [] as string[],
+    warnings: [] as string[],
+    playlistScanComplete: true,
   };
 
+  const client = new YouTubeSyncClient(160);
+  let state = emptyYouTubeSyncState();
+  let checkpointLoaded = false;
+  const pause = (error: unknown) => {
+    if (error instanceof YouTubeSyncError && error.pauseRequired) {
+      state.blockedUntil = error.quotaExceeded ? nextYouTubeQuotaReset() : new Date(Date.now() + 3600_000).toISOString();
+    }
+  };
   const started = Date.now();
-  const progress = (stage: string) => console.info(JSON.stringify({ event: "youtube_sync", stage, elapsedMs: Date.now() - started, ...results }));
+  const progress = (stage: string) => console.info(JSON.stringify({ event: "youtube_sync", stage, elapsedMs: Date.now() - started, ...results, youtubeRequests: client.total, youtubeRequestsByMethod: client.counts, youtubeRequestLimit: client.limit }));
   try {
+    state = await loadYouTubeSyncState();
+    checkpointLoaded = true;
+    if (state.blockedUntil && Date.parse(state.blockedUntil) > Date.now()) {
+      results.playlistScanComplete = false;
+      progress("cooldown");
+      return NextResponse.json({ ...results, skipped: "youtube_cooldown", youtubePausedUntil: state.blockedUntil, youtubeRequests: 0, youtubeRequestLimit: client.limit, youtubeRequestsByMethod: client.counts });
+    }
+    state.blockedUntil = undefined;
     progress("started");
     // Revisit a month to recover missed runs; batch writes keep this bounded.
     const cutoff = new Date(Date.now() - 30 * 86400_000).toISOString();
-    const uploads = await fetchNewestUploadsDetailed(5000, cutoff);
+    const uploads = await fetchNewestUploadsDetailed(5000, cutoff, client);
     results.checked = uploads.length;
     progress("uploads_fetched");
 
@@ -53,11 +74,8 @@ export async function GET(req: NextRequest) {
       candidateChunks.push(candidateIds.slice(i, i + 100));
     }
 
-    const ytPlaylists = await fetchPlaylistNames();
-    progress("playlist_names_fetched");
-
-    const [membership, playlistsRes, existingRes] = await Promise.all([
-      fetchPlaylistVideoMembership(ytPlaylists).then(value => { progress("youtube_membership_fetched"); return value; }),
+    // Resolve existing rows before spending anything on playlist membership.
+    const [playlistsRes, existingRes] = await Promise.all([
       supabaseAdmin.from("playlists").select("id, name"),
       Promise.all(candidateChunks.map((ids) =>
         supabaseAdmin.from("site_videos").select("id,video_url,youtube_video_id,playlist_id").or(
@@ -65,12 +83,38 @@ export async function GET(req: NextRequest) {
         )
       )),
     ]);
-
-    progress("membership_fetched");
     if (playlistsRes.error) throw new Error(playlistsRes.error.message);
-    for (const result of existingRes) {
-      if (result.error) throw new Error(result.error.message);
+    for (const result of existingRes) if (result.error) throw new Error(result.error.message);
+    const existing = existingRes.flatMap((result) => result.data ?? []);
+    const bySource = new Map(existing.map(row => [row.youtube_video_id ?? extractYoutubeId(row.video_url), row]));
+    const targets = new Set(uploads.filter(v =>
+      !(v.isLivestream && !v.liveEnded) && !bySource.get(v.videoId)?.playlist_id
+    ).map(v => v.videoId));
+    let ytPlaylists = state.playlistNames ?? [];
+    let membership = new Map<string, string>();
+    try {
+      ytPlaylists = await fetchPlaylistNames(client);
+      state.playlistNames = ytPlaylists;
+      progress("playlist_names_fetched");
+      if (targets.size) {
+        const scan = await fetchPlaylistVideoMembership(ytPlaylists, targets, state, client);
+        membership = scan.membership;
+        results.playlistScanComplete = scan.complete;
+        results.warnings.push(...scan.warnings);
+      }
+    } catch (error) {
+      // A playlist outage must not discard already fetched public uploads.
+      pause(error);
+      results.playlistScanComplete = false;
+      results.warnings.push(error instanceof Error ? error.message : "Playlist sync deferred");
+      for (const pl of ytPlaylists) {
+        const cached = state.playlists[pl.id];
+        for (const vid of [...(cached?.members ?? []), ...(cached?.pendingMembers ?? [])]) {
+          if (targets.has(vid) && !membership.has(vid)) membership.set(vid, pl.id);
+        }
+      }
     }
+    progress("membership_fetched");
 
     // Which real YouTube playlist does each internal playlists-table row correspond
     // to? Matched by exact playlist NAME (a small, reviewable set — ~70 rows — unlike
@@ -94,7 +138,6 @@ export async function GET(req: NextRequest) {
       if (internalId) ytPlaylistIdToInternalId.set(pl.id, internalId);
     }
 
-    const existing = existingRes.flatMap((result) => result.data ?? []);
     const knownIds = new Set(existing.map(v => v.youtube_video_id ?? extractYoutubeId(v.video_url)).filter(Boolean));
     const repairs = new Map<string, string[]>();
     for (const row of existing) {
@@ -153,12 +196,17 @@ export async function GET(req: NextRequest) {
       else results.inserted += batch.length;
     }
   } catch (err: unknown) {
+    pause(err);
     results.errors.push(err instanceof Error ? err.message : String(err));
   }
 
+  if (checkpointLoaded) {
+    try { await saveYouTubeSyncState(state); }
+    catch (error) { results.errors.push(error instanceof Error ? error.message : "Checkpoint save failed"); }
+  }
   if (results.inserted || results.repairedPlaylists || results.createdPlaylists) {
     revalidateTag("public-programmes", { expire: 0 });
   }
   progress("finished");
-  return NextResponse.json(results, { status: results.errors.length ? 500 : 200 });
+  return NextResponse.json({ ...results, youtubeRequests: client.total, youtubeRequestsByMethod: client.counts, youtubeRequestLimit: client.limit, youtubePausedUntil: state.blockedUntil }, { status: results.errors.length ? 500 : 200 });
 }
