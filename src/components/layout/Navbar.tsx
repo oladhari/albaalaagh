@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { Menu, X } from "lucide-react";
@@ -48,9 +49,7 @@ export default function Navbar() {
             }}
             className="flex min-h-11 items-center gap-2 px-1 shrink-0 rounded-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
           >
-            <span className="logo-3d text-2xl font-black tracking-tight">
-              البلاغ
-            </span>
+            <Image src="/branding/albaalaagh-gold-20261109.png" alt="البلاغ — albaalaagh.com" width={809} height={786} className="h-14 w-auto" unoptimized />
           </Link>
 
           {/* Desktop Nav */}
