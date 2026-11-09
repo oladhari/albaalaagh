@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactElement } from "react";
 import { SOCIAL_LINKS } from "@/types";
 import NewsletterForm from "@/components/ui/NewsletterForm";
@@ -71,9 +72,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <h2 className="logo-3d text-2xl sm:text-3xl font-black mb-3">
-              البلاغ
-            </h2>
+            <Image src="/branding/albaalaagh-gold-20261109.png" alt="البلاغ — albaalaagh.com" width={809} height={786} className="h-28 w-auto mb-3" unoptimized />
             <p className="text-sm leading-relaxed text-text-muted">
               منبر سياسي تونسي يتخصص في الحوار المعمق مع شخصيات سياسية وفكرية بارزة. نصنع المحتوى الجاد الذي يحترم عقل المتلقي.
             </p>
