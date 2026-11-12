@@ -1,3 +1,4 @@
+import { ARTICLE_CARD_FIELDS, type ArticleCardData } from "@/lib/article-card";
 import { supabaseAdmin } from "./supabase";
 import { REPORT_CATEGORIES } from "./reports";
 import { PROGRAMME_ARTICLE_CATEGORY } from "./programme-articles";
@@ -11,7 +12,7 @@ const SECTIONS = [
 
 export async function getHomeEditorialSections() {
   return Promise.all(SECTIONS.map(async section => {
-    let query = supabaseAdmin.from("articles").select("*, writer:writers(*)")
+    let query = supabaseAdmin.from("articles").select(ARTICLE_CARD_FIELDS)
       .eq("status", "published").eq("published", true);
     if (section.key === "reports") query = query.in("category", [...REPORT_CATEGORIES]);
     else if (section.key === "programmes") query = query.eq("category", PROGRAMME_ARTICLE_CATEGORY);
@@ -19,6 +20,6 @@ export async function getHomeEditorialSections() {
     else query = query.not("category", "in", `(${[...REPORT_CATEGORIES, PROGRAMME_ARTICLE_CATEGORY, "دين"].map(c => `"${c}"`).join(",")})`);
     const { data, error } = await query.order("published_at", { ascending: false }).limit(3);
     if (error) console.error(`Unable to load home editorial section: ${section.key}`);
-    return { ...section, articles: data ?? [] };
+    return { ...section, articles: (data ?? []) as unknown as ArticleCardData[] };
   }));
 }

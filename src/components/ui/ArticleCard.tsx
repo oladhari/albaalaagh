@@ -2,9 +2,9 @@ import { isProgrammeArticle } from "@/lib/programme-articles";
 import { articlePath, isReport } from "@/lib/reports";
 import Link from "next/link";
 import { formatArabicDate } from "@/lib/utils";
-import type { Article } from "@/types";
+import type { ArticleCardData } from "@/lib/article-card";
 
-export default function ArticleCard({ article }: { article: Article }) {
+export default function ArticleCard({ article }: { article: ArticleCardData }) {
   return (
     <Link
       href={articlePath(article)}
