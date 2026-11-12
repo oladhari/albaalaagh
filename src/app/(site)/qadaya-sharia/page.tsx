@@ -1,3 +1,4 @@
+import { ARTICLE_CARD_FIELDS, type ArticleCardData } from "@/lib/article-card";
 import ArticleCard from "@/components/ui/ArticleCard";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -13,11 +14,11 @@ export const revalidate = 60;
 async function getQadaya() {
   const { data } = await supabaseAdmin
     .from("articles")
-    .select("*, writer:writers(*)")
+    .select(ARTICLE_CARD_FIELDS)
     .eq("status", "published")
     .eq("category", "دين")
     .order("published_at", { ascending: false })
-    .limit(60);
+    .limit(60).returns<ArticleCardData[]>();
   return data ?? [];
 }
 

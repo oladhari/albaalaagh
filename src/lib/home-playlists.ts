@@ -33,6 +33,7 @@ export async function getHomePlaylists() {
     .sort((a, b) => (b.latestDate ?? "").localeCompare(a.latestDate ?? ""));
 }
 
-// Cache only the public summary, never the full archive or authenticated data.
+// The summary scans the full public archive. Reuse it for an hour; the
+// YouTube sync invalidates public-programmes when it changes the archive.
 export const getCachedHomePlaylists = unstable_cache(getHomePlaylists,
-  ["home-programme-summary-v1"], { revalidate: 120, tags: ["public-programmes"] });
+  ["home-programme-summary-v1"], { revalidate: 3600, tags: ["public-programmes"] });
