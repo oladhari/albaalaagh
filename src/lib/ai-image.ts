@@ -9,6 +9,9 @@ import { composeWriterThumbnail } from "@/lib/article-thumbnail";
 
 let openai: OpenAI | null = null;
 
+// Shared by template edits and writer-cover backgrounds; keep migrations in one place.
+export const IMAGE_MODEL = "gpt-image-2.6-sunburst";
+
 function getOpenAI(): OpenAI {
   if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 0, timeout: 120_000 });
   return openai;
@@ -599,14 +602,14 @@ NEWS STYLE:
 * high contrast
 * 1280×720 landscape format
 
-TITLE:
+TITLE TO RENDER VERBATIM (the only new text):
 ${title}
 
-DESCRIPTION:
+DESCRIPTION FOR VISUAL CONTEXT ONLY — DO NOT RENDER THIS TEXT:
 ${excerpt || "—"}
 
 TEMPLATE:
-first attached image — use only its branding and frame. Replace sample headline and all sample editorial imagery in the content area, including any sample people or portraits. Template people are never authorized person references. Fill the content area using only the supplied story and qualifying references.`;
+first attached image — use only its branding and frame. Replace sample headline and all sample editorial imagery in the content area, including any sample people or portraits. Template people are never authorized person references. Fill the content area using only the supplied story and qualifying references. Render the title exactly once. Do not render the description, reference labels, explanations, or instructions anywhere in the image.`;
 }
 
 export interface GeneratedImageResult {
@@ -622,7 +625,7 @@ export async function generateNewsImage(title: string, excerpt: string, people: 
   const imagePrompt = buildNews16_9Prompt(title, excerpt, attached);
 
   const result = await getOpenAI().images.edit({
-    model: "gpt-image-2",
+    model: IMAGE_MODEL,
     image: personFiles.length ? [templateFile, ...personFiles] : templateFile,
     prompt: imagePrompt,
     size: "1280x720",
@@ -665,14 +668,14 @@ ${people.length ? "Build the composition around the supplied photographic conten
 ${buildGeographicAccuracyRules(title, excerpt)}
 Use a modern premium newsroom style, realistic documentary lighting, clean composition, strong focal point, and high contrast.
 
-TITLE:
+TITLE TO RENDER VERBATIM (the only new text):
 ${title}
 
-DESCRIPTION:
+DESCRIPTION FOR VISUAL CONTEXT ONLY — DO NOT RENDER THIS TEXT:
 ${excerpt || "—"}
 
 TEMPLATE:
-attached image — preserve it exactly as the base, only fill the content area`;
+attached image — preserve it exactly as the base, only fill the content area. Render the title exactly once. Do not render the description, reference labels, explanations, or instructions anywhere in the image.`;
 }
 
 export async function generateFacebookImage(title: string, excerpt: string, people: PersonPhoto[] = []): Promise<GeneratedImageResult> {
@@ -684,7 +687,7 @@ export async function generateFacebookImage(title: string, excerpt: string, peop
   }
 
   const result = await getOpenAI().images.edit({
-    model: "gpt-image-2",
+    model: IMAGE_MODEL,
     image: personFiles.length ? [templateFile, ...personFiles] : templateFile,
     prompt: buildFacebookPrompt(title, excerpt, attached),
     size: "1024x1024",
@@ -719,7 +722,7 @@ export async function generateWriterArticleImage(
   await sharp(writerPhoto).metadata();
   const plan = await generateWriterThumbnailPlan({ title, excerpt, writerName });
   const result = await getOpenAI().images.generate({
-    model: "gpt-image-2",
+    model: IMAGE_MODEL,
     prompt: `Create only a topic-specific editorial background. No people, faces, text, logos, labels, numbers, charts or maps. Keep the lower-left area quiet for separately composited Arabic copy and the right 36% quiet for an authentic portrait. Never manufacture documentary evidence. Background concept: ${plan.backgroundPrompt}`,
     size: "1280x720", quality: "medium", n: 1,
   });

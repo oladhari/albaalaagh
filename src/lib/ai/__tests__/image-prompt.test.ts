@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { buildFacebookPrompt, buildNews16_9Prompt } from "@/lib/ai-image";
 
+describe("headline-only image text", () => {
+  it.each([buildFacebookPrompt, buildNews16_9Prompt])("separates visual context from the exact rendered headline", (build) => {
+    const prompt = build("التعليم في تونس", "تفاصيل تساعد على اختيار المشهد ولا تظهر على الصورة");
+    expect(prompt).toContain("TITLE TO RENDER VERBATIM (the only new text):\nالتعليم في تونس");
+    expect(prompt).toContain("DESCRIPTION FOR VISUAL CONTEXT ONLY — DO NOT RENDER THIS TEXT:");
+    expect(prompt).toContain("Render the title exactly once");
+    expect(prompt).toContain("Do not render the description, reference labels, explanations, or instructions");
+  });
+});
+
 describe("Facebook image prompt", () => {
   it("scopes flag examples to the story and prohibits invented cartography", () => {
     const iran = buildFacebookPrompt("إيران: استقالة وزير النفط", "قطاع الطاقة الإيراني");
