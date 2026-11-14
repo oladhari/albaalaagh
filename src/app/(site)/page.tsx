@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import ArticleCard from "@/components/ui/ArticleCard";
 import NewsCard from "@/components/ui/NewsCard";
-import SectionHeader from "@/components/ui/SectionHeader";
+import SectionHeader, { SectionTitleLink } from "@/components/ui/SectionHeader";
 import SocialBar from "@/components/sections/SocialBar";
 import NewsTicker from "@/components/sections/NewsTicker";
 import LiveBanner from "@/components/sections/LiveBanner";
@@ -188,7 +188,7 @@ export default async function HomePage() {
           {/* Latest news sidebar */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold text-gold">آخر الأخبار</h3>
+              <h3 className="text-sm font-bold"><SectionTitleLink title="آخر الأخبار" href="/news" /></h3>
               <Link href="/news" className="text-xs text-text-muted">عرض الكل ←</Link>
             </div>
             {news.length > 0 ? (
@@ -235,11 +235,8 @@ export default async function HomePage() {
       {/* ── About banner ── */}
       <section className="py-12 bg-bg-card border-t border-border border-b border-border">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2
-            className="text-3xl font-black mb-4"
-            style={{ background: "linear-gradient(135deg, #E8D5A3, #C9A844)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",  }}
-          >
-            البلاغ
+          <h2 className="text-3xl font-black mb-4">
+            <SectionTitleLink title="البلاغ" href="/about" />
           </h2>
           <p className="text-base leading-loose mb-6 text-text-muted">
             منبر إعلامي تونسي مستقل يؤمن بحرية الكلمة وقيم الإسلام الوسطي. نُجري حوارات معمقة مع شخصيات سياسية وفكرية متنوعة، ساعين إلى تقديم محتوى راقٍ يخدم المواطن التونسي والعربي.
