@@ -238,3 +238,58 @@ body {
   color: var(--color-gold) !important;
   -webkit-text-fill-color: currentColor !important;
 }
+
+/* Section titles remain headings while also opening their section archive. */
+.section-heading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  max-width: 100%;
+  border-radius: .25rem;
+  color: var(--color-gold);
+  text-decoration: none;
+}
+.section-heading-text {
+  min-width: 0;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 24%));
+  transition: filter 180ms ease;
+}
+.section-heading-arrow {
+  flex-shrink: 0;
+  font-size: .6em;
+  opacity: .45;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.section-heading-link:hover .section-heading-text,
+.section-heading-link:focus-visible .section-heading-text {
+  text-decoration: underline;
+  text-decoration-color: var(--color-gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: .25em;
+  filter: drop-shadow(0 2px 3px rgb(201 168 68 / 28%));
+}
+.section-heading-link:hover .section-heading-arrow,
+.section-heading-link:focus-visible .section-heading-arrow {
+  opacity: 1;
+  transform: translateX(-3px);
+}
+.section-heading-link:focus-visible,
+.section-view-all:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 5px;
+}
+.section-view-all {
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.section-view-all:hover {
+  background: rgb(201 168 68 / 8%);
+  border-color: var(--color-gold);
+}
+[data-theme="light"] .section-heading-text {
+  filter: drop-shadow(0 1px 1px rgb(98 73 14 / 10%));
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-heading-text, .section-heading-arrow, .section-view-all { transition: none; }
+  .section-heading-link:hover .section-heading-arrow,
+  .section-heading-link:focus-visible .section-heading-arrow { transform: none; }
+}

@@ -1,4 +1,4 @@
-"use client";
+import Link from "next/link";
 
 interface SectionHeaderProps {
   title: string;
@@ -6,6 +6,13 @@ interface SectionHeaderProps {
   linkHref?: string;
   linkLabel?: string;
   as?: "h1" | "h2";
+}
+
+export function SectionTitleLink({ title, href }: { title: string; href: string }) {
+  return <Link href={href} className="section-heading-link">
+    <span className="text-gold-gradient section-heading-text">{title}</span>
+    <span aria-hidden="true" className="section-heading-arrow">←</span>
+  </Link>;
 }
 
 export default function SectionHeader({
@@ -17,18 +24,11 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
   const Heading = as;
   return (
-    <div className="flex items-end justify-between mb-8">
-      <div>
-        <Heading
-          className="text-2xl sm:text-3xl font-black mb-1"
-          style={{
-            background: "linear-gradient(135deg, #E8D5A3 0%, #C9A844 60%, #9A7B28 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          {title}
+    <div className="flex items-end justify-between gap-4 mb-8">
+      <div className="min-w-0">
+        <Heading className="text-2xl sm:text-3xl font-black mb-1">
+          {linkHref ? <SectionTitleLink title={title} href={linkHref} /> :
+            <span className="text-gold-gradient">{title}</span>}
         </Heading>
         {subtitle && (
           <p className="text-sm text-text-muted">
@@ -43,18 +43,10 @@ export default function SectionHeader({
         />
       </div>
       {linkHref && (
-        <a
-          href={linkHref}
-          className="text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 text-gold border-border"
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(201,168,68,0.08)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-          }}
-        >
-          {linkLabel} ←
-        </a>
+        <Link href={linkHref}
+          className="section-view-all text-sm font-medium px-4 py-1.5 rounded-full border text-gold border-border shrink-0">
+          {linkLabel} <span aria-hidden="true">←</span>
+        </Link>
       )}
     </div>
   );
