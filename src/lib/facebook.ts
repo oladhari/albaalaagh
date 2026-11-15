@@ -15,7 +15,7 @@ async function postPhotoWithComment(
   imageUrl: string,
   caption: string,
   articleUrl: string,
-  programme = false
+  contentLabel: "المقال" | "التقرير"
 ): Promise<void> {
   const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
     method: "POST",
@@ -31,11 +31,11 @@ async function postPhotoWithComment(
   const postId = post_id ?? id;
   if (!postId) return;
 
-  // Link in first comment — avoids algorithm penalty for external links in caption
+  // Photo posts keep the reading URL in the first Page comment.
   const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: `🔗 اقرأ ${programme ? "المقال" : "التقرير"} كاملاً:\n${articleUrl}`, access_token: PAGE_TOKEN }),
+    body: JSON.stringify({ message: `🔗 اقرأ ${contentLabel} كاملاً:\n${articleUrl}`, access_token: PAGE_TOKEN }),
   });
   if (!commentRes.ok) {
     const err = await commentRes.json();
@@ -47,23 +47,24 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
   if (!PAGE_ID || !PAGE_TOKEN) return;
 
   const url = shareUrl(opts);
+  const contentLabel = opts.type === "news" || opts.type === "report" ? "التقرير" : "المقال";
 
   if (opts.facebook_image) {
     const caption = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
-      opts.type === "news" ? "\nللمزيد، رابط التقرير كاملاً في أول تعليق 👇" : null,
+      `\nللمزيد، رابط ${contentLabel} كاملاً في أول تعليق 👇`,
       opts.type === "programme" ? "\n#البلاغ #من_برامجنا #تونس" : "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
-    await postPhotoWithComment(opts.facebook_image, caption, url, opts.type === "programme");
+    await postPhotoWithComment(opts.facebook_image, caption, url, contentLabel);
   } else {
     const message = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
-      `\n🔗 اقرأ المقال كاملاً: ${url}`,
+      `\n🔗 اقرأ ${contentLabel} كاملاً: ${url}`,
       "\n\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
