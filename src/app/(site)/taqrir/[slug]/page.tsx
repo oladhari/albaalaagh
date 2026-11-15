@@ -165,10 +165,11 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
         className="flex items-center gap-4 p-4 rounded-xl mb-6 bg-bg-card border border-border"
       >
         <img
-          src="/albaalaagh-logo.png"
+          src="/branding/albaalaagh-editorial-avatar.png"
           alt="البلاغ"
-          className="w-10 h-10 rounded-full object-cover shrink-0"
-          style={{ background: "rgba(201, 168, 68, 0.15)" }}
+          width={48}
+          height={48}
+          className="w-12 h-12 rounded-full object-contain shrink-0"
         />
         <div>
           <p className="text-sm font-semibold text-text">تحرير البلاغ</p>

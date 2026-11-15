@@ -139,10 +139,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           </div>
         ) : (
           <img
-            src="/albaalaagh-logo.png"
+            src="/branding/albaalaagh-editorial-avatar.png"
             alt="البلاغ"
-            className="w-12 h-12 rounded-full object-cover shrink-0"
-            style={{ background: "rgba(201, 168, 68, 0.15)" }}
+            width={48}
+            height={48}
+            className="w-12 h-12 rounded-full object-contain shrink-0"
           />
         )}
         <div>
