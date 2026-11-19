@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Resend } from "resend";
 import { videoPath } from "@/lib/public-urls";
@@ -7,6 +8,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.albaalaagh.com";
 
 export async function POST(req: NextRequest) {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+
   const { subject, intro, videos, articles, news } = await req.json();
 
   // Collect all recipients: paid subscribers + free newsletter subscribers

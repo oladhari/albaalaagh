@@ -1,8 +1,9 @@
 import { cache } from "react";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase";
+import { hasAdminSession } from "@/lib/admin-auth";
 import { REPORT_CATEGORIES, reportPath } from "@/lib/reports";
 import { expandCompactUuid, isDashedUuid } from "@/lib/public-urls";
 import ReportBody from "@/components/reports/ReportBody";
@@ -10,7 +11,7 @@ import ReportBody from "@/components/reports/ReportBody";
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> };
 const getReport = cache(async (slug: string, preview: boolean) => {
-  const authorized = preview && (await cookies()).get("admin_authed")?.value === "1";
+  const authorized = preview && (await hasAdminSession());
   let query = supabaseAdmin.from("articles").select("id,slug,title,excerpt,content,cover_image,category,published_at,published,status").in("category", [...REPORT_CATEGORIES]);
   query = /^[0-9a-f]{32}$/i.test(slug) || isDashedUuid(slug) ? query.eq("id", expandCompactUuid(slug)) : query.eq("slug", slug);
   if (!authorized) query = query.eq("published", true).eq("status", "published");

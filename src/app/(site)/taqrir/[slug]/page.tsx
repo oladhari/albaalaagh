@@ -1,35 +1,35 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
 import { formatAndSanitize } from "@/lib/sanitize";
 import { expandCompactUuid, newsPath } from "@/lib/public-urls";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 async function getArticle(slugOrId: string) {
   const expandedId = expandCompactUuid(slugOrId);
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(expandedId);
-  const filter = isUuid ? `id.eq.${expandedId},slug.eq.${slugOrId}` : `slug.eq.${slugOrId}`;
-
-  const { data } = await supabaseAdmin
+  const publishedReports = () => supabase
     .from("news")
     .select("*, news_citations(*)")
-    .or(filter)
-    .eq("source", "البلاغ")
-    .single();
+    .eq("status", "approved")
+    .eq("source", "البلاغ");
+
+  const exact = publishedReports();
+  const { data } = await (isUuid
+    ? exact.or(`id.eq.${expandedId},slug.eq.${slugOrId}`)
+    : exact.eq("slug", slugOrId)).single();
   if (data) return data;
 
   const prefix = slugOrId.replace(/-+$/, "");
   if (!prefix || prefix === slugOrId) return null;
 
-  const { data: prefixMatches } = await supabaseAdmin
-    .from("news")
-    .select("*, news_citations(*)")
-    .eq("source", "البلاغ")
-    .like("slug", `${prefix}%`)
+  const escapedPrefix = prefix.replace(/[\\%_]/g, "\\$&");
+  const { data: prefixMatches } = await publishedReports()
+    .like("slug", `${escapedPrefix}%`)
     .limit(2);
 
   return prefixMatches?.length === 1 ? prefixMatches[0] : null;

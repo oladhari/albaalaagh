@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { newsPath } from "@/lib/public-urls";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.albaalaagh.com";
 
 export async function GET() {
+  const unauthed = await requireAdmin();
+  if (unauthed) return unauthed;
+
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [

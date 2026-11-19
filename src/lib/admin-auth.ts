@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-session";
+
+export async function hasAdminSession(): Promise<boolean> {
+  const cookieStore = await cookies();
+  return isValidAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+}
 
 export async function requireAdmin(): Promise<NextResponse | null> {
-  const cookieStore = await cookies();
-  const authed = cookieStore.get("admin_authed")?.value === "1";
-
-  if (!authed) {
+  if (!(await hasAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return null;
