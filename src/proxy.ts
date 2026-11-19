@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, isValidAdminSession } from "@/lib/admin-session";
 
 function createNonce() {
   return Buffer.from(crypto.randomUUID()).toString("base64");
@@ -60,7 +61,7 @@ export async function proxy(req: NextRequest) {
   let response = createResponse(req, requestHeaders, cspHeader);
 
   const isWriterRoute = req.nextUrl.pathname.startsWith("/writer");
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
+  const isAdminRoute = req.nextUrl.pathname === "/admin" || req.nextUrl.pathname.startsWith("/admin/");
 
   if (isWriterRoute) {
     const supabase = createServerClient(
@@ -99,9 +100,7 @@ export async function proxy(req: NextRequest) {
 
   // Protect /admin routes (except /admin/login)
   const isAdminLogin = req.nextUrl.pathname === "/admin/login";
-  const isAdminAuthed = req.cookies.get("admin_authed")?.value === "1";
-
-  if (isAdminRoute && !isAdminLogin && !isAdminAuthed) {
+  if (isAdminRoute && !isAdminLogin && !isValidAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value)) {
     const redirect = NextResponse.redirect(new URL("/admin/login", req.url));
     redirect.headers.set("Content-Security-Policy", cspHeader);
     return redirect;
@@ -112,6 +111,7 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/admin/:path*",
     {
       source: "/((?!api|_next/static|_next/image|favicon.ico|icon.ico|robots.txt|sitemap.xml|feed.xml).*)",
       missing: [

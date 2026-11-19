@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { ADMIN_SESSION_COOKIE, adminSessionCookieOptions, createAdminSession } from "@/lib/admin-session";
 
 // Per-instance rate limiting (best-effort on serverless — limits attacks on warm instances)
-const attempts = new Map<string, { count: number; lockedUntil: number }>();
+const attempts = new Map<string, { count: number; lastFailureAt: number; lockedUntil: number }>();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS   = 15 * 60 * 1000; // 15 min lockout after 5 failures
 const WINDOW_MS    = 15 * 60 * 1000; // reset counter after 15 min of no failures
@@ -28,21 +30,27 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { password } = await req.json();
+  const body = await req.json().catch(() => null);
+  const password = body?.password;
+  const expectedPassword = process.env.ADMIN_PASSWORD;
+  if (!expectedPassword) {
+    return NextResponse.json({ error: "خدمة تسجيل الدخول غير متاحة" }, { status: 503 });
+  }
 
-  if (password !== process.env.ADMIN_PASSWORD) {
+  const digest = (value: string) => createHash("sha256").update(value).digest();
+  if (typeof password !== "string" || !timingSafeEqual(digest(password), digest(expectedPassword))) {
     // Increment failure counter
-    const current = rec && rec.lockedUntil <= now ? rec : { count: 0, lockedUntil: 0 };
-    const newCount = current.count + 1;
+    const newCount = rec && !rec.lockedUntil && now - rec.lastFailureAt < WINDOW_MS ? rec.count + 1 : 1;
     attempts.set(ip, {
       count:       newCount,
+      lastFailureAt: now,
       lockedUntil: newCount >= MAX_ATTEMPTS ? now + LOCKOUT_MS : 0,
     });
 
     // Clear stale entries periodically to prevent memory leak
     if (attempts.size > 500) {
       for (const [k, v] of attempts) {
-        if (v.lockedUntil < now - WINDOW_MS) attempts.delete(k);
+        if (v.lockedUntil <= now && v.lastFailureAt <= now - WINDOW_MS) attempts.delete(k);
       }
     }
 
@@ -51,17 +59,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
   }
 
-  // Success — clear any failed attempts for this IP
+  const session = createAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "خدمة تسجيل الدخول غير متاحة" }, { status: 503 });
+  }
   attempts.delete(ip);
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set("admin_authed", "1", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: "/",
-  });
+  res.cookies.set(ADMIN_SESSION_COOKIE, session, adminSessionCookieOptions);
 
   return res;
 }

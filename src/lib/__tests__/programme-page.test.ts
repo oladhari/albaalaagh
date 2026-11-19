@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ admin: false, row: null as Record<string, unknown> | null, eq: [] as unknown[], categories: [] as unknown[] }));
 vi.mock("react", () => ({ cache: (fn: unknown) => fn }));
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => mocks.admin ? { value: "1" } : undefined }) }));
+vi.mock("@/lib/admin-auth", () => ({ hasAdminSession: async () => mocks.admin }));
 vi.mock("@/lib/supabase", () => ({ supabaseAdmin: { from: () => {
   const chain = { select: () => chain, in: (...args: unknown[]) => { mocks.categories.push(args); return chain; }, eq: (...args: unknown[]) => { mocks.eq.push(args); return chain; }, single: async () => ({ data: mocks.row, error: null }) }; return chain;
 } } }));
