@@ -31,14 +31,20 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null);
+  const email = body?.email;
   const password = body?.password;
-  const expectedPassword = process.env.ADMIN_PASSWORD;
-  if (!expectedPassword) {
+  const expectedEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const expectedPassword = process.env.ADMIN_LOGIN_PASSWORD;
+  if (!expectedEmail || !expectedPassword) {
     return NextResponse.json({ error: "خدمة تسجيل الدخول غير متاحة" }, { status: 503 });
   }
 
   const digest = (value: string) => createHash("sha256").update(value).digest();
-  if (typeof password !== "string" || !timingSafeEqual(digest(password), digest(expectedPassword))) {
+  const emailMatches = typeof email === "string" &&
+    timingSafeEqual(digest(email.trim().toLowerCase()), digest(expectedEmail));
+  const passwordMatches = typeof password === "string" &&
+    timingSafeEqual(digest(password), digest(expectedPassword));
+  if (!emailMatches || !passwordMatches) {
     // Increment failure counter
     const newCount = rec && !rec.lockedUntil && now - rec.lastFailureAt < WINDOW_MS ? rec.count + 1 : 1;
     attempts.set(ip, {
@@ -56,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Constant-time-ish delay to slow automated attempts
     await new Promise((r) => setTimeout(r, 1000));
-    return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
+    return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 });
   }
 
   const session = createAdminSession();

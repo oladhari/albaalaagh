@@ -1,31 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+const inputClass = "w-full px-4 py-2.5 rounded-lg text-sm outline-none focus:ring-1 focus:ring-[#C9A844]";
+const inputStyle = { background: "#111008", border: "1px solid #2E2A18", color: "#F0EAD6" };
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (res.ok) {
-      window.location.href = "/admin";
-    } else {
-      setError("كلمة المرور غير صحيحة");
-      setLoading(false);
+      if (res.ok) {
+        window.location.assign("/admin");
+        return;
+      }
+      const { error: message } = await res.json();
+      setError(message || "خدمة تسجيل الدخول غير متاحة حالياً");
+    } catch {
+      setError("تعذّر الاتصال بخدمة تسجيل الدخول. حاول مجدداً.");
     }
+    setLoading(false);
   }
 
   return (
@@ -63,25 +70,41 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
           <div>
-            <label className="block text-sm mb-1.5" style={{ color: "#9A9070" }}>
+            <label htmlFor="admin-email" className="block text-sm mb-1.5" style={{ color: "#9A9070" }}>
+              البريد الإلكتروني
+            </label>
+            <input
+              id="admin-email"
+              name="email"
+              type="email"
+              autoComplete="username"
+              dir="ltr"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className={inputClass}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label htmlFor="admin-password" className="block text-sm mb-1.5" style={{ color: "#9A9070" }}>
               كلمة المرور
             </label>
             <input
+              id="admin-password"
+              name="password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-              style={{
-                background: "#111008",
-                border: "1px solid #2E2A18",
-                color: "#F0EAD6",
-              }}
+              className={inputClass}
+              style={inputStyle}
             />
           </div>
 
           {error && (
-            <p className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>
+            <p role="alert" className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>
           )}
 
           <button
