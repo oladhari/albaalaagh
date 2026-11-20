@@ -9,10 +9,20 @@ import { proxy } from "@/proxy";
 
 const cookies = vi.hoisted(() => new Map<string, { value: string }>());
 vi.mock("next/headers", () => ({ cookies: async () => cookies }));
+const email = "admin@example.test";
+const password = "test-only-admin-password";
+
+function loginRequest(body: object) {
+  return new NextRequest("https://albaalaagh.test/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
 
 beforeEach(() => {
   vi.stubEnv("ADMIN_SESSION_SECRET", randomBytes(32).toString("hex"));
-  vi.stubEnv("ADMIN_PASSWORD", "test-only-admin-password");
+  vi.stubEnv("ADMIN_EMAIL", email);
+  vi.stubEnv("ADMIN_LOGIN_PASSWORD", password);
   cookies.clear();
 });
 afterEach(() => {
@@ -22,10 +32,7 @@ afterEach(() => {
 
 describe("admin session boundaries", () => {
   it("accepts a server-issued login token and expires the cookie on logout", async () => {
-    const response = await login(new NextRequest("https://albaalaagh.test/api/admin/login", {
-      method: "POST",
-      body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
-    }));
+    const response = await login(loginRequest({ email: ` ${email.toUpperCase()} `, password }));
     expect(response.status).toBe(200);
     const session = response.cookies.get(ADMIN_SESSION_COOKIE)!;
     expect(session).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/" });
@@ -36,6 +43,18 @@ describe("admin session boundaries", () => {
     }));
     expect(page.headers.get("location")).toBeNull();
     expect((await logout()).cookies.get(ADMIN_SESSION_COOKIE)?.maxAge).toBe(0);
+  });
+
+  it("requires both the configured email and the dashboard password", async () => {
+    const responses = await Promise.all([
+      login(loginRequest({ password })),
+      login(loginRequest({ email: "other@example.test", password })),
+      login(loginRequest({ email, password: "incorrect" })),
+    ]);
+    for (const response of responses) {
+      expect(response.status).toBe(401);
+      expect(response.cookies.has(ADMIN_SESSION_COOKIE)).toBe(false);
+    }
   });
 
   it("rejects legacy cookies in the API and on admin page requests", async () => {
@@ -60,16 +79,15 @@ describe("admin session boundaries", () => {
     expect(isValidAdminSession(recent)).toBe(false);
   });
 
-  it("fails closed without a configured password or signing secret", async () => {
-    vi.stubEnv("ADMIN_PASSWORD", undefined);
-    const request = (body: object) => new NextRequest("https://albaalaagh.test/api/admin/login", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    expect((await login(request({}))).status).toBe(503);
-    vi.stubEnv("ADMIN_PASSWORD", "test-only-admin-password");
+  it("fails closed without a configured email, password or signing secret", async () => {
+    vi.stubEnv("ADMIN_EMAIL", undefined);
+    expect((await login(loginRequest({ email, password }))).status).toBe(503);
+    vi.stubEnv("ADMIN_EMAIL", email);
+    vi.stubEnv("ADMIN_LOGIN_PASSWORD", undefined);
+    expect((await login(loginRequest({ email, password }))).status).toBe(503);
+    vi.stubEnv("ADMIN_LOGIN_PASSWORD", password);
     vi.stubEnv("ADMIN_SESSION_SECRET", undefined);
-    expect((await login(request({ password: process.env.ADMIN_PASSWORD }))).status).toBe(503);
+    expect((await login(loginRequest({ email, password }))).status).toBe(503);
     expect(createAdminSession()).toBeNull();
   });
 });
