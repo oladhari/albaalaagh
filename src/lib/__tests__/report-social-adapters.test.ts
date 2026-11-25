@@ -17,12 +17,8 @@ describe("report social adapters", () => {
     const opts = { title: "تقرير موثّق", excerpt: "ملخص", slug: "c8306fdb205c42a6b071ce859edcbaac", type, facebook_image: "https://media.albaalaagh.com/landscape.jpg", image: "https://media.albaalaagh.com/landscape.jpg" };
     await postArticleToFacebook(opts); await postArticleToInstagram(opts); await postToTelegram(opts); await postToX(opts); await postToLinkedIn(opts);
     const canonical = `https://www.albaalaagh.com/${type === "programme" ? "from-programmes" : "reports"}/${opts.slug}`;
-    if (type === "report") {
-      expect(calls.find(c => c.url.endsWith("/feed"))?.body.link).toBe(canonical);
-      expect(calls.some(c => c.url.endsWith("/photos"))).toBe(false);
-    } else {
-      expect(calls.find(c => c.url.endsWith("/photos"))?.body.url).toBe(opts.image);
-    }
+    expect(calls.find(c => c.url.endsWith("/feed"))?.body.link).toBe(canonical);
+    expect(calls.some(c => c.url.endsWith("/photos"))).toBe(false);
     expect(calls.find(c => c.url.endsWith("/comments"))?.body.message).toContain(canonical);
     expect(calls.find(c => c.url.endsWith("/media"))?.body).toMatchObject({ image_url: opts.image, caption: expect.stringContaining(canonical) });
     expect(calls.find(c => c.url.endsWith("/sendPhoto"))?.body).toMatchObject({ photo: opts.image, caption: expect.stringContaining(canonical) });
