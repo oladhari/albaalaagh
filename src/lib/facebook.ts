@@ -33,14 +33,14 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
   const url = shareUrl(opts);
   const contentLabel = opts.type === "news" || opts.type === "report" ? "التقرير" : "المقال";
 
-  const linkWithComment = opts.type === "article" || opts.type === "report";
+  const linkWithComment = opts.type === "article" || opts.type === "report" || opts.type === "programme";
   if (opts.facebook_image && !linkWithComment) {
     const caption = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
       opts.excerpt ? `\n${opts.excerpt}` : null,
       `\nللمزيد، رابط ${contentLabel} كاملاً في أول تعليق 👇`,
-      opts.type === "programme" ? "\n#البلاغ #من_برامجنا #تونس" : "\n#البلاغ #سياسة #تونس",
+      "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
     const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
@@ -63,7 +63,7 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
     opts.writerName ? `✍️ ${opts.writerName}` : null,
     opts.excerpt ? `\n${opts.excerpt}` : null,
     `\n🔗 اقرأ ${contentLabel} كاملاً: ${url}`,
-    "\n\n#البلاغ #سياسة #تونس",
+    opts.type === "programme" ? "\n\n#البلاغ #من_برامجنا #تونس" : "\n\n#البلاغ #سياسة #تونس",
   ].filter(Boolean).join("\n");
 
   const res = await fetch(`https://graph.facebook.com/${PAGE_ID}/feed`, {

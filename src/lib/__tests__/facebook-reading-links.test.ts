@@ -9,11 +9,11 @@ afterEach(() => {
 const linkPostSections = [
   ["report", "reports", "التقرير"],
   ["article", "articles", "المقال"],
+  ["programme", "from-programmes", "المقال"],
 ] as const;
 
 const photoPostSections = [
   ["news", "taqrir", "التقرير"],
-  ["programme", "from-programmes", "المقال"],
 ] as const;
 
 async function adapter(feedSucceeds = true) {
@@ -66,6 +66,7 @@ describe("Facebook reading-link placement", () => {
     expect(calls[0].url).toMatch(/\/feed$/);
     expect(calls[0].body).toMatchObject({ link: canonical, message: expect.stringContaining(canonical) });
     expect(calls[0].body.message).toContain("الكاتب");
+    if (type === "programme") expect(calls[0].body.message).toContain("#من_برامجنا");
     expect(JSON.stringify(calls[0].body)).not.toContain("cover.jpg");
     expect(calls[1].url).toMatch(/\/post-test\/comments$/);
     expect(calls[1].body.message).toBe(`🔗 اقرأ ${label} كاملاً:\n${canonical}`);
