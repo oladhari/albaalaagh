@@ -11,27 +11,11 @@ interface PostOptions {
   facebook_image?: string | null;
 }
 
-async function postPhotoWithComment(
-  imageUrl: string,
-  caption: string,
+async function postReadingLinkComment(
+  postId: string,
   articleUrl: string,
   contentLabel: "المقال" | "التقرير"
 ): Promise<void> {
-  const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url: imageUrl, caption, access_token: PAGE_TOKEN }),
-  });
-  if (!photoRes.ok) {
-    const err = await photoRes.json();
-    console.error("Facebook photo post failed:", err);
-    return;
-  }
-  const { post_id, id } = await photoRes.json();
-  const postId = post_id ?? id;
-  if (!postId) return;
-
-  // Photo posts keep the reading URL in the first Page comment.
   const commentRes = await fetch(`https://graph.facebook.com/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -49,7 +33,8 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
   const url = shareUrl(opts);
   const contentLabel = opts.type === "news" || opts.type === "report" ? "التقرير" : "المقال";
 
-  if (opts.facebook_image) {
+  const linkWithComment = opts.type === "article" || opts.type === "report";
+  if (opts.facebook_image && !linkWithComment) {
     const caption = [
       opts.title,
       opts.writerName ? `✍️ ${opts.writerName}` : null,
@@ -58,24 +43,41 @@ export async function postArticleToFacebook(opts: PostOptions): Promise<void> {
       opts.type === "programme" ? "\n#البلاغ #من_برامجنا #تونس" : "\n#البلاغ #سياسة #تونس",
     ].filter(Boolean).join("\n");
 
-    await postPhotoWithComment(opts.facebook_image, caption, url, contentLabel);
-  } else {
-    const message = [
-      opts.title,
-      opts.writerName ? `✍️ ${opts.writerName}` : null,
-      opts.excerpt ? `\n${opts.excerpt}` : null,
-      `\n🔗 اقرأ ${contentLabel} كاملاً: ${url}`,
-      "\n\n#البلاغ #سياسة #تونس",
-    ].filter(Boolean).join("\n");
-
-    const res = await fetch(`https://graph.facebook.com/${PAGE_ID}/feed`, {
+    const photoRes = await fetch(`https://graph.facebook.com/${PAGE_ID}/photos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, link: url, access_token: PAGE_TOKEN }),
+      body: JSON.stringify({ url: opts.facebook_image, caption, access_token: PAGE_TOKEN }),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      console.error("Facebook post failed:", err);
+    if (!photoRes.ok) {
+      console.error("Facebook photo post failed:", await photoRes.json());
+      return;
     }
+    const { post_id, id } = await photoRes.json();
+    const postId = post_id ?? id;
+    if (postId) await postReadingLinkComment(postId, url, contentLabel);
+    return;
+  }
+
+  const message = [
+    opts.title,
+    opts.writerName ? `✍️ ${opts.writerName}` : null,
+    opts.excerpt ? `\n${opts.excerpt}` : null,
+    `\n🔗 اقرأ ${contentLabel} كاملاً: ${url}`,
+    "\n\n#البلاغ #سياسة #تونس",
+  ].filter(Boolean).join("\n");
+
+  const res = await fetch(`https://graph.facebook.com/${PAGE_ID}/feed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, link: url, access_token: PAGE_TOKEN }),
+  });
+  if (!res.ok) {
+    console.error("Facebook post failed:", await res.json());
+    return;
+  }
+  if (linkWithComment) {
+    const { id } = await res.json();
+    if (id) await postReadingLinkComment(id, url, contentLabel);
+    else console.warn("Facebook link post returned no ID for its reading link comment");
   }
 }
