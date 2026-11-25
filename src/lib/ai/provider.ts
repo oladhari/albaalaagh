@@ -101,7 +101,7 @@ export function createAiProvider(dependencies: ProviderDependencies = {}) {
   const getModel = (tier: AiModelTier): string => {
     return tier === "text"
       ? env.OPENAI_TEXT_MODEL || "gpt-5.4-mini"
-      : env.OPENAI_FAST_MODEL || "gpt-5-mini";
+      : env.OPENAI_FAST_MODEL || "gpt-6.1-terra";
   };
 
   const getOpenAI = () => {
