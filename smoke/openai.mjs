@@ -15,7 +15,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, maxRetries: 0, t
 // The cap includes reasoning tokens, so 20 tokens can end before visible output.
 try {
   for (const [tier, model] of [
-    ["fast", process.env.OPENAI_FAST_MODEL || "gpt-5-mini"],
+    ["fast", process.env.OPENAI_FAST_MODEL || "gpt-6.1-terra"],
     ["text", process.env.OPENAI_TEXT_MODEL || "gpt-5.4-mini"],
   ]) {
     const response = await client.responses.create({

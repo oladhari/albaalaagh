@@ -33,14 +33,15 @@ The original audit covered tracked application files. The later OpenAI-only audi
 Defaults are configuration values, not hard-coded routing requirements:
 
 - `OPENAI_TEXT_MODEL=gpt-5.4-mini` for drafting, URL import, guest review, and writer-image prompting. OpenAI describes it as a faster, efficient high-volume model; it supports the Responses API and Structured Outputs. The published price at audit time was $0.75 per million input tokens and $4.50 per million output tokens.
-- `OPENAI_FAST_MODEL=gpt-5-mini` for classification, reclassification, and guest metadata extraction. Its published price at audit time was $0.25 per million input tokens and $2.00 per million output tokens. It supports the Responses API and Structured Outputs.
+- `OPENAI_FAST_MODEL=gpt-6.1-terra` for classification, reclassification, and guest metadata extraction. It supports the Responses API and Structured Outputs. OpenAI lists it as the replacement for `gpt-5-mini`, which shuts down on December 11, 2026.
 
-`gpt-6-astra` is the current highest-capability general model in OpenAI's model guidance, but it was not chosen as the default here because these bounded editorial and classification tasks benefit more from the mini models' lower cost and latency. Change either environment variable after representative evaluation if quality requires it.
+Both model settings can be overridden by environment variables. Evaluate changes against representative editorial and classification inputs.
 
 Official references:
 
 - https://developers.openai.com/api/docs/models/gpt-5.4-mini
-- https://developers.openai.com/api/docs/models/gpt-5-mini
+- https://developers.openai.com/api/docs/models/gpt-6.1-terra
+- https://developers.openai.com/api/docs/deprecations
 - https://developers.openai.com/api/docs/guides/structured-outputs
 - https://developers.openai.com/api/docs/guides/text
 
