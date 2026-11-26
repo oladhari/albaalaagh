@@ -4,7 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatArabicDate } from "@/lib/utils";
 import ShareButtons from "@/components/ui/ShareButtons";
-import { formatAndSanitize } from "@/lib/sanitize";
+import { formatNewsContent } from "@/lib/news-content";
 import { expandCompactUuid, newsPath } from "@/lib/public-urls";
 
 export const dynamic = "force-dynamic";
@@ -80,8 +80,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       : { index: false, follow: true },
   };
 }
-
-const formatContent = formatAndSanitize;
 
 export default async function TaqrirPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -200,7 +198,7 @@ export default async function TaqrirPage({ params }: { params: Promise<{ slug: s
       <div
         className="prose-ar leading-relaxed text-text-body"
         style={{ fontSize: 16, lineHeight: 1.9 }}
-        dangerouslySetInnerHTML={{ __html: formatContent(article.content ?? "") }}
+        dangerouslySetInnerHTML={{ __html: formatNewsContent(article.content ?? "") }}
       />
 
       {article.news_citations?.length > 0 && (
