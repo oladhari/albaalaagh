@@ -20,11 +20,14 @@ const ALLOWED_TAGS = [
 // AI citation markers injected by ChatGPT (e.g. :contentReference[oaicite:0]{index=0})
 const AI_ARTIFACT_RE = /:contentReference\[oaicite:\d+\]\{index=\d+\}/g;
 
-export function sanitizeHtml(html: string): string {
+type FormatOptions = { allowArticleCharts?: boolean };
+
+export function sanitizeHtml(html: string, options: FormatOptions = {}): string {
   return sanitizeHtmlLib(html, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
       "*": ["class", "style", "id", "dir", "lang"],
+      ...(options.allowArticleCharts ? { figure: ["data-article-chart"] } : {}),
       a: ["href", "target", "rel", "title"],
       img: ["src", "alt", "title", "width", "height", "loading", "srcset", "sizes"],
       td: ["colspan", "rowspan"],
@@ -38,7 +41,7 @@ export function sanitizeHtml(html: string): string {
   });
 }
 
-export function formatAndSanitize(content: string): string {
+export function formatAndSanitize(content: string, options?: FormatOptions): string {
   let html = content.replace(AI_ARTIFACT_RE, "").trim();
 
   if (!/<[a-z][\s\S]*>/i.test(html)) {
@@ -49,7 +52,7 @@ export function formatAndSanitize(content: string): string {
       .map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
       .join("\n");
   }
-  return sanitizeHtml(html);
+  return sanitizeHtml(html, options);
 }
 
 // Reports may embed videos only from YouTube's privacy-enhanced player.

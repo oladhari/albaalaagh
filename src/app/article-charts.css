@@ -1,0 +1,145 @@
+.article-chart {
+  --chart-gold: #e3bd56;
+  --chart-domestic: #e48392;
+  --chart-external: #87b5d4;
+  --chart-equipment: #81beaa;
+  --chart-investment: #bcb9e0;
+  --chart-inside: #181818;
+  min-width: 0;
+  margin-block: 1.6rem;
+  padding: clamp(.7rem, 2.5vw, 1.3rem);
+  border: 1px solid var(--color-border);
+  border-radius: .8rem;
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  text-align: start;
+  font-family: var(--font-cairo), Cairo, sans-serif;
+  font-size: .92rem;
+  line-height: 1.65;
+}
+
+[data-theme="light"] .article-chart {
+  --chart-gold: #886309;
+  --chart-domestic: #a63e53;
+  --chart-external: #3d6887;
+  --chart-equipment: #247360;
+  --chart-investment: #65598e;
+  --chart-inside: #fff;
+}
+
+.article-chart__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .2rem 1rem;
+  padding-inline-start: .75rem;
+  border-inline-start: 3px solid var(--color-gold);
+}
+
+.article-chart__heading .article-chart__title {
+  font-size: clamp(1rem, 3.4vw, 1.28rem);
+  font-weight: 800;
+}
+.article-chart__unit,
+.article-chart__estimate,
+.article-chart__caption {
+  color: var(--color-text-muted);
+  font-size: .83rem;
+}
+
+.article-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  margin: .65rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-chart__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.article-chart__swatch {
+  width: .8rem;
+  height: .8rem;
+  border-radius: .18rem;
+  background: var(--series-color);
+  flex: none;
+}
+
+.article-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-block-start: .45rem;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.article-chart__grid { stroke: var(--color-border); stroke-width: 1; }
+.article-chart__grid--base { stroke: var(--color-text-muted); }
+.article-chart__axis { fill: var(--color-text-muted); font-size: 17px; }
+.article-chart__year { fill: var(--color-text); font-size: 19px; font-weight: 700; }
+.article-chart__value { fill: var(--color-text); font-size: 19px; font-weight: 800; }
+.article-chart__inside { fill: var(--chart-inside); font-size: 19px; font-weight: 800; }
+
+.article-chart__bar--gold { --series-color: var(--chart-gold); }
+.article-chart__bar--domestic { --series-color: var(--chart-domestic); }
+.article-chart__bar--external { --series-color: var(--chart-external); }
+.article-chart__bar--equipment { --series-color: var(--chart-equipment); }
+.article-chart__bar--investment { --series-color: var(--chart-investment); }
+.article-chart__bar { fill: var(--series-color); }
+.article-chart__bar--estimate {
+  stroke: var(--color-text);
+  stroke-width: 1.7;
+  stroke-dasharray: 5 3;
+}
+
+.article-chart__estimate { display: block; margin-block: .15rem .6rem; }
+.article-chart__caption { display: block; margin-block-start: .6rem; }
+.article-chart__source { display: block; margin-block-start: .2rem; }
+.article-chart__source a,
+.article-chart__details summary {
+  color: var(--color-gold);
+  text-decoration: underline;
+  text-underline-offset: .16em;
+}
+.article-chart__details summary {
+  cursor: pointer;
+  width: fit-content;
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.article-chart__table { overflow-x: auto; max-width: 100%; margin-block: .5rem .85rem; }
+.article-chart__table table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 0;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+.article-chart__table caption {
+  text-align: start;
+  color: var(--color-text-muted);
+  margin-block: 0 .4rem;
+}
+.article-chart__table :is(th, td) {
+  padding: .45rem .42rem;
+  border-block-end: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+}
+.article-chart__table thead { background: var(--color-bg-elevated); }
+.article-chart__table bdi { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 480px) {
+  .article-chart__axis { font-size: 19px; }
+  .article-chart__year,
+  .article-chart__value,
+  .article-chart__inside { font-size: 22px; }
+}

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./article-charts.css";
 
 @theme inline {
   --color-gold: var(--site-gold);
