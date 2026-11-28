@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { timeAgo, toDateTimeLocal } from "@/lib/utils";
 import type { NewsArticle, NewsCitation } from "@/types";
+import type { NewsImportMatch } from "@/lib/news-import-review";
 import CoverUpload from "@/components/admin/CoverUpload";
 import PersonPhotoPicker, { type PersonPhoto } from "@/components/admin/PersonPhotoPicker";
 
@@ -30,6 +31,7 @@ interface Preview {
   citations:      NewsCitation[];
   needs_internal_review?: boolean;
   editMode?:      boolean;
+  sourceUnavailable?: boolean;
 }
 
 const VALID_CATEGORIES = ["سياسة", "اقتصاد", "مجتمع", "قضاء", "أمن", "رياضة", "ثقافة", "تكنولوجيا", "بيئة", "صحة", "تعليم", "عام"];
@@ -68,6 +70,8 @@ export default function AdminNewsPage() {
   const [deleting, setDeleting]       = useState<string | null>(null);
   const [urlInput, setUrlInput]       = useState("");
   const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [importReview, setImportReview] = useState<{ url: string; matches: NewsImportMatch[]; partial: boolean } | null>(null);
+  const [importError, setImportError] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [editError, setEditError] = useState("");
@@ -262,20 +266,25 @@ export default function AdminNewsPage() {
     setDeleting(null);
   };
 
-  const fromUrl = async () => {
-    if (!urlInput.trim()) return;
+  const fromUrl = async (url: string, review: boolean) => {
+    if (!url.trim() || fetchingUrl) return;
     setFetchingUrl(true);
-    setPreview(null);
-    setPersonPhotos([]);
+    setImportError("");
+    if (review) setImportReview(null);
     try {
-      const res  = await fetch("/api/admin/news/from-url", {
+      const res = await fetch("/api/admin/news/from-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ url: urlInput.trim() }),
+        body: JSON.stringify({ url: url.trim(), review }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error ?? "خطأ في جلب الرابط"); return; }
+      if (!res.ok) throw new Error(data.error ?? "تعذّر جلب الرابط.");
+      if (review) {
+        setImportReview({ url: url.trim(), matches: data.matches, partial: data.partial });
+        return;
+      }
+      setPersonPhotos([]);
       setPreview({
         newsId:         data.newsId,
         title:          data.title,
@@ -286,12 +295,16 @@ export default function AdminNewsPage() {
         geo:            data.geo ?? "general",
         category:       data.category ?? "عام",
         published_at:   toDateTimeLocal(),
-        tone:         "accountability",
-        citations:    data.citations ?? [],
+        tone:           "accountability",
+        citations:      data.citations ?? [],
         needs_internal_review: Boolean(data.needs_internal_review),
+        sourceUnavailable: Boolean(data.sourceUnavailable),
       });
+      setImportReview(null);
       setUrlInput("");
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "تعذّر جلب الرابط.");
     } finally {
       setFetchingUrl(false);
     }
@@ -360,19 +373,26 @@ export default function AdminNewsPage() {
         {editError && <p role="alert" className="text-sm mt-2" style={{ color: RED }}>{editError}</p>}
       </div>
       <div
-        className="flex gap-2 mb-6 p-3 rounded-xl"
+        className="flex flex-wrap gap-2 mb-6 p-3 rounded-xl"
         style={{ background: "#1A1810", border: "1px solid #2E2A18" }}
       >
         <input
           type="url"
           value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && fromUrl()}
-          placeholder="🔗 هل لديك رابط خبر معين؟ الصقه هنا وسننشئ تقريراً منه..."
-          style={{ ...inputStyle, resize: "none", flex: 1 }}
+          onChange={(e) => {
+            setUrlInput(e.target.value);
+            setImportReview(null);
+            setImportError("");
+          }}
+          disabled={fetchingUrl}
+          onKeyDown={(e) => e.key === "Enter" && void fromUrl(urlInput, true)}
+          placeholder="ألصق رابط الخبر"
+          aria-label="رابط الخبر"
+          className="min-w-0"
+          style={{ ...inputStyle, resize: "none", flex: "1 1 15rem" }}
         />
         <button
-          onClick={fromUrl}
+          onClick={() => void fromUrl(urlInput, true)}
           disabled={fetchingUrl || !urlInput.trim()}
           className="px-4 py-2 rounded-lg text-sm font-bold shrink-0"
           style={{
@@ -380,9 +400,44 @@ export default function AdminNewsPage() {
             color: fetchingUrl || !urlInput.trim() ? DIM : "#111008",
           }}
         >
-          {fetchingUrl ? "⏳ جارٍ الجلب..." : "✍️ إنشاء تقرير"}
+          {fetchingUrl ? "جارٍ الجلب…" : "مراجعة الرابط"}
         </button>
       </div>
+
+      {importError && <p role="alert" className="mb-4 text-sm" style={{ color: RED }}>{importError}</p>}
+      {importReview && (
+        <section aria-labelledby="news-import-review" className="mb-6 rounded-xl p-4 space-y-3" style={{ background: "#1A1810" }}>
+          <h2 id="news-import-review" className="text-sm font-bold" style={{ color: GOLD }}>الأخبار ذات الصلة</h2>
+          {importReview.partial && <p className="text-sm" style={{ color: DIM }}>تعذّر إكمال جزء من البحث. يمكنك متابعة إنشاء المسودة.</p>}
+          {!importReview.partial && importReview.matches.length === 0 && (
+            <p className="text-sm" style={{ color: DIM }}>لم تظهر أخبار مشابهة في البحث.</p>
+          )}
+          {importReview.matches.length > 0 && (
+            <ul className="space-y-2">
+              {importReview.matches.map((match) => (
+                <li key={match.id} className="rounded-lg border border-[#2E2A18] px-3 py-2">
+                  {/^(https?:)\/\//i.test(match.url) ? (
+                    <a href={match.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold underline">{match.title}</a>
+                  ) : <span className="text-sm font-semibold">{match.title}</span>}
+                  <p className="mt-1 text-xs" style={{ color: DIM }}>
+                    {match.source} · {new Date(match.published_at).toLocaleDateString("ar-TN", { timeZone: "Africa/Tunis" })}
+                    {" · "}{match.status === "pending" ? "قيد المراجعة" : match.status === "approved" ? "منشور" : "مرفوض"}
+                    {match.sameUrl && " · نفس رابط المصدر"}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => void fromUrl(importReview.url, false)} disabled={fetchingUrl}
+              className="rounded-lg px-4 py-2 text-sm font-bold disabled:opacity-50" style={{ background: GOLD, color: "#111008" }}>
+              {fetchingUrl ? "جارٍ إعداد المسودة…" : "متابعة إنشاء خبر"}
+            </button>
+            <button onClick={() => { setImportReview(null); setImportError(""); }} disabled={fetchingUrl}
+              className="px-3 py-2 text-sm" style={{ color: DIM }}>إلغاء</button>
+          </div>
+        </section>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -427,8 +482,14 @@ export default function AdminNewsPage() {
             </div>
           )}
 
+          {preview.sourceUnavailable && (
+            <p className="text-sm" style={{ color: GOLD }}>
+              تعذّر جلب النص الكامل من المصدر. يمكنك كتابة الخبر وإضافة المصادر التي راجعتها.
+            </p>
+          )}
+
           {/* Tone switcher — only for generated (non-edit) previews */}
-          {!preview.editMode && (
+          {!preview.editMode && !preview.sourceUnavailable && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs shrink-0" style={{ color: DIM }}>أسلوب التقرير:</span>
               {TONES.map((t) => (
@@ -654,7 +715,7 @@ export default function AdminNewsPage() {
           <div className="flex items-center gap-3 pt-1">
             <button
               onClick={publish}
-              disabled={publishing || preview.citations.every((citation) => !citation.name.trim() || !citation.url.trim())}
+              disabled={publishing || !preview.content.trim() || preview.citations.every((citation) => !citation.name.trim() || !citation.url.trim())}
               className="px-5 py-2.5 rounded-full text-sm font-bold"
               style={{ background: `linear-gradient(135deg, ${GOLD}, #9A7B28)`, color: "#111008" }}
             >
