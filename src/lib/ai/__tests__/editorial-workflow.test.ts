@@ -16,8 +16,8 @@ describe("editorial publication invariants", () => {
   it("URL import creates only a pending placeholder after validated generation", () => {
     const route = read("src/app/api/admin/news/from-url/route.ts");
     expect(route).toContain("generated = await generateUrlDraft");
-    expect(route).toContain('status:      "pending"');
-    expect(route.indexOf("generated = await generateUrlDraft")).toBeLessThan(route.indexOf('.from("news")'));
+    expect(route).toContain('status: "pending"');
+    expect(route.indexOf("generated = await generateUrlDraft")).toBeLessThan(route.indexOf('.from("news").insert('));
   });
 
   it("RSS cron imports pending records and never approved records", () => {

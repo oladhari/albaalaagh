@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { generateNewsDraft, type Tone } from "@/lib/ai/workflows";
 import { AiProviderError, toAdminAiResponse } from "@/lib/ai/provider";
 import { fetchNewsSource, NewsSourceError } from "@/lib/news-source";
+import { newsImportSourceUrl } from "@/lib/news-import-review";
 
 export const maxDuration = 90;
 
@@ -33,12 +34,13 @@ export async function POST(
   try {
     // RSS excerpts are deliberately short. Fetch the source before asking for
     // an article; a URL in an AI prompt does not retrieve that page.
-    const article = await fetchNewsSource(news.url);
+    const sourceUrl = newsImportSourceUrl(news.url);
+    const article = await fetchNewsSource(sourceUrl);
     const generated = await generateNewsDraft({
       title: news.title,
       excerpt: news.excerpt ?? "",
       source: news.source,
-      url: news.url,
+      url: sourceUrl,
       source_language: news.source_language ?? "ar",
       source_kind: news.source_kind ?? "media",
       category: news.category ?? "",
@@ -59,7 +61,7 @@ export async function POST(
       category: news.category,
       citations: [{
         name: news.source,
-        url: news.url,
+        url: sourceUrl,
         kind: news.source_kind === "official" ? "official" : news.source_kind === "agency" ? "agency" : "media",
         is_primary: true,
         published_at: news.published_at,
